@@ -10,7 +10,7 @@ function handleJoinGame(client, room) {
     JSON.stringify({
       type: "joinedRoom",
       roomId: room.id,
-      roomType: "default-arena", // Add this line
+      roomType: room.roomType,
       playerId: client.id,
       players: room.getPlayerList().filter((p) => p.id !== client.id),
       maxPlayers: MAX_PLAYERS_PER_ROOM,
@@ -140,7 +140,8 @@ export function handleConnection(ws) {
             name: `Player${client.id}`,
             avatarId: "low-poly-girl",
           };
-          const room = findOrCreateRoom();
+          const roomType = message.roomType || "default-arena";
+          const room = findOrCreateRoom(roomType);
           handleJoinGame(client, room);
           break;
 

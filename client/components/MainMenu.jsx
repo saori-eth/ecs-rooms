@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import "./MainMenu.css";
+import { rooms } from "../rooms/room-definitions.js";
 
 function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
+  const [roomType, setRoomType] = useState(Object.keys(rooms)[0] || "default-arena");
 
   const handlePlay = () => {
     const playerName =
       name.trim() || `Player${Math.floor(Math.random() * 1000)}`;
-    onPlay(playerName, avatarId);
+    onPlay(playerName, avatarId, roomType);
   };
 
   return (
@@ -32,6 +34,17 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
           <option value="glasses">Glasses</option>
           <option value="bonnie">Bonnie</option>
           <option value="taiga">Taiga</option>
+        </select>
+        <select
+          value={roomType}
+          onChange={(e) => setRoomType(e.target.value)}
+          className="room-select"
+        >
+          {Object.entries(rooms).map(([key, room]) => (
+            <option key={key} value={key}>
+              {room.name}
+            </option>
+          ))}
         </select>
       </div>
       <button

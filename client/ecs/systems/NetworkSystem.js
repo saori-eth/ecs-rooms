@@ -260,11 +260,12 @@ export function createNetworkSystem() {
       gameManager = gm
     },
     
-    joinGame(identity) {
+    joinGame(identity, roomType) {
       if (connected && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ 
           type: 'joinGame',
-          identity: identity
+          identity: identity,
+          roomType: roomType
         }))
       }
     },

@@ -145,8 +145,8 @@ class GameManager {
     };
   }
 
-  async onPlay(playerIdentity) {
-    networkSystem.joinGame(playerIdentity);
+  async onPlay(playerIdentity, roomType) {
+    networkSystem.joinGame(playerIdentity, roomType);
   }
 
   async startGame(playerIdentity) {

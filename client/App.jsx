@@ -41,13 +41,13 @@ function App({ gameManager }) {
     }
   }, [gameManager, playerIdentity]);
 
-  const handlePlay = (name, avatarId) => {
+  const handlePlay = (name, avatarId, roomType) => {
     const updatedIdentity = { ...playerIdentity, name, avatarId };
     setPlayerIdentity(updatedIdentity);
     localStorage.setItem('playerIdentity', JSON.stringify(updatedIdentity));
     
     if (gameManager && gameManager.onPlay) {
-      gameManager.onPlay(updatedIdentity);
+      gameManager.onPlay(updatedIdentity, roomType);
     }
   };
 
