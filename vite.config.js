@@ -5,7 +5,12 @@ export default defineConfig({
   root: './client',
   plugins: [react()],
   build: {
-    outDir: '../dist'
+    outDir: '../dist',
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
   },
   server: {
     port: 3000,

@@ -130,11 +130,11 @@ class GameManager {
     networkSystem.onDisconnect = () => {
       callbacks.setGameState("menu");
     };
-    
+
     networkSystem.onPlayerJoined = (playerId) => {
       sceneManager.onPlayerJoin(playerId);
     };
-    
+
     networkSystem.onPlayerLeft = (playerId) => {
       sceneManager.onPlayerLeave(playerId);
     };

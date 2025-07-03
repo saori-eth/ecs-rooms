@@ -3,6 +3,7 @@ import * as CANNON from "cannon-es";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { rooms } from "../rooms/room-definitions.js";
 import { ScriptingAPI } from "./ScriptingAPI.js";
+import { loadGameScript } from "./ScriptLoader.js";
 
 export class SceneManager {
   constructor(scene, physicsWorld, world, networkSystem) {
@@ -205,17 +206,29 @@ export class SceneManager {
 
     // Load and instantiate script
     if (roomData.script) {
+      console.log('[SceneManager] Attempting to load script:', roomData.script);
       try {
-        const scriptModule = await import(/* @vite-ignore */ roomData.script);
+        const scriptModule = await loadGameScript(roomData.script);
+        console.log('[SceneManager] Script module loaded:', scriptModule);
+        
         const ScriptClass = Object.values(scriptModule)[0];
+        console.log('[SceneManager] Script class found:', ScriptClass);
+        
         const scriptingAPI = new ScriptingAPI(this.world, this.physicsWorld, this.loadedScene, this.networkSystem);
         this.activeScript = new ScriptClass(scriptingAPI);
+        console.log('[SceneManager] Script instantiated:', this.activeScript);
+        
         if (this.activeScript.onLoad) {
           this.activeScript.onLoad();
+          console.log('[SceneManager] Script onLoad called');
         }
       } catch (e) {
-        console.error(`Failed to load script for room ${roomType}:`, e);
+        console.error(`[SceneManager] Failed to load script for room ${roomType}:`, e);
+        console.error('[SceneManager] Script path was:', roomData.script);
+        console.error('[SceneManager] Error stack:', e.stack);
       }
+    } else {
+      console.log('[SceneManager] No script defined for room:', roomType);
     }
   }
 
