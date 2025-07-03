@@ -5,7 +5,9 @@ import { rooms } from "../rooms/room-definitions.js";
 function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
-  const [roomType, setRoomType] = useState(Object.keys(rooms)[0] || "default-arena");
+  const [roomType, setRoomType] = useState(
+    Object.keys(rooms)[0] || "default-arena"
+  );
 
   const handlePlay = () => {
     const playerName =
@@ -17,6 +19,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
     <div className="main-menu">
       <img src="/images/logo.png" alt="Digispace" className="logo" />
       <div className="player-customization">
+        <label className="input-label">Player Name</label>
         <input
           type="text"
           value={name}
@@ -25,6 +28,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
           maxLength={20}
           className="player-name-input"
         />
+        <label className="input-label">Avatar</label>
         <select
           value={avatarId}
           onChange={(e) => setAvatarId(e.target.value)}
@@ -35,6 +39,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
           <option value="bonnie">Bonnie</option>
           <option value="taiga">Taiga</option>
         </select>
+        <label className="input-label">Room</label>
         <select
           value={roomType}
           onChange={(e) => setRoomType(e.target.value)}

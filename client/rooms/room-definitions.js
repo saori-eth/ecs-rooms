@@ -1,6 +1,6 @@
 export const rooms = {
-  "default-arena": {
-    name: "Default Arena",
+  "arena-shooter": {
+    name: "Arena Shooter",
     sceneModel: "/environments/arena.glb",
     script: "/rooms/scripts/arena-shooting-game.js",
     sceneTransform: {
@@ -10,7 +10,7 @@ export const rooms = {
     },
     enablePhysics: true, // Set to false to disable trimesh collision
   },
-  empty: {
+  "arena-empty": {
     name: "Empty",
     sceneModel: "/environments/arena.glb",
     script: "/rooms/scripts/arena-logic.js",
