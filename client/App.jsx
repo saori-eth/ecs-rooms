@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import MainMenu from './components/MainMenu';
-import GameUI from './components/GameUI';
-import LoadingScreen from './components/LoadingScreen';
-import { useGameState } from './hooks/useGameState';
-import './App.css';
+import React, { useState, useEffect, useRef } from "react";
+import MainMenu from "./components/MainMenu";
+import GameUI from "./components/GameUI";
+import LoadingScreen from "./components/LoadingScreen";
+import { useGameState } from "./hooks/useGameState";
+import "./App.css";
 
 function App({ gameManager }) {
   const {
@@ -14,18 +14,18 @@ function App({ gameManager }) {
     setGameState,
     setConnectionStatus,
     setPlayEnabled,
-    updateRoomInfo
+    updateRoomInfo,
   } = useGameState();
 
   const [playerIdentity, setPlayerIdentity] = useState(() => {
-    const saved = localStorage.getItem('playerIdentity');
+    const saved = localStorage.getItem("playerIdentity");
     if (saved) {
       return JSON.parse(saved);
     }
     return {
-      name: '',
-      avatarId: 'low-poly-girl',
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      name: "",
+      avatarId: "wassie",
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
   });
 
@@ -37,7 +37,7 @@ function App({ gameManager }) {
         setConnectionStatus,
         setPlayEnabled,
         updateRoomInfo,
-        getPlayerIdentity: () => playerIdentity
+        getPlayerIdentity: () => playerIdentity,
       });
     }
   }, [gameManager, playerIdentity]);
@@ -45,11 +45,11 @@ function App({ gameManager }) {
   const handlePlay = (name, avatarId, roomType) => {
     const updatedIdentity = { ...playerIdentity, name, avatarId };
     setPlayerIdentity(updatedIdentity);
-    localStorage.setItem('playerIdentity', JSON.stringify(updatedIdentity));
-    
+    localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
+
     // Set game state to loading immediately
-    setGameState('loading');
-    
+    setGameState("loading");
+
     if (gameManager && gameManager.onPlay) {
       gameManager.onPlay(updatedIdentity, roomType);
     }
@@ -57,7 +57,7 @@ function App({ gameManager }) {
 
   return (
     <div className="app">
-      {gameState === 'menu' && (
+      {gameState === "menu" && (
         <MainMenu
           playerIdentity={playerIdentity}
           connectionStatus={connectionStatus}
@@ -65,10 +65,8 @@ function App({ gameManager }) {
           onPlay={handlePlay}
         />
       )}
-      {gameState === 'loading' && (
-        <LoadingScreen />
-      )}
-      {gameState === 'playing' && (
+      {gameState === "loading" && <LoadingScreen />}
+      {gameState === "playing" && (
         <GameUI roomInfo={roomInfo} gameManager={gameManager} />
       )}
     </div>

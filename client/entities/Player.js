@@ -34,7 +34,7 @@ export async function createPlayer(
   if (scene) scene.add(playerGroup);
 
   // Load VRM model
-  const avatarId = identity?.avatarId || "low-poly-girl";
+  const avatarId = identity?.avatarId || "wassie";
   const vrm = await vrmManager.loadVRM(avatarId);
 
   // Reset to T-pose before applying any transforms or animations
@@ -85,9 +85,9 @@ export async function createPlayer(
       ComponentTypes.CAMERA_TARGET,
       createCameraTargetComponent()
     );
-    
+
     // Tag as local player for animation system detection
-    world.addComponent(entityId, 'localPlayer', { isLocal: true });
+    world.addComponent(entityId, "localPlayer", { isLocal: true });
   }
 
   // Load animations
