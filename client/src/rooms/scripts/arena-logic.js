@@ -1,7 +1,6 @@
 export class ArenaLogic {
   constructor(scriptingAPI) {
     this.api = scriptingAPI;
-    console.log("Arena Logic loaded!");
   }
 
   onLoad() {

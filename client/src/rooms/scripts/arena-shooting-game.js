@@ -32,14 +32,9 @@ export class ArenaShootingGame {
   }
 
   onLoad() {
-    console.log("Arena Shooting Game loaded!");
-    console.log("[ArenaShootingGame] API:", this.api);
-    console.log("[ArenaShootingGame] NetworkSystem:", this.api.networkSystem);
-
     // Set up network event handler
     if (this.api.networkSystem) {
       this.api.networkSystem.onGameEvent = this.handleGameEvent.bind(this);
-      console.log("[ArenaShootingGame] Network event handler set up");
     } else {
       console.error("[ArenaShootingGame] No networkSystem available!");
     }
@@ -57,10 +52,7 @@ export class ArenaShootingGame {
       // Add grid
       const gridHelper = new THREE.GridHelper(10, 10);
       this.api.getThreeScene().add(gridHelper);
-
-      console.log("[ArenaShootingGame] Debug helpers added");
     }
-    console.log("[ArenaShootingGame] Event listeners added");
   }
 
   onUpdate(deltaTime) {
@@ -121,13 +113,6 @@ export class ArenaShootingGame {
       z: Math.sin(angle) * distance,
     };
 
-    console.log(
-      "[ArenaShootingGame] Spawning enemy:",
-      enemyId,
-      "at position:",
-      position
-    );
-
     // Create enemy locally
     this.createEnemy(enemyId, position);
 
@@ -136,17 +121,9 @@ export class ArenaShootingGame {
       id: enemyId,
       position: position,
     });
-    console.log("[ArenaShootingGame] Enemy spawn event sent");
   }
 
   createEnemy(id, position) {
-    console.log(
-      "[ArenaShootingGame] Creating enemy at position:",
-      position,
-      "height:",
-      position.y
-    );
-
     // Create visual
     const geometry = new THREE.SphereGeometry(0.3, 16, 16);
     const mesh = new THREE.Mesh(geometry, this.enemyMaterial);
@@ -186,11 +163,6 @@ export class ArenaShootingGame {
       body: body,
       health: 1,
     });
-
-    console.log(
-      "[ArenaShootingGame] Enemy created. Total enemies:",
-      this.enemies.size
-    );
   }
 
   updateEnemies(deltaTime) {
@@ -242,29 +214,21 @@ export class ArenaShootingGame {
 
   handleShoot(event) {
     event.preventDefault();
-    console.log("[ArenaShootingGame] handleShoot called");
-
     // Get player position and rotation
     const players = this.api.getEntitiesWithComponents(
       ComponentTypes.POSITION,
       ComponentTypes.PLAYER,
       ComponentTypes.VRM
     );
-    console.log("[ArenaShootingGame] All players with components:", players);
     const localPlayers = [];
 
     players.forEach((playerId) => {
       const player = this.api.getComponent(playerId, ComponentTypes.PLAYER);
-      console.log("[ArenaShootingGame] Player component:", player);
       if (player && player.isLocal) {
         localPlayers.push(playerId);
       }
     });
 
-    console.log(
-      "[ArenaShootingGame] Local players found:",
-      localPlayers.length
-    );
     if (localPlayers.length === 0) return;
 
     const playerId = localPlayers[0];
@@ -299,13 +263,6 @@ export class ArenaShootingGame {
   }
 
   createProjectile(id, position, direction) {
-    console.log(
-      "[ArenaShootingGame] Creating projectile at height:",
-      position.y,
-      "direction:",
-      direction
-    );
-
     // Create visual
     const geometry = new THREE.SphereGeometry(0.1, 8, 8);
     const mesh = new THREE.Mesh(geometry, this.projectileMaterial);
@@ -358,7 +315,6 @@ export class ArenaShootingGame {
         );
         if (distance < 0.4) {
           // Hit! (0.3 enemy radius + 0.1 projectile radius)
-          console.log("[ArenaShootingGame] Hit detected! Distance:", distance);
           toRemoveProjectiles.push(projId);
           toRemoveEnemies.push(enemyId);
 
@@ -448,7 +404,6 @@ export class ArenaShootingGame {
   }
 
   handleGameEvent(event) {
-    console.log("[ArenaShootingGame] handleGameEvent called:", event);
     switch (event.eventType) {
       case "spawnEnemy":
         if (!this.enemies.has(event.data.id)) {
@@ -486,8 +441,6 @@ export class ArenaShootingGame {
 
     // If we're the host, send current game state to new player
     if (this.isHost && this.enemies.size > 0) {
-      console.log("[ArenaShootingGame] Sending game state to new player");
-
       // Send all existing enemies
       this.enemies.forEach((enemy, id) => {
         this.api.sendGameEvent("spawnEnemy", {

@@ -47,8 +47,6 @@ export async function createPlayer(
   vrm.scene.position.y = -0.5; // Adjust so feet are at the bottom
 
   playerGroup.add(vrm.scene);
-  console.log("player group", playerGroup);
-
   // Add name tag
   if (identity?.name) {
     // Calculate VRM height based on scale
@@ -82,7 +80,11 @@ export async function createPlayer(
 
   // Add camera target for local player
   if (isLocal) {
-    world.addComponent(entityId, ComponentTypes.CAMERA_TARGET, createCameraTargetComponent());
+    world.addComponent(
+      entityId,
+      ComponentTypes.CAMERA_TARGET,
+      createCameraTargetComponent()
+    );
   }
 
   // Load animations

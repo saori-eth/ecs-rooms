@@ -25,16 +25,10 @@ function Chat({ gameManager }) {
 
   useEffect(() => {
     // Set up chat message handler
-    console.log(
-      "[Chat] Setting up chat message handler, gameManager:",
-      gameManager
-    );
     if (gameManager) {
       gameManager.onChatMessage = (message) => {
-        console.log("[Chat] Received message:", message);
         setMessages((prev) => [...prev, message]);
       };
-      console.log("[Chat] Chat message handler set");
     }
   }, [gameManager]);
 
@@ -45,17 +39,8 @@ function Chat({ gameManager }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("[Chat] handleSubmit called");
     const trimmedMessage = inputValue.trim();
-    console.log("[Chat] trimmedMessage:", trimmedMessage);
-    console.log("[Chat] gameManager:", gameManager);
-    console.log(
-      "[Chat] gameManager.sendChatMessage:",
-      gameManager?.sendChatMessage
-    );
-
     if (trimmedMessage && gameManager && gameManager.sendChatMessage) {
-      console.log("[Chat] Sending message:", trimmedMessage);
       gameManager.sendChatMessage(trimmedMessage);
       setInputValue("");
     } else {

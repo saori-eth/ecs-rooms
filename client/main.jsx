@@ -114,9 +114,7 @@ class GameManager {
     };
 
     networkSystem.onJoinedRoom = (roomData) => {
-      console.log("[main] onJoinedRoom called with:", roomData);
       if (roomData.roomType) {
-        console.log("[main] Loading room type:", roomData.roomType);
         sceneManager.loadRoom(roomData.roomType);
       } else {
         console.warn("[main] No roomType in roomData");

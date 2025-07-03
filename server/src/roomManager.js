@@ -21,7 +21,6 @@ export function getRoom(roomId) {
 
 export function deleteRoom(roomId) {
   rooms.delete(roomId);
-  console.log(`Room ${roomId} deleted (empty)`);
 }
 
 export function getRooms() {
