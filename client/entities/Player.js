@@ -35,6 +35,11 @@ export async function createPlayer(
   const avatarId = identity?.avatarId || "BitcoinGuy";
   const vrm = await vrmManager.loadVRM(avatarId);
 
+  // Reset to T-pose before applying any transforms or animations
+  if (vrm.humanoid) {
+    vrm.humanoid.resetPose();
+  }
+
   // Scale and position the VRM model to fit in a roughly 1x1x1 box
   vrm.scene.scale.set(0.7, 0.7, 0.7);
   vrm.scene.position.y = -0.5; // Adjust so feet are at the bottom
@@ -89,25 +94,38 @@ export async function createPlayer(
   world.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
 
   // Load animations
-  const clips = await animationManager.loadAndRetarget(vrm);
-  const mixer = new THREE.AnimationMixer(vrm.scene);
-  const actions = {
-    idle: mixer.clipAction(clips.idle),
-    walking: mixer.clipAction(clips.walking),
-  };
+  try {
+    const clips = await animationManager.loadAndRetarget(vrm);
+    const mixer = new THREE.AnimationMixer(vrm.scene);
+    const actions = {
+      idle: mixer.clipAction(clips.idle),
+      walking: mixer.clipAction(clips.walking),
+    };
 
-  actions.idle.play();
+    // Ensure animations don't accumulate transforms
+    actions.idle.setLoop(THREE.LoopRepeat);
+    actions.walking.setLoop(THREE.LoopRepeat);
+    
+    // Reset any accumulated transforms
+    actions.idle.reset();
+    actions.walking.reset();
+    
+    // Start with idle animation
+    actions.idle.play();
 
-  world.addComponent(
-    entityId,
-    ComponentTypes.ANIMATION,
-    createAnimationComponent({
-      mixer,
-      clips,
-      actions,
-      currentAction: actions.idle,
-    })
-  );
+    world.addComponent(
+      entityId,
+      ComponentTypes.ANIMATION,
+      createAnimationComponent({
+        mixer,
+        clips,
+        actions,
+        currentAction: actions.idle,
+      })
+    );
+  } catch (error) {
+    console.error("Failed to load animations for player:", error);
+  }
 
   if (physicsWorld) {
     // Create capsule-like compound shape using spheres

@@ -1,38 +1,38 @@
-import * as THREE from "three";
-import { FBXLoader } from "three/addons/loaders/FBXLoader.js";
-import { retargetAnimation } from "vrm-mixamo-retarget";
+import { loadAnim } from "./retarget.js";
 
 class AnimationManager {
   constructor() {
-    this.fbxLoader = new FBXLoader();
-    this.cachedFbx = new Map();
-  }
-
-  async #loadFbx(url) {
-    if (this.cachedFbx.has(url)) {
-      return this.cachedFbx.get(url).clone();
-    }
-    const fbxAsset = await this.fbxLoader.loadAsync(url);
-    this.cachedFbx.set(url, fbxAsset);
-    return fbxAsset.clone();
+    this.cachedClips = new Map();
   }
 
   async loadAndRetarget(vrm) {
-    const [idleFbx, walkingFbx] = await Promise.all([
-      this.#loadFbx("/animations/idle.fbx"),
-      this.#loadFbx("/animations/walk.fbx"),
+    // Generate a unique key for caching based on VRM instance
+    const vrmId = vrm.scene.uuid;
+    
+    // Check if we already have clips for this VRM
+    if (this.cachedClips.has(vrmId)) {
+      return this.cachedClips.get(vrmId);
+    }
+
+    // Load animations using the custom retarget function
+    const [idleClip, walkingClip] = await Promise.all([
+      loadAnim("/animations/idle.fbx", vrm),
+      loadAnim("/animations/walk.fbx", vrm),
     ]);
 
-    const idleClip = retargetAnimation(idleFbx, vrm);
+    // Set clip names
     idleClip.name = "idle";
+    walkingClip.name = "walking";
 
-    const walkingClip = retargetAnimation(walkingFbx, vrm);
-    walkingClip.name = "walk";
-
-    return {
+    const clips = {
       idle: idleClip,
       walking: walkingClip,
     };
+
+    // Cache the clips for this VRM
+    this.cachedClips.set(vrmId, clips);
+
+    return clips;
   }
 }
 

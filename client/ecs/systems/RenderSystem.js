@@ -3,6 +3,16 @@ import { ComponentTypes } from "../components.js";
 export function createRenderSystem(scene) {
   return {
     update(world, deltaTime) {
+      // First, update all VRM models
+      const vrmEntities = world.getEntitiesWithComponents(ComponentTypes.VRM);
+      vrmEntities.forEach((entityId) => {
+        const vrmComponent = world.getComponent(entityId, ComponentTypes.VRM);
+        if (vrmComponent && vrmComponent.vrm && vrmComponent.vrm.update) {
+          vrmComponent.vrm.update(deltaTime);
+        }
+      });
+
+      // Then update positions
       const entities = world.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.MESH
@@ -11,7 +21,6 @@ export function createRenderSystem(scene) {
       entities.forEach((entityId) => {
         const position = world.getComponent(entityId, ComponentTypes.POSITION);
         const meshComponent = world.getComponent(entityId, ComponentTypes.MESH);
-        const vrmComponent = world.getComponent(entityId, ComponentTypes.VRM);
 
         if (meshComponent.mesh) {
           meshComponent.mesh.position.x = position.x;
@@ -23,10 +32,6 @@ export function createRenderSystem(scene) {
             meshComponent.mesh.updateMatrix();
             meshComponent.mesh.updateMatrixWorld(true);
           }
-        }
-
-        if (vrmComponent && vrmComponent.vrm) {
-          vrmComponent.vrm.update(deltaTime);
         }
       });
     },
