@@ -1,21 +1,23 @@
-# Use official Node.js LTS image
-FROM node:20-alpine
+# Use Node.js 18 Alpine image
+FROM node:18-alpine
 
-# Create app directory
+# Set working directory
 WORKDIR /app
 
-# Install app dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm install --production=false --legacy-peer-deps
 
-# Copy the rest of the application code
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
 COPY . .
 
 # Build the client
 RUN npm run build
 
-# Expose the port Fly.io will forward to the Internet
+# Expose port
 EXPOSE 8080
 
 # Start the server
-CMD ["node", "server/index.js"] 
+CMD ["npm", "start"]

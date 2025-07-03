@@ -23,7 +23,12 @@ export function createNetworkSystem() {
   let onChatMessage = null
 
   const connect = () => {
-    ws = new WebSocket('ws://localhost:8080')
+    // Use wss:// for production, ws:// for development
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}`;
+    
+    ws = new WebSocket(wsUrl)
     
     ws.onopen = () => {
       console.log('Connected to server')

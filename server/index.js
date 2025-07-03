@@ -5,6 +5,8 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { handleConnection } from "./src/clientHandler.js";
 import { startHeartbeat } from "./src/heartbeat.js";
+import { getRooms } from "./src/roomManager.js";
+import { MAX_PLAYERS_PER_ROOM } from "./src/Room.js";
 
 // Determine __dirname in ES module scope
 const __filename = fileURLToPath(import.meta.url);
@@ -17,6 +19,63 @@ const app = express();
 const distPath = path.join(__dirname, "..", "dist");
 
 app.use(express.static(distPath));
+
+// Health check endpoint for Fly.io
+app.get("/health", (req, res) => {
+  const rooms = getRooms();
+  let totalPlayers = 0;
+  let totalCapacity = 0;
+  
+  rooms.forEach(room => {
+    totalPlayers += room.players.size;
+    totalCapacity += MAX_PLAYERS_PER_ROOM;
+  });
+  
+  // Calculate server load percentage
+  const loadPercentage = totalCapacity > 0 ? (totalPlayers / totalCapacity) * 100 : 0;
+  
+  res.json({
+    status: "healthy",
+    totalPlayers,
+    totalCapacity,
+    roomCount: rooms.size,
+    loadPercentage,
+    availableSlots: Math.max(0, totalCapacity - totalPlayers)
+  });
+});
+
+// Metrics endpoint for autoscaling
+app.get("/metrics", (req, res) => {
+  const rooms = getRooms();
+  let totalPlayers = 0;
+  let fullRooms = 0;
+  
+  rooms.forEach(room => {
+    totalPlayers += room.players.size;
+    if (room.players.size >= MAX_PLAYERS_PER_ROOM) {
+      fullRooms++;
+    }
+  });
+  
+  // Prometheus-style metrics
+  res.type("text/plain");
+  res.send(`# HELP game_players_total Total number of connected players
+# TYPE game_players_total gauge
+game_players_total ${totalPlayers}
+
+# HELP game_rooms_total Total number of active rooms
+# TYPE game_rooms_total gauge
+game_rooms_total ${rooms.size}
+
+# HELP game_rooms_full Number of full rooms
+# TYPE game_rooms_full gauge
+game_rooms_full ${fullRooms}
+
+# HELP game_server_load Server load percentage (0-100)
+# TYPE game_server_load gauge
+game_server_load ${rooms.size > 0 ? (fullRooms / rooms.size) * 100 : 0}
+`);
+});
 
 // Fallback to index.html for SPA routing
 app.get("*", (req, res) => {

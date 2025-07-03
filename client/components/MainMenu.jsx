@@ -13,7 +13,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
 
   return (
     <div className="main-menu">
-      <h1>Cozy Rooms</h1>
+      <h1>Digispace</h1>
       <div className="player-customization">
         <input
           type="text"

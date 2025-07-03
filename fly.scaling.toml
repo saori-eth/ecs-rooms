@@ -1,0 +1,26 @@
+# Fly.io Autoscaling Configuration
+# This file configures how Fly.io should scale your application
+
+# Scale up when:
+# - All rooms are at 75% capacity or higher
+# - There are no available slots for new players
+
+# Scale down when:
+# - Server load drops below 25%
+# - There are empty machines with no players
+
+# To apply these settings after deployment:
+# fly autoscale set min=1 max=5
+# fly autoscale show
+
+# The metrics endpoint provides these values:
+# - game_server_load: Percentage of rooms that are full (0-100)
+# - game_players_total: Total connected players
+# - game_rooms_full: Number of rooms at max capacity
+
+# Recommended autoscaling command:
+# fly autoscale set min=1 max=10 --region sjc
+
+# Monitor your app's metrics:
+# fly metrics show game_server_load
+# fly metrics show game_players_total
