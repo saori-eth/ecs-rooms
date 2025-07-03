@@ -12,6 +12,7 @@ import { createPhysicsSystem } from "./ecs/systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./ecs/systems/AnimationSystem.js";
 import { createPlayer } from "./entities/Player.js";
 import { SceneManager } from "./src/SceneManager.js";
+import { CameraSystem } from "./ecs/systems/CameraSystem.js";
 
 // Three.js setup
 const scene = new THREE.Scene();
@@ -64,6 +65,7 @@ world.registerSystem(createInterpolationSystem());
 world.registerSystem(createRenderSystem(scene));
 world.registerSystem(networkSystem);
 world.registerSystem(createAnimationSystem());
+world.addSystem(new CameraSystem());
 
 window.scene = scene;
 window.physicsWorld = physicsSystem.world;
@@ -213,18 +215,7 @@ function animate(time) {
   lastTime = time;
 
   sceneManager.update(deltaTime);
-  world.update(deltaTime);
-
-  // Simple camera follow for local player
-  if (gameManager.localPlayerId) {
-    const position = world.getComponent(gameManager.localPlayerId, "position");
-    if (position) {
-      camera.position.x = position.x;
-      camera.position.y = position.y + 2.5;
-      camera.position.z = position.z + 2.5;
-      camera.lookAt(position.x, position.y, position.z);
-    }
-  }
+  world.update(deltaTime, camera);
 
   renderer.render(scene, camera);
 }

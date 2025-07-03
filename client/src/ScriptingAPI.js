@@ -1,4 +1,5 @@
 import * as CANNON from 'cannon-es';
+import { ComponentTypes } from '../ecs/components.js';
 
 export class ScriptingAPI {
   constructor(world, physicsWorld, loadedScene = null, networkSystem = null) {
@@ -34,6 +35,29 @@ export class ScriptingAPI {
   sendGameEvent(eventType, data) {
     if (this.networkSystem) {
       this.networkSystem.sendGameEvent(eventType, data);
+    }
+  }
+
+  // Camera Control
+  setCameraTarget(entityId) {
+    // First, remove cameraTarget from any other entity
+    const currentTargets = this.world.getEntitiesWithComponents(ComponentTypes.CAMERA_TARGET);
+    for (const target of currentTargets) {
+      this.world.removeComponent(target, ComponentTypes.CAMERA_TARGET);
+    }
+
+    if (entityId !== null && this.world.entities.has(entityId)) {
+      // Set new entity as target
+      this.world.addComponent(entityId, ComponentTypes.CAMERA_TARGET, {});
+    } else {
+      // Reset to local player if entityId is null or invalid
+      const localPlayer = this.world.findEntityWithComponent(ComponentTypes.PLAYER);
+      if (localPlayer) {
+        const playerComponent = this.world.getComponent(localPlayer.id, ComponentTypes.PLAYER);
+        if (playerComponent && playerComponent.isLocal) {
+          this.world.addComponent(localPlayer.id, ComponentTypes.CAMERA_TARGET, {});
+        }
+      }
     }
   }
   

@@ -11,9 +11,13 @@
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0.02em;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
-  font-family: 'Inter', sans-serif;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-family: "Inter", sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
 }
 
 @media (max-width: 767px) {
@@ -38,9 +42,13 @@
   border-radius: 16px;
   font-size: 14px;
   font-weight: 400;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
-  font-family: 'Inter', sans-serif;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  font-family: "Inter", sans-serif;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
 }
 
 @media (max-width: 767px) {

@@ -11,6 +11,7 @@ import {
   createPhysicsBodyComponent,
   createVRMComponent,
   createAnimationComponent,
+  createCameraTargetComponent,
 } from "../ecs/components.js";
 import { vrmManager } from "../utils/VRMLoader.js";
 import { animationManager } from "../utils/AnimationManager.js";
@@ -78,6 +79,11 @@ export async function createPlayer(
     createPlayerComponent(isLocal)
   );
   world.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
+
+  // Add camera target for local player
+  if (isLocal) {
+    world.addComponent(entityId, ComponentTypes.CAMERA_TARGET, createCameraTargetComponent());
+  }
 
   // Load animations
   try {
