@@ -14,6 +14,7 @@ import {
 } from "../ecs/components.js";
 import { vrmManager } from "../utils/VRMLoader.js";
 import { animationManager } from "../utils/AnimationManager.js";
+import { createNameplateSprite } from "../utils/NameplateGenerator.js";
 
 export async function createPlayer(
   world,
@@ -49,25 +50,10 @@ export async function createPlayer(
 
   // Add name tag
   if (identity?.name) {
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    canvas.width = 256;
-    canvas.height = 64;
-
-    context.fillStyle = "rgba(0, 0, 0, 0.5)";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-
-    context.font = "32px Arial";
-    context.fillStyle = "white";
-    context.textAlign = "center";
-    context.fillText(identity.name, canvas.width / 2, canvas.height / 2 + 10);
-
-    const texture = new THREE.CanvasTexture(canvas);
-    const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
-    const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(1, 0.25, 1);
-    sprite.position.set(0, 0.5, 0);
-    playerGroup.add(sprite);
+    // Calculate VRM height based on scale
+    const vrmHeight = 1.0 * 0.7; // VRM is scaled to 0.7
+    const nameplate = createNameplateSprite(identity.name, vrmHeight);
+    playerGroup.add(nameplate);
   }
 
   world.addComponent(

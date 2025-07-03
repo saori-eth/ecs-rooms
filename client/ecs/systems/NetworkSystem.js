@@ -105,16 +105,23 @@ export function createNetworkSystem() {
             const animation = world.getComponent(movingEntityId, ComponentTypes.ANIMATION)
             
             if (interpolation) {
+              // Push position data to position buffer
               interpolation.positionBuffer.push({
                 position: {
                   x: message.position.x,
                   y: message.position.y,
                   z: message.position.z
                 },
+                timestamp: message.timestamp
+              })
+              
+              // Push rotation data to rotation buffer
+              interpolation.rotationBuffer.push({
                 rotation: message.rotation,
                 timestamp: message.timestamp
               })
               
+              // Maintain buffer sizes
               if (interpolation.positionBuffer.length > 20) {
                 interpolation.positionBuffer.shift()
               }

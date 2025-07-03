@@ -8,7 +8,8 @@ export function createInterpolationSystem() {
         ComponentTypes.POSITION,
         ComponentTypes.INTERPOLATION,
         ComponentTypes.PLAYER,
-        ComponentTypes.PHYSICS_BODY
+        ComponentTypes.PHYSICS_BODY,
+        ComponentTypes.VRM
       )
 
       entities.forEach(entityId => {
