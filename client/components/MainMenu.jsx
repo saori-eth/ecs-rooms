@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
-import './MainMenu.css';
+import React, { useState } from "react";
+import "./MainMenu.css";
 
 function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
 
   const handlePlay = () => {
-    const playerName = name.trim() || `Player${Math.floor(Math.random() * 1000)}`;
+    const playerName =
+      name.trim() || `Player${Math.floor(Math.random() * 1000)}`;
     onPlay(playerName, avatarId);
   };
 
   return (
     <div className="main-menu">
-      <h1>A Three.js Room</h1>
+      <h1>Cozy Rooms</h1>
       <div className="player-customization">
         <input
           type="text"

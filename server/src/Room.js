@@ -35,6 +35,14 @@ export class Room {
       }
     });
   }
+  
+  broadcastToAll(message) {
+    this.players.forEach((client) => {
+      if (client.ws.readyState === WebSocket.OPEN) {
+        client.ws.send(JSON.stringify(message));
+      }
+    });
+  }
 
   getPlayerList() {
     return Array.from(this.players.values()).map((client) => ({

@@ -78,13 +78,16 @@ class GameManager {
     this.localPlayerId = null;
     this.gameStarted = false;
     this.stateCallbacks = null;
-    
+
     // Set up mobile input callback
     this.mobileInputCallback = (moveVector) => {
       if (inputSystem.handleMobileInput) {
         inputSystem.handleMobileInput(moveVector);
       }
     };
+
+    // Chat message handler placeholder
+    this.onChatMessage = null;
   }
 
   setStateCallbacks(callbacks) {
@@ -109,6 +112,13 @@ class GameManager {
 
     networkSystem.onDisconnect = () => {
       callbacks.setGameState("menu");
+    };
+
+    // Set up chat message handler
+    networkSystem.onChatMessage = (message) => {
+      if (this.onChatMessage) {
+        this.onChatMessage(message);
+      }
     };
   }
 
@@ -150,12 +160,19 @@ class GameManager {
       this.gameStarted = false;
     }
   }
+
+  sendChatMessage(text) {
+    networkSystem.sendChatMessage(text);
+  }
 }
 
 const gameManager = new GameManager();
 
 // Pass game manager to network system
 networkSystem.setGameManager(gameManager);
+
+// Bind the send chat message method
+gameManager.sendChatMessage = gameManager.sendChatMessage.bind(gameManager);
 
 // Window resize handler
 window.addEventListener("resize", () => {

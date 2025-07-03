@@ -11,18 +11,19 @@
   border-radius: 24px;
   color: white;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
-              0 0 0 1px rgba(255, 255, 255, 0.05);
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   min-width: 400px;
   width: 90%;
   max-width: 500px;
+  box-sizing: border-box;
 }
 
 @media (max-width: 767px) {
   .main-menu {
-    padding: 40px 30px;
+    padding: 40px 20px;
     min-width: unset;
-    width: 85%;
-    max-width: 360px;
+    width: calc(100vw - 40px);
+    max-width: none;
   }
 }
 
@@ -55,7 +56,7 @@
   margin: 16px 0;
   padding: 16px 20px;
   font-size: 15px;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 400;
   border: none;
   border-radius: 12px;
@@ -105,20 +106,18 @@
   padding: 18px 48px;
   font-size: 16px;
   font-weight: 500;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   letter-spacing: -0.01em;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3),
-              0 0 40px rgba(0, 255, 136, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.3), 0 0 40px rgba(0, 255, 136, 0.1);
   text-transform: uppercase;
 }
 
 .play-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 30px rgba(0, 255, 136, 0.4),
-              0 0 60px rgba(0, 255, 136, 0.2);
+  box-shadow: 0 6px 30px rgba(0, 255, 136, 0.4), 0 0 60px rgba(0, 255, 136, 0.2);
 }
 
 .play-button:active {

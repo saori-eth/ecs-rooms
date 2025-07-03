@@ -73,6 +73,23 @@ function handleHeartbeat(client) {
   client.ws.send(JSON.stringify({ type: "heartbeatAck" }));
 }
 
+function handleChatMessage(client, message) {
+  if (client.roomId) {
+    const room = getRoom(client.roomId);
+    if (room) {
+      const chatMessage = {
+        type: "chatMessage",
+        author: client.identity?.name || `Player${client.id}`,
+        text: message.text.substring(0, 200), // Limit message length
+        timestamp: Date.now()
+      };
+      
+      // Send to all players in the room including the sender
+      room.broadcastToAll(chatMessage);
+    }
+  }
+}
+
 export function handleConnection(ws) {
   const clientId = nextClientId++;
   const client = {
@@ -113,6 +130,10 @@ export function handleConnection(ws) {
 
         case "heartbeat":
           handleHeartbeat(client);
+          break;
+          
+        case "chatMessage":
+          handleChatMessage(client, message);
           break;
       }
     } catch (error) {

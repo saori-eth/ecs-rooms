@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import MobileControls from './MobileControls';
+import Chat from './Chat';
 import './GameUI.css';
 
 function GameUI({ roomInfo, gameManager }) {
@@ -31,6 +32,7 @@ function GameUI({ roomInfo, gameManager }) {
         <div>Players: <span>{roomInfo.playerCount}</span>/{roomInfo.maxPlayers}</div>
       </div>
       {isMobile && <MobileControls onMove={handleMobileMove} />}
+      <Chat gameManager={gameManager} />
     </>
   );
 }

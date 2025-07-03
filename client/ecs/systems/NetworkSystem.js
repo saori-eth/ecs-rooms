@@ -20,6 +20,7 @@ export function createNetworkSystem() {
   let onRoomUpdate = null
   let onGameStart = null
   let onDisconnect = null
+  let onChatMessage = null
 
   const connect = () => {
     ws = new WebSocket('ws://localhost:8080')
@@ -147,6 +148,16 @@ export function createNetworkSystem() {
             onRoomUpdate(roomId, message.playerCount, message.maxPlayers)
           }
           break
+          
+        case 'chatMessage':
+          if (onChatMessage) {
+            onChatMessage({
+              author: message.author,
+              text: message.text,
+              timestamp: message.timestamp
+            })
+          }
+          break
       }
     }
     
@@ -205,6 +216,15 @@ export function createNetworkSystem() {
         ws.send(JSON.stringify({ 
           type: 'joinGame',
           identity: identity
+        }))
+      }
+    },
+    
+    sendChatMessage(text) {
+      if (connected && ws && ws.readyState === WebSocket.OPEN && inRoom) {
+        ws.send(JSON.stringify({
+          type: 'chatMessage',
+          text: text
         }))
       }
     },
@@ -275,6 +295,12 @@ export function createNetworkSystem() {
   Object.defineProperty(networkSystem, 'onDisconnect', {
     set(callback) {
       onDisconnect = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onChatMessage', {
+    set(callback) {
+      onChatMessage = callback
     }
   })
   
