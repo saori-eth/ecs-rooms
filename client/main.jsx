@@ -25,8 +25,6 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 5, 5);
 camera.lookAt(0, 0, 0);
-console.log("[main] Initial camera position:", camera.position);
-console.log("[main] Initial camera target:", new THREE.Vector3(0, 0, 0));
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
