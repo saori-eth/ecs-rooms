@@ -21,12 +21,21 @@ export function createNetworkSystem() {
   let onGameStart = null
   let onDisconnect = null
   let onChatMessage = null
+  let onJoinedRoom = null
 
   const connect = () => {
     // Use wss:// for production, ws:// for development
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
+    
+    // In development, the client runs on port 3000/3001/etc but WebSocket server is on 8080
+    let host = window.location.host;
+    if (window.location.hostname === 'localhost' && 
+        (window.location.port === '3000' || window.location.port === '3001' || window.location.port === '3002')) {
+      host = 'localhost:8080';
+    }
+    
     const wsUrl = `${protocol}//${host}`;
+    console.log('Connecting to WebSocket at:', wsUrl);
     
     ws = new WebSocket(wsUrl)
     
@@ -54,9 +63,15 @@ export function createNetworkSystem() {
           break
           
         case 'joinedRoom':
+          localPlayerId = message.playerId
           roomId = message.roomId
           inRoom = true
           console.log(`Joined ${roomId}`)
+          
+          if (onJoinedRoom) {
+            // Pass the whole message as it contains roomType
+            onJoinedRoom(message)
+          }
           
           if (onGameStart) {
             onGameStart()
@@ -200,6 +215,8 @@ export function createNetworkSystem() {
     
     ws.onerror = (error) => {
       console.error('WebSocket error:', error)
+      console.error('WebSocket readyState:', ws.readyState)
+      console.error('WebSocket URL:', ws.url)
       if (onConnectionStatusChange) {
         onConnectionStatusChange('Connection error')
       }
@@ -208,6 +225,7 @@ export function createNetworkSystem() {
 
   const networkSystem = {
     init(w) {
+      console.log('NetworkSystem: Initializing with world:', w)
       world = w
       connect()
     },
@@ -306,6 +324,12 @@ export function createNetworkSystem() {
   Object.defineProperty(networkSystem, 'onChatMessage', {
     set(callback) {
       onChatMessage = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onJoinedRoom', {
+    set(callback) {
+      onJoinedRoom = callback
     }
   })
   

@@ -10,6 +10,7 @@ function handleJoinGame(client, room) {
     JSON.stringify({
       type: "joinedRoom",
       roomId: room.id,
+      roomType: "default-arena", // Add this line
       playerId: client.id,
       players: room.getPlayerList().filter((p) => p.id !== client.id),
       maxPlayers: MAX_PLAYERS_PER_ROOM,

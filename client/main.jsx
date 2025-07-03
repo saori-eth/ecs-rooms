@@ -11,6 +11,7 @@ import { createInterpolationSystem } from "./ecs/systems/InterpolationSystem.js"
 import { createPhysicsSystem } from "./ecs/systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./ecs/systems/AnimationSystem.js";
 import { createPlayer } from "./entities/Player.js";
+import { SceneManager } from "./src/SceneManager.js";
 
 // Three.js setup
 const scene = new THREE.Scene();
@@ -24,6 +25,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 2.5, 2.5);
 camera.lookAt(0, 0, 0);
+console.log('[main] Initial camera position:', camera.position);
+console.log('[main] Initial camera target:', new THREE.Vector3(0, 0, 0));
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -45,12 +48,7 @@ directionalLight.shadow.camera.top = 10;
 directionalLight.shadow.camera.bottom = -10;
 scene.add(directionalLight);
 
-const groundGeometry = new THREE.PlaneGeometry(50, 50);
-const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
-const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
-scene.add(ground);
+// Ground plane removed - using scene GLB instead
 
 // ECS setup
 const world = new World();
@@ -71,6 +69,10 @@ world.registerSystem(createAnimationSystem());
 
 window.scene = scene;
 window.physicsWorld = physicsSystem.world;
+
+const sceneManager = new SceneManager(scene, physicsSystem.world, world);
+
+// Debug cube removed
 
 // Game manager to bridge React and Three.js
 class GameManager {
@@ -104,6 +106,16 @@ class GameManager {
 
     networkSystem.onRoomUpdate = (roomId, playerCount, maxPlayers) => {
       callbacks.updateRoomInfo(roomId, playerCount, maxPlayers);
+    };
+
+    networkSystem.onJoinedRoom = (roomData) => {
+      console.log('[main] onJoinedRoom called with:', roomData);
+      if (roomData.roomType) {
+        console.log('[main] Loading room type:', roomData.roomType);
+        sceneManager.loadRoom(roomData.roomType);
+      } else {
+        console.warn('[main] No roomType in roomData');
+      }
     };
 
     networkSystem.onGameStart = () => {
@@ -189,7 +201,19 @@ function animate(time) {
   const deltaTime = (time - lastTime) / 1000;
   lastTime = time;
 
+  sceneManager.update(deltaTime);
   world.update(deltaTime);
+
+  // Simple camera follow for local player
+  if (gameManager.localPlayerId) {
+    const position = world.getComponent(gameManager.localPlayerId, "position");
+    if (position) {
+      camera.position.x = position.x;
+      camera.position.y = position.y + 2.5;
+      camera.position.z = position.z + 2.5;
+      camera.lookAt(position.x, position.y, position.z);
+    }
+  }
 
   renderer.render(scene, camera);
 }
