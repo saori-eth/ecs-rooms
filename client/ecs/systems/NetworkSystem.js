@@ -52,8 +52,8 @@ export function createNetworkSystem() {
             gameStateManager.updateRoomInfo(roomId, message.players.length + 1, message.maxPlayers)
           }
           
-          message.players.forEach(playerData => {
-            const remoteEntityId = createPlayer(world, playerData.position, false, window.physicsWorld, playerData.identity)
+          message.players.forEach(async playerData => {
+            const remoteEntityId = await createPlayer(world, playerData.position, false, window.physicsWorld, playerData.identity)
             world.addComponent(remoteEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
             remotePlayers.set(playerData.id, remoteEntityId)
           })
@@ -61,10 +61,11 @@ export function createNetworkSystem() {
           
         case 'playerJoined':
           if (inRoom) {
-            const newEntityId = createPlayer(world, message.player.position, false, window.physicsWorld, message.player.identity)
-            world.addComponent(newEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
-            remotePlayers.set(message.player.id, newEntityId)
-            console.log(`Player ${message.player.id} joined`)
+            createPlayer(world, message.player.position, false, window.physicsWorld, message.player.identity).then(newEntityId => {
+              world.addComponent(newEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
+              remotePlayers.set(message.player.id, newEntityId)
+              console.log(`Player ${message.player.id} joined`)
+            })
           }
           break
           

@@ -75,10 +75,10 @@ gameStateManager.playButton.addEventListener('click', () => {
   networkSystem.joinGame(identity)
 })
 
-gameStateManager.onStateChange = (newState) => {
+gameStateManager.onStateChange = async (newState) => {
   if (newState === 'playing' && !gameStarted) {
     const identity = gameStateManager.getPlayerIdentity()
-    localPlayerId = createPlayer(world, { x: 0, y: 2, z: 0 }, true, physicsSystem.world, identity)
+    localPlayerId = await createPlayer(world, { x: 0, y: 2, z: 0 }, true, physicsSystem.world, identity)
     gameStarted = true
   } else if (newState === 'menu' && gameStarted) {
     if (localPlayerId) {

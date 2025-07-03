@@ -16,12 +16,12 @@ export class IdentityManager {
     
     return {
       name: `Player${Math.floor(Math.random() * 1000)}`,
-      color: '#00ff00'
+      avatarId: 'BitcoinGuy'
     }
   }
   
-  saveIdentity(name, color) {
-    this.identity = { name, color }
+  saveIdentity(name, avatarId) {
+    this.identity = { name, avatarId }
     localStorage.setItem(this.storageKey, JSON.stringify(this.identity))
   }
   
@@ -29,8 +29,8 @@ export class IdentityManager {
     return this.identity.name
   }
   
-  getColor() {
-    return this.identity.color
+  getAvatarId() {
+    return this.identity.avatarId
   }
   
   getIdentity() {

@@ -56,15 +56,6 @@
     #playerCustomization input::placeholder {
       color: rgba(255, 255, 255, 0.5);
     }
-    #colorPreview {
-      display: inline-block;
-      width: 30px;
-      height: 30px;
-      margin-left: 10px;
-      vertical-align: middle;
-      border: 2px solid white;
-      border-radius: 5px;
-    }
     #playButton {
       background: #00ff00;
       color: black;
@@ -105,18 +96,13 @@
     <div id="playerCustomization">
       <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
       <div>
-        <label for="playerColor" style="display: inline-block;">Color:</label>
-        <select id="playerColor">
-          <option value="#00ff00">Green</option>
-          <option value="#ff0000">Red</option>
-          <option value="#0000ff">Blue</option>
-          <option value="#ffff00">Yellow</option>
-          <option value="#ff00ff">Magenta</option>
-          <option value="#00ffff">Cyan</option>
-          <option value="#ff8800">Orange</option>
-          <option value="#ff0088">Pink</option>
+        <label for="playerAvatar" style="display: inline-block;">Avatar:</label>
+        <select id="playerAvatar">
+          <option value="BitcoinGuy">Bitcoin Guy</option>
+          <option value="bayc">BAYC</option>
+          <option value="bezos">Bezos</option>
+          <option value="buterin">Buterin</option>
         </select>
-        <span id="colorPreview"></span>
       </div>
     </div>
     <button id="playButton" disabled>Play</button>

@@ -14,8 +14,7 @@ export class GameStateManager {
     this.roomIdSpan = document.getElementById('roomId')
     this.playerCountSpan = document.getElementById('playerCount')
     this.playerNameInput = document.getElementById('playerName')
-    this.playerColorSelect = document.getElementById('playerColor')
-    this.colorPreview = document.getElementById('colorPreview')
+    this.playerAvatarSelect = document.getElementById('playerAvatar')
     
     this.initializeUI()
   }
@@ -23,22 +22,13 @@ export class GameStateManager {
   initializeUI() {
     const identity = this.identityManager.getIdentity()
     this.playerNameInput.value = identity.name
-    this.playerColorSelect.value = identity.color
-    this.updateColorPreview()
-    
-    this.playerColorSelect.addEventListener('change', () => {
-      this.updateColorPreview()
-    })
+    this.playerAvatarSelect.value = identity.avatarId || 'BitcoinGuy'
     
     this.playButton.addEventListener('click', () => {
       const name = this.playerNameInput.value.trim() || `Player${Math.floor(Math.random() * 1000)}`
-      const color = this.playerColorSelect.value
-      this.identityManager.saveIdentity(name, color)
+      const avatarId = this.playerAvatarSelect.value
+      this.identityManager.saveIdentity(name, avatarId)
     })
-  }
-  
-  updateColorPreview() {
-    this.colorPreview.style.backgroundColor = this.playerColorSelect.value
   }
   
   setState(newState) {
