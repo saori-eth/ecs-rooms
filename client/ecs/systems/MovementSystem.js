@@ -1,5 +1,6 @@
 import { ComponentTypes } from "../components.js";
 import * as CANNON from "cannon-es";
+import * as THREE from "three";
 
 export function createMovementSystem() {
   return {
@@ -17,6 +18,7 @@ export function createMovementSystem() {
         );
         const input = world.getComponent(entityId, ComponentTypes.INPUT);
         const player = world.getComponent(entityId, ComponentTypes.PLAYER);
+        const vrmComponent = world.getComponent(entityId, ComponentTypes.VRM);
 
         if (!player.isLocal || !physicsComponent.body) return;
 
@@ -29,6 +31,16 @@ export function createMovementSystem() {
           currentVelocity.y,
           z * moveSpeed
         );
+
+        // Rotate VRM to face movement direction
+        if (vrmComponent && vrmComponent.vrm && (x !== 0 || z !== 0)) {
+          const angle = Math.atan2(x, z) + Math.PI;
+          const targetQuaternion = new THREE.Quaternion().setFromAxisAngle(
+            new THREE.Vector3(0, 1, 0),
+            angle
+          );
+          vrmComponent.vrm.scene.quaternion.slerp(targetQuaternion, 0.15);
+        }
 
         physicsComponent.body.velocity.y = Math.max(
           -10,

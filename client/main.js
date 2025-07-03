@@ -6,6 +6,7 @@ import { createInputSystem } from './ecs/systems/InputSystem.js'
 import { createNetworkSystem } from './ecs/systems/NetworkSystem.js'
 import { createInterpolationSystem } from './ecs/systems/InterpolationSystem.js'
 import { createPhysicsSystem } from './ecs/systems/PhysicsSystem.js'
+import { createAnimationSystem } from './ecs/systems/AnimationSystem.js'
 import { createPlayer } from './entities/Player.js'
 import { GameStateManager } from './GameStateManager.js'
 
@@ -63,6 +64,7 @@ world.registerSystem(physicsSystem)
 world.registerSystem(createInterpolationSystem())
 world.registerSystem(createRenderSystem(scene))
 world.registerSystem(networkSystem)
+world.registerSystem(createAnimationSystem())
 
 window.scene = scene
 window.physicsWorld = physicsSystem.world

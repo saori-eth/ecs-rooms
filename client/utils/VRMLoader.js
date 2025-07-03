@@ -32,7 +32,7 @@ class VRMManager {
         url,
         (gltf) => {
           const vrm = gltf.userData.vrm;
-          
+
           // Optimize the VRM
           VRMUtils.removeUnnecessaryVertices(gltf.scene);
           VRMUtils.removeUnnecessaryJoints(gltf.scene);

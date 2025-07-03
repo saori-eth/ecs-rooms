@@ -90,6 +90,8 @@ export function createNetworkSystem() {
           const movingEntityId = remotePlayers.get(message.id)
           if (movingEntityId) {
             const interpolation = world.getComponent(movingEntityId, ComponentTypes.INTERPOLATION)
+            const animation = world.getComponent(movingEntityId, ComponentTypes.ANIMATION)
+            
             if (interpolation) {
               interpolation.positionBuffer.push({
                 position: {
@@ -100,8 +102,28 @@ export function createNetworkSystem() {
                 timestamp: message.timestamp || Date.now()
               })
               
+              if (message.rotation) {
+                interpolation.rotationBuffer.push({
+                  rotation: message.rotation,
+                  timestamp: message.timestamp || Date.now()
+                })
+              }
+              
               if (interpolation.positionBuffer.length > 20) {
                 interpolation.positionBuffer.shift()
+              }
+              if (interpolation.rotationBuffer.length > 20) {
+                interpolation.rotationBuffer.shift()
+              }
+            }
+            
+            if (animation && message.isMoving !== undefined) {
+              const actionToPlay = message.isMoving ? animation.actions.walking : animation.actions.idle
+              if (actionToPlay !== animation.currentAction) {
+                const lastAction = animation.currentAction
+                animation.currentAction = actionToPlay
+                lastAction.fadeOut(0.2)
+                animation.currentAction.reset().fadeIn(0.2).play()
               }
             }
           }
@@ -191,16 +213,23 @@ export function createNetworkSystem() {
         const player = world.getComponent(entityId, ComponentTypes.PLAYER)
         if (player.isLocal) {
           const position = world.getComponent(entityId, ComponentTypes.POSITION)
+          const input = world.getComponent(entityId, ComponentTypes.INPUT)
+          const vrm = world.getComponent(entityId, ComponentTypes.VRM)
           
-          ws.send(JSON.stringify({
-            type: 'move',
-            position: {
-              x: position.x,
-              y: position.y,
-              z: position.z
-            },
-            timestamp: Date.now()
-          }))
+          if (position && input && vrm) {
+            const isMoving = input.moveVector.x !== 0 || input.moveVector.z !== 0
+            ws.send(JSON.stringify({
+              type: 'move',
+              position: {
+                x: position.x,
+                y: position.y,
+                z: position.z
+              },
+              rotation: vrm.vrm.scene.quaternion.toArray(),
+              isMoving,
+              timestamp: Date.now()
+            }))
+          }
         }
       })
     }

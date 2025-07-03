@@ -8,6 +8,7 @@ export const ComponentTypes = {
   INTERPOLATION: 1 << 6,
   PHYSICS_BODY: 1 << 7,
   VRM: 1 << 8,
+  ANIMATION: 1 << 9,
 };
 
 export function createPositionComponent(x = 0, y = 0, z = 0) {
@@ -49,6 +50,7 @@ export function createInterpolationComponent() {
     startTime: 0,
     duration: 100,
     positionBuffer: [],
+    rotationBuffer: [],
   };
 }
 
@@ -58,4 +60,13 @@ export function createPhysicsBodyComponent(body) {
 
 export function createVRMComponent(vrm) {
   return { vrm };
+}
+
+export function createAnimationComponent(data) {
+  return {
+    mixer: data.mixer,
+    clips: data.clips,
+    actions: data.actions,
+    currentAction: data.currentAction,
+  };
 }

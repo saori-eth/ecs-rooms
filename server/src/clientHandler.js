@@ -58,6 +58,8 @@ function handleMove(client, message) {
           type: "playerMoved",
           id: client.id,
           position: message.position,
+          rotation: message.rotation,
+          isMoving: message.isMoving,
           timestamp: Date.now(),
         },
         client.id

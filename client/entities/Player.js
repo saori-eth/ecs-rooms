@@ -10,8 +10,10 @@ import {
   createNetworkComponent,
   createPhysicsBodyComponent,
   createVRMComponent,
+  createAnimationComponent,
 } from "../ecs/components.js";
 import { vrmManager } from "../utils/VRMLoader.js";
+import { animationManager } from "../utils/AnimationManager.js";
 
 export async function createPlayer(
   world,
@@ -85,6 +87,27 @@ export async function createPlayer(
     createPlayerComponent(isLocal)
   );
   world.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
+
+  // Load animations
+  const clips = await animationManager.loadAndRetarget(vrm);
+  const mixer = new THREE.AnimationMixer(vrm.scene);
+  const actions = {
+    idle: mixer.clipAction(clips.idle),
+    walking: mixer.clipAction(clips.walking),
+  };
+
+  actions.idle.play();
+
+  world.addComponent(
+    entityId,
+    ComponentTypes.ANIMATION,
+    createAnimationComponent({
+      mixer,
+      clips,
+      actions,
+      currentAction: actions.idle,
+    })
+  );
 
   if (physicsWorld) {
     const shape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
