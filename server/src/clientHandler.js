@@ -104,8 +104,8 @@ function handleGameEvent(client, message) {
         timestamp: Date.now(),
       };
 
-      // Broadcast to all players including the sender for consistency
-      room.broadcastToAll(gameEvent);
+      // Broadcast to other players in the room
+      room.broadcast(gameEvent, client.id);
     }
   }
 }
