@@ -79,9 +79,22 @@ export class World {
     }
   }
 
-  update(deltaTime) {
+  addSystem(system) {
+    return this.registerSystem(system)
+  }
+
+  update(deltaTime, ...args) {
     for (const system of this.systems) {
-      system.update(this, deltaTime)
+      system.update(this, deltaTime, ...args)
     }
+  }
+
+  findEntityWithComponent(componentType) {
+    for (const [entityId, entityComponents] of this.entities) {
+      if (entityComponents.has(componentType)) {
+        return { id: entityId }
+      }
+    }
+    return null
   }
 }

@@ -9,6 +9,7 @@ export const ComponentTypes = {
   PHYSICS_BODY: 1 << 7,
   VRM: 1 << 8,
   ANIMATION: 1 << 9,
+  CAMERA_TARGET: 1 << 10,
 };
 
 export function createPositionComponent(x = 0, y = 0, z = 0) {
@@ -69,4 +70,8 @@ export function createAnimationComponent(data) {
     actions: data.actions,
     currentAction: data.currentAction,
   };
+}
+
+export function createCameraTargetComponent() {
+  return {};
 }

@@ -11,7 +11,6 @@ export function startHeartbeat() {
     rooms.forEach((room) => {
       room.players.forEach((client, id) => {
         if (now - client.lastHeartbeat > TIMEOUT) {
-          console.log(`Client ${id} timed out`);
           client.ws.close();
         }
       });

@@ -12,6 +12,7 @@ import { createPhysicsSystem } from "./ecs/systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./ecs/systems/AnimationSystem.js";
 import { createPlayer } from "./entities/Player.js";
 import { SceneManager } from "./src/SceneManager.js";
+import { CameraSystem } from "./ecs/systems/CameraSystem.js";
 
 // Three.js setup
 const scene = new THREE.Scene();
@@ -25,8 +26,6 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(0, 5, 5);
 camera.lookAt(0, 0, 0);
-console.log("[main] Initial camera position:", camera.position);
-console.log("[main] Initial camera target:", new THREE.Vector3(0, 0, 0));
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -59,13 +58,16 @@ world.physicsWorld = physicsSystem.world;
 const networkSystem = createNetworkSystem();
 const inputSystem = createInputSystem();
 
+const animationSystem = createAnimationSystem();
+
 world.registerSystem(inputSystem);
 world.registerSystem(createMovementSystem());
 world.registerSystem(physicsSystem);
 world.registerSystem(createInterpolationSystem());
 world.registerSystem(createRenderSystem(scene));
 world.registerSystem(networkSystem);
-world.registerSystem(createAnimationSystem());
+world.registerSystem(animationSystem);
+world.addSystem(new CameraSystem());
 
 window.scene = scene;
 window.physicsWorld = physicsSystem.world;
@@ -114,9 +116,7 @@ class GameManager {
     };
 
     networkSystem.onJoinedRoom = (roomData) => {
-      console.log("[main] onJoinedRoom called with:", roomData);
       if (roomData.roomType) {
-        console.log("[main] Loading room type:", roomData.roomType);
         sceneManager.loadRoom(roomData.roomType);
       } else {
         console.warn("[main] No roomType in roomData");
@@ -124,17 +124,20 @@ class GameManager {
     };
 
     networkSystem.onGameStart = () => {
-      callbacks.setGameState("playing");
+      // Don't set playing state here anymore - wait for idle animation
+      // callbacks.setGameState("playing");
     };
 
     networkSystem.onDisconnect = () => {
+      // Reset animation system notification flag
+      animationSystem.notifiedIdle = false;
       callbacks.setGameState("menu");
     };
-    
+
     networkSystem.onPlayerJoined = (playerId) => {
       sceneManager.onPlayerJoin(playerId);
     };
-    
+
     networkSystem.onPlayerLeft = (playerId) => {
       sceneManager.onPlayerLeave(playerId);
     };
@@ -147,8 +150,8 @@ class GameManager {
     };
   }
 
-  async onPlay(playerIdentity) {
-    networkSystem.joinGame(playerIdentity);
+  async onPlay(playerIdentity, roomType) {
+    networkSystem.joinGame(playerIdentity, roomType);
   }
 
   async startGame(playerIdentity) {
@@ -183,6 +186,9 @@ class GameManager {
       world.destroyEntity(this.localPlayerId);
       this.localPlayerId = null;
       this.gameStarted = false;
+      
+      // Reset animation system notification flag
+      animationSystem.notifiedIdle = false;
     }
   }
 
@@ -198,6 +204,13 @@ networkSystem.setGameManager(gameManager);
 
 // Bind the send chat message method
 gameManager.sendChatMessage = gameManager.sendChatMessage.bind(gameManager);
+
+// Set up animation system callback to transition from loading to playing
+animationSystem.onLocalPlayerIdleAnimation = () => {
+  if (gameManager && gameManager.stateCallbacks) {
+    gameManager.stateCallbacks.setGameState('playing');
+  }
+};
 
 // Window resize handler
 window.addEventListener("resize", () => {
@@ -215,18 +228,7 @@ function animate(time) {
   lastTime = time;
 
   sceneManager.update(deltaTime);
-  world.update(deltaTime);
-
-  // Simple camera follow for local player
-  if (gameManager.localPlayerId) {
-    const position = world.getComponent(gameManager.localPlayerId, "position");
-    if (position) {
-      camera.position.x = position.x;
-      camera.position.y = position.y + 2.5;
-      camera.position.z = position.z + 2.5;
-      camera.lookAt(position.x, position.y, position.z);
-    }
-  }
+  world.update(deltaTime, camera);
 
   renderer.render(scene, camera);
 }

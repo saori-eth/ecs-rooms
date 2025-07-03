@@ -10,7 +10,7 @@ function handleJoinGame(client, room) {
     JSON.stringify({
       type: "joinedRoom",
       roomId: room.id,
-      roomType: "default-arena", // Add this line
+      roomType: room.roomType,
       playerId: client.id,
       players: room.getPlayerList().filter((p) => p.id !== client.id),
       maxPlayers: MAX_PLAYERS_PER_ROOM,
@@ -82,9 +82,9 @@ function handleChatMessage(client, message) {
         type: "chatMessage",
         author: client.identity?.name || `Player${client.id}`,
         text: message.text.substring(0, 200), // Limit message length
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       // Send to all players in the room including the sender
       room.broadcastToAll(chatMessage);
     }
@@ -101,11 +101,11 @@ function handleGameEvent(client, message) {
         eventType: message.eventType,
         data: message.data,
         playerId: client.id,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
-      // Broadcast to all players including the sender for consistency
-      room.broadcastToAll(gameEvent);
+
+      // Broadcast to other players in the room
+      room.broadcast(gameEvent, client.id);
     }
   }
 }
@@ -120,9 +120,6 @@ export function handleConnection(ws) {
     lastHeartbeat: Date.now(),
     identity: null,
   };
-
-  console.log(`Client ${clientId} connected`);
-
   ws.send(
     JSON.stringify({
       type: "connected",
@@ -138,9 +135,10 @@ export function handleConnection(ws) {
         case "joinGame":
           client.identity = message.identity || {
             name: `Player${client.id}`,
-            avatarId: "low-poly-girl",
+            avatarId: "wassie",
           };
-          const room = findOrCreateRoom();
+          const roomType = message.roomType || "default-arena";
+          const room = findOrCreateRoom(roomType);
           handleJoinGame(client, room);
           break;
 
@@ -151,11 +149,11 @@ export function handleConnection(ws) {
         case "heartbeat":
           handleHeartbeat(client);
           break;
-          
+
         case "chatMessage":
           handleChatMessage(client, message);
           break;
-          
+
         case "gameEvent":
           handleGameEvent(client, message);
           break;
@@ -166,8 +164,6 @@ export function handleConnection(ws) {
   });
 
   ws.on("close", () => {
-    console.log(`Client ${client.id} disconnected`);
-
     if (client.roomId) {
       const room = getRoom(client.roomId);
       if (room) {

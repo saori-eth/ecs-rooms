@@ -1,405 +1,451 @@
-import { ComponentTypes, createInterpolationComponent } from '../components.js'
-import { createPlayer } from '../../entities/Player.js'
+import { ComponentTypes, createInterpolationComponent } from "../components.js";
+import { createPlayer } from "../../entities/Player.js";
 
 export function createNetworkSystem() {
-  let ws = null
-  let localPlayerId = null
-  let world = null
-  let connected = false
-  let heartbeatInterval = null
-  let lastUpdateTime = 0
-  const updateRate = 50
-  const remotePlayers = new Map()
-  let gameManager = null
-  let roomId = null
-  let inRoom = false
-  
+  let ws = null;
+  let localPlayerId = null;
+  let world = null;
+  let connected = false;
+  let heartbeatInterval = null;
+  let lastUpdateTime = 0;
+  const updateRate = 50;
+  const remotePlayers = new Map();
+  let gameManager = null;
+  let roomId = null;
+  let inRoom = false;
+
   // Callback functions
-  let onConnectionStatusChange = null
-  let onConnectionReady = null
-  let onRoomUpdate = null
-  let onGameStart = null
-  let onDisconnect = null
-  let onChatMessage = null
-  let onJoinedRoom = null
-  let onGameEvent = null
-  let onPlayerJoined = null
-  let onPlayerLeft = null
+  let onConnectionStatusChange = null;
+  let onConnectionReady = null;
+  let onRoomUpdate = null;
+  let onGameStart = null;
+  let onDisconnect = null;
+  let onChatMessage = null;
+  let onJoinedRoom = null;
+  let onGameEvent = null;
+  let onPlayerJoined = null;
+  let onPlayerLeft = null;
 
   const connect = () => {
     // Use wss:// for production, ws:// for development
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+
     // In development, the client runs on port 3000/3001/etc but WebSocket server is on 8080
     let host = window.location.host;
-    if (window.location.hostname === 'localhost' && 
-        (window.location.port === '3000' || window.location.port === '3001' || window.location.port === '3002')) {
-      host = 'localhost:8080';
+    if (
+      window.location.hostname === "localhost" &&
+      (window.location.port === "3000" ||
+        window.location.port === "3001" ||
+        window.location.port === "3002")
+    ) {
+      host = "localhost:8080";
     }
-    
+
     const wsUrl = `${protocol}//${host}`;
-    console.log('Connecting to WebSocket at:', wsUrl);
-    
-    ws = new WebSocket(wsUrl)
-    
+    ws = new WebSocket(wsUrl);
+
     ws.onopen = () => {
-      console.log('Connected to server')
-      connected = true
-      
-      if (onConnectionStatusChange) onConnectionStatusChange('Connected')
-      if (onConnectionReady) onConnectionReady(true)
-      
+      console.log("Connected to server");
+      connected = true;
+
+      if (onConnectionStatusChange) onConnectionStatusChange("Connected");
+      if (onConnectionReady) onConnectionReady(true);
+
       heartbeatInterval = setInterval(() => {
         if (connected) {
-          ws.send(JSON.stringify({ type: 'heartbeat' }))
+          ws.send(JSON.stringify({ type: "heartbeat" }));
         }
-      }, 10000)
-    }
-    
+      }, 10000);
+    };
+
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data)
-      
+      const message = JSON.parse(event.data);
+
       switch (message.type) {
-        case 'connected':
-          localPlayerId = message.id
-          console.log(`Assigned client ID: ${localPlayerId}`)
-          break
-          
-        case 'joinedRoom':
-          localPlayerId = message.playerId
-          roomId = message.roomId
-          inRoom = true
-          console.log(`Joined ${roomId}`)
-          
+        case "connected":
+          localPlayerId = message.id;
+          break;
+
+        case "joinedRoom":
+          localPlayerId = message.playerId;
+          roomId = message.roomId;
+          inRoom = true;
+          console.log(`Joined ${roomId}`);
+
           if (onJoinedRoom) {
             // Pass the whole message as it contains roomType
-            onJoinedRoom(message)
+            onJoinedRoom(message);
           }
-          
+
           if (onGameStart) {
-            onGameStart()
+            onGameStart();
           }
           if (onRoomUpdate) {
-            onRoomUpdate(roomId, message.players.length + 1, message.maxPlayers)
+            onRoomUpdate(
+              roomId,
+              message.players.length + 1,
+              message.maxPlayers
+            );
           }
-          
+
           if (gameManager) {
-            const identity = gameManager.stateCallbacks.getPlayerIdentity()
-            gameManager.startGame(identity)
+            const identity = gameManager.stateCallbacks.getPlayerIdentity();
+            gameManager.startGame(identity);
           }
-          
-          message.players.forEach(async playerData => {
-            const remoteEntityId = await createPlayer(world, playerData.position, false, window.physicsWorld, playerData.identity)
-            world.addComponent(remoteEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
-            remotePlayers.set(playerData.id, remoteEntityId)
-          })
-          break
-          
-        case 'playerJoined':
+
+          message.players.forEach(async (playerData) => {
+            const remoteEntityId = await createPlayer(
+              world,
+              playerData.position,
+              false,
+              window.physicsWorld,
+              playerData.identity
+            );
+            world.addComponent(
+              remoteEntityId,
+              ComponentTypes.INTERPOLATION,
+              createInterpolationComponent()
+            );
+            remotePlayers.set(playerData.id, remoteEntityId);
+          });
+          break;
+
+        case "playerJoined":
           if (inRoom) {
-            createPlayer(world, message.player.position, false, window.physicsWorld, message.player.identity).then(newEntityId => {
-              world.addComponent(newEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
-              remotePlayers.set(message.player.id, newEntityId)
-              console.log(`Player ${message.player.id} joined`)
+            createPlayer(
+              world,
+              message.player.position,
+              false,
+              window.physicsWorld,
+              message.player.identity
+            ).then((newEntityId) => {
+              world.addComponent(
+                newEntityId,
+                ComponentTypes.INTERPOLATION,
+                createInterpolationComponent()
+              );
+              remotePlayers.set(message.player.id, newEntityId);
+              console.log(`Player ${message.player.id} joined`);
               if (onPlayerJoined) {
-                onPlayerJoined(message.player.id)
+                onPlayerJoined(message.player.id);
               }
-            })
+            });
           }
-          break
-          
-        case 'playerLeft':
-          const leavingEntityId = remotePlayers.get(message.id)
+          break;
+
+        case "playerLeft":
+          const leavingEntityId = remotePlayers.get(message.id);
           if (leavingEntityId) {
-            const meshComponent = world.getComponent(leavingEntityId, ComponentTypes.MESH)
+            const meshComponent = world.getComponent(
+              leavingEntityId,
+              ComponentTypes.MESH
+            );
             if (meshComponent && meshComponent.mesh) {
-              window.scene.remove(meshComponent.mesh)
+              window.scene.remove(meshComponent.mesh);
             }
-            const physicsComponent = world.getComponent(leavingEntityId, ComponentTypes.PHYSICS_BODY)
+            const physicsComponent = world.getComponent(
+              leavingEntityId,
+              ComponentTypes.PHYSICS_BODY
+            );
             if (physicsComponent && physicsComponent.body) {
-              window.physicsWorld.removeBody(physicsComponent.body)
+              window.physicsWorld.removeBody(physicsComponent.body);
             }
-            world.destroyEntity(leavingEntityId)
-            remotePlayers.delete(message.id)
-            console.log(`Player ${message.id} left`)
+            world.destroyEntity(leavingEntityId);
+            remotePlayers.delete(message.id);
+            console.log(`Player ${message.id} left`);
             if (onPlayerLeft) {
-              onPlayerLeft(message.id)
+              onPlayerLeft(message.id);
             }
           }
-          break
-          
-        case 'playerMoved':
-          const movingEntityId = remotePlayers.get(message.id)
+          break;
+
+        case "playerMoved":
+          const movingEntityId = remotePlayers.get(message.id);
           if (movingEntityId) {
-            const interpolation = world.getComponent(movingEntityId, ComponentTypes.INTERPOLATION)
-            const animation = world.getComponent(movingEntityId, ComponentTypes.ANIMATION)
-            
+            const interpolation = world.getComponent(
+              movingEntityId,
+              ComponentTypes.INTERPOLATION
+            );
+            const animation = world.getComponent(
+              movingEntityId,
+              ComponentTypes.ANIMATION
+            );
+
             if (interpolation) {
               // Push position data to position buffer
               interpolation.positionBuffer.push({
                 position: {
                   x: message.position.x,
                   y: message.position.y,
-                  z: message.position.z
+                  z: message.position.z,
                 },
-                timestamp: message.timestamp
-              })
-              
+                timestamp: message.timestamp,
+              });
+
               // Push rotation data to rotation buffer
               interpolation.rotationBuffer.push({
                 rotation: message.rotation,
-                timestamp: message.timestamp
-              })
-              
+                timestamp: message.timestamp,
+              });
+
               // Maintain buffer sizes
               if (interpolation.positionBuffer.length > 20) {
-                interpolation.positionBuffer.shift()
+                interpolation.positionBuffer.shift();
               }
               if (interpolation.rotationBuffer.length > 20) {
-                interpolation.rotationBuffer.shift()
+                interpolation.rotationBuffer.shift();
               }
             }
-            
+
             if (animation && message.isMoving !== undefined) {
-              const actionToPlay = message.isMoving ? animation.actions.walking : animation.actions.idle
+              const actionToPlay = message.isMoving
+                ? animation.actions.walking
+                : animation.actions.idle;
               if (actionToPlay !== animation.currentAction) {
-                const lastAction = animation.currentAction
-                animation.currentAction = actionToPlay
-                lastAction.fadeOut(0.2)
-                animation.currentAction.reset().fadeIn(0.2).play()
+                const lastAction = animation.currentAction;
+                animation.currentAction = actionToPlay;
+                lastAction.fadeOut(0.2);
+                animation.currentAction.reset().fadeIn(0.2).play();
               }
             }
           }
-          break
-          
-        case 'roomUpdate':
+          break;
+
+        case "roomUpdate":
           if (onRoomUpdate && inRoom) {
-            onRoomUpdate(roomId, message.playerCount, message.maxPlayers)
+            onRoomUpdate(roomId, message.playerCount, message.maxPlayers);
           }
-          break
-          
-        case 'chatMessage':
-          console.log('[NetworkSystem] Received chat message:', message);
+          break;
+
+        case "chatMessage":
           if (onChatMessage) {
             onChatMessage({
               author: message.author,
               text: message.text,
-              timestamp: message.timestamp
-            })
+              timestamp: message.timestamp,
+            });
           } else {
-            console.error('[NetworkSystem] No onChatMessage handler!');
+            console.error("[NetworkSystem] No onChatMessage handler!");
           }
-          break
-          
-        case 'gameEvent':
-          console.log('[NetworkSystem] Received game event:', message);
+          break;
+
+        case "gameEvent":
           if (onGameEvent) {
             onGameEvent({
               eventType: message.eventType,
               data: message.data,
               playerId: message.playerId,
-              timestamp: message.timestamp
-            })
+              timestamp: message.timestamp,
+            });
           } else {
-            console.error('[NetworkSystem] No onGameEvent handler!');
+            console.error("[NetworkSystem] No onGameEvent handler!");
           }
-          break
+          break;
       }
-    }
-    
+    };
+
     ws.onclose = () => {
-      console.log('Disconnected from server')
-      connected = false
-      inRoom = false
-      roomId = null
-      
-      if (onConnectionStatusChange) onConnectionStatusChange('Disconnected. Reconnecting...')
-      if (onConnectionReady) onConnectionReady(false)
-      if (onDisconnect) onDisconnect()
-      if (gameManager) gameManager.stopGame()
-      
+      console.log("Disconnected from server");
+      connected = false;
+      inRoom = false;
+      roomId = null;
+
+      if (onConnectionStatusChange)
+        onConnectionStatusChange("Disconnected. Reconnecting...");
+      if (onConnectionReady) onConnectionReady(false);
+      if (onDisconnect) onDisconnect();
+      if (gameManager) gameManager.stopGame();
+
       if (heartbeatInterval) {
-        clearInterval(heartbeatInterval)
-        heartbeatInterval = null
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
       }
-      
+
       remotePlayers.forEach((entityId) => {
-        const meshComponent = world.getComponent(entityId, ComponentTypes.MESH)
+        const meshComponent = world.getComponent(entityId, ComponentTypes.MESH);
         if (meshComponent && meshComponent.mesh) {
-          window.scene.remove(meshComponent.mesh)
+          window.scene.remove(meshComponent.mesh);
         }
-        const physicsComponent = world.getComponent(entityId, ComponentTypes.PHYSICS_BODY)
+        const physicsComponent = world.getComponent(
+          entityId,
+          ComponentTypes.PHYSICS_BODY
+        );
         if (physicsComponent && physicsComponent.body) {
-          window.physicsWorld.removeBody(physicsComponent.body)
+          window.physicsWorld.removeBody(physicsComponent.body);
         }
-        world.destroyEntity(entityId)
-      })
-      remotePlayers.clear()
-      
-      setTimeout(connect, 3000)
-    }
-    
+        world.destroyEntity(entityId);
+      });
+      remotePlayers.clear();
+
+      setTimeout(connect, 3000);
+    };
+
     ws.onerror = (error) => {
-      console.error('WebSocket error:', error)
-      console.error('WebSocket readyState:', ws.readyState)
-      console.error('WebSocket URL:', ws.url)
+      console.error("WebSocket error:", error);
+      console.error("WebSocket readyState:", ws.readyState);
+      console.error("WebSocket URL:", ws.url);
       if (onConnectionStatusChange) {
-        onConnectionStatusChange('Connection error')
+        onConnectionStatusChange("Connection error");
       }
-    }
-  }
+    };
+  };
 
   const networkSystem = {
     init(w) {
-      console.log('NetworkSystem: Initializing with world:', w)
-      world = w
-      connect()
+      world = w;
+      connect();
     },
-    
+
     setGameManager(gm) {
-      gameManager = gm
+      gameManager = gm;
     },
-    
-    joinGame(identity) {
+
+    joinGame(identity, roomType) {
       if (connected && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ 
-          type: 'joinGame',
-          identity: identity
-        }))
+        ws.send(
+          JSON.stringify({
+            type: "joinGame",
+            identity: identity,
+            roomType: roomType,
+          })
+        );
       }
     },
-    
+
     sendChatMessage(text) {
-      console.log('[NetworkSystem] sendChatMessage called with:', text);
-      console.log('[NetworkSystem] connected:', connected, 'ws ready:', ws && ws.readyState === WebSocket.OPEN, 'inRoom:', inRoom);
-      
       if (connected && ws && ws.readyState === WebSocket.OPEN && inRoom) {
         const message = {
-          type: 'chatMessage',
-          text: text
+          type: "chatMessage",
+          text: text,
         };
-        console.log('[NetworkSystem] Sending chat message:', message);
         ws.send(JSON.stringify(message));
       } else {
-        console.error('[NetworkSystem] Cannot send chat message - not connected or not in room');
+        console.error(
+          "[NetworkSystem] Cannot send chat message - not connected or not in room"
+        );
       }
     },
-    
+
     sendGameEvent(eventType, data) {
-      console.log('[NetworkSystem] sendGameEvent called:', eventType, data);
-      console.log('[NetworkSystem] connected:', connected, 'ws ready:', ws && ws.readyState === WebSocket.OPEN, 'inRoom:', inRoom);
-      
       if (connected && ws && ws.readyState === WebSocket.OPEN && inRoom) {
         const message = {
-          type: 'gameEvent',
+          type: "gameEvent",
           eventType: eventType,
-          data: data
+          data: data,
         };
-        console.log('[NetworkSystem] Sending game event:', message);
         ws.send(JSON.stringify(message));
       } else {
-        console.error('[NetworkSystem] Cannot send game event - not connected or not in room');
+        console.error(
+          "[NetworkSystem] Cannot send game event - not connected or not in room"
+        );
       }
     },
 
     update(world, deltaTime) {
-      if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !inRoom) return
-      
-      const now = Date.now()
-      if (now - lastUpdateTime < updateRate) return
-      lastUpdateTime = now
-      
+      if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !inRoom)
+        return;
+
+      const now = Date.now();
+      if (now - lastUpdateTime < updateRate) return;
+      lastUpdateTime = now;
+
       const localPlayers = world.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.PLAYER
-      )
-      
-      localPlayers.forEach(entityId => {
-        const player = world.getComponent(entityId, ComponentTypes.PLAYER)
+      );
+
+      localPlayers.forEach((entityId) => {
+        const player = world.getComponent(entityId, ComponentTypes.PLAYER);
         if (player.isLocal) {
-          const position = world.getComponent(entityId, ComponentTypes.POSITION)
-          const input = world.getComponent(entityId, ComponentTypes.INPUT)
-          const vrm = world.getComponent(entityId, ComponentTypes.VRM)
-          
+          const position = world.getComponent(
+            entityId,
+            ComponentTypes.POSITION
+          );
+          const input = world.getComponent(entityId, ComponentTypes.INPUT);
+          const vrm = world.getComponent(entityId, ComponentTypes.VRM);
+
           if (position && input && vrm) {
-            const isMoving = input.moveVector.x !== 0 || input.moveVector.z !== 0
-            ws.send(JSON.stringify({
-              type: 'move',
-              position: {
-                x: position.x,
-                y: position.y,
-                z: position.z
-              },
-              rotation: vrm.vrm.scene.quaternion.toArray(),
-              isMoving,
-              timestamp: Date.now()
-            }))
+            const isMoving =
+              input.moveVector.x !== 0 || input.moveVector.z !== 0;
+            ws.send(
+              JSON.stringify({
+                type: "move",
+                position: {
+                  x: position.x,
+                  y: position.y,
+                  z: position.z,
+                },
+                rotation: vrm.vrm.scene.quaternion.toArray(),
+                isMoving,
+                timestamp: Date.now(),
+              })
+            );
           }
         }
-      })
-    }
-  }
-  
+      });
+    },
+  };
+
   // Define setter properties
-  Object.defineProperty(networkSystem, 'onConnectionStatusChange', {
+  Object.defineProperty(networkSystem, "onConnectionStatusChange", {
     set(callback) {
-      onConnectionStatusChange = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onConnectionReady', {
+      onConnectionStatusChange = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onConnectionReady", {
     set(callback) {
-      onConnectionReady = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onRoomUpdate', {
+      onConnectionReady = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onRoomUpdate", {
     set(callback) {
-      onRoomUpdate = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onGameStart', {
+      onRoomUpdate = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onGameStart", {
     set(callback) {
-      onGameStart = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onDisconnect', {
+      onGameStart = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onDisconnect", {
     set(callback) {
-      onDisconnect = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onChatMessage', {
+      onDisconnect = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onChatMessage", {
     set(callback) {
-      onChatMessage = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onJoinedRoom', {
+      onChatMessage = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onJoinedRoom", {
     set(callback) {
-      onJoinedRoom = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onGameEvent', {
+      onJoinedRoom = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onGameEvent", {
     set(callback) {
-      onGameEvent = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onPlayerJoined', {
+      onGameEvent = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onPlayerJoined", {
     set(callback) {
-      onPlayerJoined = callback
-    }
-  })
-  
-  Object.defineProperty(networkSystem, 'onPlayerLeft', {
+      onPlayerJoined = callback;
+    },
+  });
+
+  Object.defineProperty(networkSystem, "onPlayerLeft", {
     set(callback) {
-      onPlayerLeft = callback
-    }
-  })
-  
-  return networkSystem
+      onPlayerLeft = callback;
+    },
+  });
+
+  return networkSystem;
 }

@@ -2,6 +2,9 @@ import { ComponentTypes } from "../components.js";
 
 export function createAnimationSystem() {
   return {
+    onLocalPlayerIdleAnimation: null,
+    notifiedIdle: false,
+    
     update(world, deltaTime) {
       const entities = world.getEntitiesWithComponents(
         ComponentTypes.ANIMATION,
@@ -29,6 +32,24 @@ export function createAnimationSystem() {
 
         anim.mixer.update(deltaTime);
       });
+      
+      // Check for local player with idle animation
+      if (!this.notifiedIdle && this.onLocalPlayerIdleAnimation) {
+        const localPlayerEntities = world.getEntitiesWithComponents(
+          ComponentTypes.ANIMATION,
+          'localPlayer'
+        );
+        
+        localPlayerEntities.forEach((entityId) => {
+          const anim = world.getComponent(entityId, ComponentTypes.ANIMATION);
+          
+          // Check if idle animation is playing
+          if (anim.currentAction === anim.actions.idle && anim.actions.idle.isRunning()) {
+            this.notifiedIdle = true;
+            this.onLocalPlayerIdleAnimation();
+          }
+        });
+      }
     },
   };
 }

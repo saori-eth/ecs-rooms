@@ -25,22 +25,23 @@ app.get("/health", (req, res) => {
   const rooms = getRooms();
   let totalPlayers = 0;
   let totalCapacity = 0;
-  
-  rooms.forEach(room => {
+
+  rooms.forEach((room) => {
     totalPlayers += room.players.size;
     totalCapacity += MAX_PLAYERS_PER_ROOM;
   });
-  
+
   // Calculate server load percentage
-  const loadPercentage = totalCapacity > 0 ? (totalPlayers / totalCapacity) * 100 : 0;
-  
+  const loadPercentage =
+    totalCapacity > 0 ? (totalPlayers / totalCapacity) * 100 : 0;
+
   res.json({
     status: "healthy",
     totalPlayers,
     totalCapacity,
     roomCount: rooms.size,
     loadPercentage,
-    availableSlots: Math.max(0, totalCapacity - totalPlayers)
+    availableSlots: Math.max(0, totalCapacity - totalPlayers),
   });
 });
 
@@ -49,14 +50,14 @@ app.get("/metrics", (req, res) => {
   const rooms = getRooms();
   let totalPlayers = 0;
   let fullRooms = 0;
-  
-  rooms.forEach(room => {
+
+  rooms.forEach((room) => {
     totalPlayers += room.players.size;
     if (room.players.size >= MAX_PLAYERS_PER_ROOM) {
       fullRooms++;
     }
   });
-  
+
   // Prometheus-style metrics
   res.type("text/plain");
   res.send(`# HELP game_players_total Total number of connected players
@@ -88,9 +89,7 @@ const wss = new WebSocketServer({ server });
 
 wss.on("connection", handleConnection);
 
-server.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+server.listen(PORT, () => {});
 
 // Start game heartbeat loop
 startHeartbeat();

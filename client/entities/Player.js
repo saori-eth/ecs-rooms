@@ -11,6 +11,7 @@ import {
   createPhysicsBodyComponent,
   createVRMComponent,
   createAnimationComponent,
+  createCameraTargetComponent,
 } from "../ecs/components.js";
 import { vrmManager } from "../utils/VRMLoader.js";
 import { animationManager } from "../utils/AnimationManager.js";
@@ -33,7 +34,7 @@ export async function createPlayer(
   if (scene) scene.add(playerGroup);
 
   // Load VRM model
-  const avatarId = identity?.avatarId || "low-poly-girl";
+  const avatarId = identity?.avatarId || "wassie";
   const vrm = await vrmManager.loadVRM(avatarId);
 
   // Reset to T-pose before applying any transforms or animations
@@ -46,8 +47,6 @@ export async function createPlayer(
   vrm.scene.position.y = -0.5; // Adjust so feet are at the bottom
 
   playerGroup.add(vrm.scene);
-  console.log("player group", playerGroup);
-
   // Add name tag
   if (identity?.name) {
     // Calculate VRM height based on scale
@@ -78,6 +77,18 @@ export async function createPlayer(
     createPlayerComponent(isLocal)
   );
   world.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
+
+  // Add camera target and local player tag for local player
+  if (isLocal) {
+    world.addComponent(
+      entityId,
+      ComponentTypes.CAMERA_TARGET,
+      createCameraTargetComponent()
+    );
+
+    // Tag as local player for animation system detection
+    world.addComponent(entityId, "localPlayer", { isLocal: true });
+  }
 
   // Load animations
   try {

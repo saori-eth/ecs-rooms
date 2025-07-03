@@ -3,8 +3,9 @@ import { WebSocket } from "ws";
 export const MAX_PLAYERS_PER_ROOM = 4;
 
 export class Room {
-  constructor(id) {
+  constructor(id, roomType) {
     this.id = id;
+    this.roomType = roomType;
     this.players = new Map();
     this.state = "waiting";
   }

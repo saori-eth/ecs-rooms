@@ -3,6 +3,7 @@ import { IdentityManager } from "./IdentityManager.js";
 export class GameStateManager {
   constructor() {
     this.currentState = "menu";
+    this.roomType = null;
     this.onStateChange = null;
     this.identityManager = new IdentityManager();
 
@@ -22,7 +23,7 @@ export class GameStateManager {
   initializeUI() {
     const identity = this.identityManager.getIdentity();
     this.playerNameInput.value = identity.name;
-    this.playerAvatarSelect.value = identity.avatarId || "low-poly-girl";
+    this.playerAvatarSelect.value = identity.avatarId || "wassie";
 
     this.playButton.addEventListener("click", () => {
       const name =
@@ -70,5 +71,9 @@ export class GameStateManager {
 
   getPlayerIdentity() {
     return this.identityManager.getIdentity();
+  }
+
+  setRoomType(roomType) {
+    this.roomType = roomType;
   }
 }
