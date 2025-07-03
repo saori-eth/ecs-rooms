@@ -80,7 +80,7 @@ gameStateManager.playButton.addEventListener('click', () => {
 gameStateManager.onStateChange = async (newState) => {
   if (newState === 'playing' && !gameStarted) {
     const identity = gameStateManager.getPlayerIdentity()
-    localPlayerId = await createPlayer(world, { x: 0, y: 2, z: 0 }, true, physicsSystem.world, identity)
+    localPlayerId = await createPlayer(world, { x: 0, y: 1.5, z: 0 }, true, physicsSystem.world, identity)
     gameStarted = true
   } else if (newState === 'menu' && gameStarted) {
     if (localPlayerId) {

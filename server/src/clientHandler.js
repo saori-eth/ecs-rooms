@@ -78,7 +78,7 @@ export function handleConnection(ws) {
   const client = {
     id: clientId,
     ws: ws,
-    position: { x: 0, y: 2, z: 0 },
+    position: { x: 0, y: 1.5, z: 0 },
     roomId: null,
     lastHeartbeat: Date.now(),
     identity: null,

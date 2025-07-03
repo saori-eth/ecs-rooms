@@ -110,14 +110,33 @@ export async function createPlayer(
   );
 
   if (physicsWorld) {
-    const shape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5));
+    // Create capsule-like compound shape using spheres
     const body = new CANNON.Body({
       mass: isLocal ? 1 : 0,
-      shape: shape,
       position: new CANNON.Vec3(position.x, position.y, position.z),
-      linearDamping: 0.4,
-      angularDamping: 0.99,
+      linearDamping: 0.9,
+      angularDamping: 0.999,
+      fixedRotation: true, // Prevent capsule from tipping over
     });
+
+    // Capsule parameters
+    const radius = 0.3;
+    const height = 1.0; // Height between top and bottom sphere centers
+    const sphereShape = new CANNON.Sphere(radius);
+    
+    // Create material with low friction to reduce bouncing
+    const playerMaterial = new CANNON.Material('playerMaterial');
+    playerMaterial.friction = 0.1;
+    playerMaterial.restitution = 0.0; // No bouncing
+    body.material = playerMaterial;
+
+    // Add spheres to create capsule shape
+    // Bottom sphere
+    body.addShape(sphereShape, new CANNON.Vec3(0, -height / 2, 0));
+    // Middle sphere
+    body.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+    // Top sphere
+    body.addShape(sphereShape, new CANNON.Vec3(0, height / 2, 0));
 
     physicsWorld.addBody(body);
     world.addComponent(
