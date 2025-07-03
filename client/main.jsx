@@ -59,8 +59,9 @@ const physicsSystem = createPhysicsSystem();
 world.physicsWorld = physicsSystem.world;
 
 const networkSystem = createNetworkSystem();
+const inputSystem = createInputSystem();
 
-world.registerSystem(createInputSystem());
+world.registerSystem(inputSystem);
 world.registerSystem(createMovementSystem());
 world.registerSystem(physicsSystem);
 world.registerSystem(createInterpolationSystem());
@@ -77,6 +78,13 @@ class GameManager {
     this.localPlayerId = null;
     this.gameStarted = false;
     this.stateCallbacks = null;
+    
+    // Set up mobile input callback
+    this.mobileInputCallback = (moveVector) => {
+      if (inputSystem.handleMobileInput) {
+        inputSystem.handleMobileInput(moveVector);
+      }
+    };
   }
 
   setStateCallbacks(callbacks) {

@@ -16,6 +16,16 @@
   font-family: 'Inter', sans-serif;
 }
 
+@media (max-width: 767px) {
+  .info {
+    top: 16px;
+    left: 16px;
+    padding: 12px 18px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
+}
+
 .room-info {
   position: absolute;
   top: 24px;
@@ -31,6 +41,16 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
               0 0 0 1px rgba(255, 255, 255, 0.05);
   font-family: 'Inter', sans-serif;
+}
+
+@media (max-width: 767px) {
+  .room-info {
+    top: 16px;
+    right: 16px;
+    padding: 12px 18px;
+    font-size: 13px;
+    border-radius: 12px;
+  }
 }
 
 .room-info div {

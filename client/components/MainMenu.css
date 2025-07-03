@@ -13,6 +13,17 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25),
               0 0 0 1px rgba(255, 255, 255, 0.05);
   min-width: 400px;
+  width: 90%;
+  max-width: 500px;
+}
+
+@media (max-width: 767px) {
+  .main-menu {
+    padding: 40px 30px;
+    min-width: unset;
+    width: 85%;
+    max-width: 360px;
+  }
 }
 
 .main-menu h1 {
@@ -24,6 +35,13 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+@media (max-width: 767px) {
+  .main-menu h1 {
+    font-size: 32px;
+    margin: 0 0 30px 0;
+  }
 }
 
 .player-customization {

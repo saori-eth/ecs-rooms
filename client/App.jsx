@@ -62,7 +62,7 @@ function App({ gameManager }) {
         />
       )}
       {gameState === 'playing' && (
-        <GameUI roomInfo={roomInfo} />
+        <GameUI roomInfo={roomInfo} gameManager={gameManager} />
       )}
     </div>
   );
