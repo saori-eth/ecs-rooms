@@ -21,12 +21,24 @@ export function createNetworkSystem() {
   let onGameStart = null
   let onDisconnect = null
   let onChatMessage = null
+  let onJoinedRoom = null
+  let onGameEvent = null
+  let onPlayerJoined = null
+  let onPlayerLeft = null
 
   const connect = () => {
     // Use wss:// for production, ws:// for development
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
+    
+    // In development, the client runs on port 3000/3001/etc but WebSocket server is on 8080
+    let host = window.location.host;
+    if (window.location.hostname === 'localhost' && 
+        (window.location.port === '3000' || window.location.port === '3001' || window.location.port === '3002')) {
+      host = 'localhost:8080';
+    }
+    
     const wsUrl = `${protocol}//${host}`;
+    console.log('Connecting to WebSocket at:', wsUrl);
     
     ws = new WebSocket(wsUrl)
     
@@ -54,9 +66,15 @@ export function createNetworkSystem() {
           break
           
         case 'joinedRoom':
+          localPlayerId = message.playerId
           roomId = message.roomId
           inRoom = true
           console.log(`Joined ${roomId}`)
+          
+          if (onJoinedRoom) {
+            // Pass the whole message as it contains roomType
+            onJoinedRoom(message)
+          }
           
           if (onGameStart) {
             onGameStart()
@@ -83,6 +101,9 @@ export function createNetworkSystem() {
               world.addComponent(newEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
               remotePlayers.set(message.player.id, newEntityId)
               console.log(`Player ${message.player.id} joined`)
+              if (onPlayerJoined) {
+                onPlayerJoined(message.player.id)
+              }
             })
           }
           break
@@ -101,6 +122,9 @@ export function createNetworkSystem() {
             world.destroyEntity(leavingEntityId)
             remotePlayers.delete(message.id)
             console.log(`Player ${message.id} left`)
+            if (onPlayerLeft) {
+              onPlayerLeft(message.id)
+            }
           }
           break
           
@@ -155,12 +179,29 @@ export function createNetworkSystem() {
           break
           
         case 'chatMessage':
+          console.log('[NetworkSystem] Received chat message:', message);
           if (onChatMessage) {
             onChatMessage({
               author: message.author,
               text: message.text,
               timestamp: message.timestamp
             })
+          } else {
+            console.error('[NetworkSystem] No onChatMessage handler!');
+          }
+          break
+          
+        case 'gameEvent':
+          console.log('[NetworkSystem] Received game event:', message);
+          if (onGameEvent) {
+            onGameEvent({
+              eventType: message.eventType,
+              data: message.data,
+              playerId: message.playerId,
+              timestamp: message.timestamp
+            })
+          } else {
+            console.error('[NetworkSystem] No onGameEvent handler!');
           }
           break
       }
@@ -200,6 +241,8 @@ export function createNetworkSystem() {
     
     ws.onerror = (error) => {
       console.error('WebSocket error:', error)
+      console.error('WebSocket readyState:', ws.readyState)
+      console.error('WebSocket URL:', ws.url)
       if (onConnectionStatusChange) {
         onConnectionStatusChange('Connection error')
       }
@@ -208,6 +251,7 @@ export function createNetworkSystem() {
 
   const networkSystem = {
     init(w) {
+      console.log('NetworkSystem: Initializing with world:', w)
       world = w
       connect()
     },
@@ -226,11 +270,35 @@ export function createNetworkSystem() {
     },
     
     sendChatMessage(text) {
+      console.log('[NetworkSystem] sendChatMessage called with:', text);
+      console.log('[NetworkSystem] connected:', connected, 'ws ready:', ws && ws.readyState === WebSocket.OPEN, 'inRoom:', inRoom);
+      
       if (connected && ws && ws.readyState === WebSocket.OPEN && inRoom) {
-        ws.send(JSON.stringify({
+        const message = {
           type: 'chatMessage',
           text: text
-        }))
+        };
+        console.log('[NetworkSystem] Sending chat message:', message);
+        ws.send(JSON.stringify(message));
+      } else {
+        console.error('[NetworkSystem] Cannot send chat message - not connected or not in room');
+      }
+    },
+    
+    sendGameEvent(eventType, data) {
+      console.log('[NetworkSystem] sendGameEvent called:', eventType, data);
+      console.log('[NetworkSystem] connected:', connected, 'ws ready:', ws && ws.readyState === WebSocket.OPEN, 'inRoom:', inRoom);
+      
+      if (connected && ws && ws.readyState === WebSocket.OPEN && inRoom) {
+        const message = {
+          type: 'gameEvent',
+          eventType: eventType,
+          data: data
+        };
+        console.log('[NetworkSystem] Sending game event:', message);
+        ws.send(JSON.stringify(message));
+      } else {
+        console.error('[NetworkSystem] Cannot send game event - not connected or not in room');
       }
     },
 
@@ -306,6 +374,30 @@ export function createNetworkSystem() {
   Object.defineProperty(networkSystem, 'onChatMessage', {
     set(callback) {
       onChatMessage = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onJoinedRoom', {
+    set(callback) {
+      onJoinedRoom = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onGameEvent', {
+    set(callback) {
+      onGameEvent = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onPlayerJoined', {
+    set(callback) {
+      onPlayerJoined = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onPlayerLeft', {
+    set(callback) {
+      onPlayerLeft = callback
     }
   })
   
