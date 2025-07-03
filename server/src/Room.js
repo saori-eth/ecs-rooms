@@ -40,6 +40,7 @@ export class Room {
     return Array.from(this.players.values()).map((client) => ({
       id: client.id,
       position: client.position,
+      identity: client.identity,
     }));
   }
 }

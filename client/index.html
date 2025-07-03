@@ -38,6 +38,33 @@
       margin: 0 0 30px 0;
       font-size: 48px;
     }
+    #playerCustomization {
+      margin-bottom: 30px;
+    }
+    #playerCustomization input, #playerCustomization select {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      box-sizing: border-box;
+    }
+    #playerCustomization input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    #colorPreview {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      margin-left: 10px;
+      vertical-align: middle;
+      border: 2px solid white;
+      border-radius: 5px;
+    }
     #playButton {
       background: #00ff00;
       color: black;
@@ -75,6 +102,23 @@
 <body>
   <div id="mainMenu">
     <h1>Three.js ECS Game</h1>
+    <div id="playerCustomization">
+      <input type="text" id="playerName" placeholder="Enter your name" maxlength="20">
+      <div>
+        <label for="playerColor" style="display: inline-block;">Color:</label>
+        <select id="playerColor">
+          <option value="#00ff00">Green</option>
+          <option value="#ff0000">Red</option>
+          <option value="#0000ff">Blue</option>
+          <option value="#ffff00">Yellow</option>
+          <option value="#ff00ff">Magenta</option>
+          <option value="#00ffff">Cyan</option>
+          <option value="#ff8800">Orange</option>
+          <option value="#ff0088">Pink</option>
+        </select>
+        <span id="colorPreview"></span>
+      </div>
+    </div>
     <button id="playButton" disabled>Play</button>
     <div id="connectionStatus">Connecting to server...</div>
   </div>

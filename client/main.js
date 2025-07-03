@@ -71,12 +71,14 @@ let localPlayerId = null
 let gameStarted = false
 
 gameStateManager.playButton.addEventListener('click', () => {
-  networkSystem.joinGame()
+  const identity = gameStateManager.getPlayerIdentity()
+  networkSystem.joinGame(identity)
 })
 
 gameStateManager.onStateChange = (newState) => {
   if (newState === 'playing' && !gameStarted) {
-    localPlayerId = createPlayer(world, { x: 0, y: 2, z: 0 }, true, physicsSystem.world)
+    const identity = gameStateManager.getPlayerIdentity()
+    localPlayerId = createPlayer(world, { x: 0, y: 2, z: 0 }, true, physicsSystem.world, identity)
     gameStarted = true
   } else if (newState === 'menu' && gameStarted) {
     if (localPlayerId) {

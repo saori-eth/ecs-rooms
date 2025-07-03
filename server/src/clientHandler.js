@@ -22,6 +22,7 @@ function handleJoinGame(client, room) {
       player: {
         id: client.id,
         position: client.position,
+        identity: client.identity,
       },
     },
     client.id
@@ -78,6 +79,7 @@ export function handleConnection(ws) {
     position: { x: 0, y: 2, z: 0 },
     roomId: null,
     lastHeartbeat: Date.now(),
+    identity: null,
   };
 
   console.log(`Client ${clientId} connected`);
@@ -95,6 +97,7 @@ export function handleConnection(ws) {
 
       switch (message.type) {
         case "joinGame":
+          client.identity = message.identity || { name: `Player${client.id}`, color: '#ff0000' };
           const room = findOrCreateRoom();
           handleJoinGame(client, room);
           break;

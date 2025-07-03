@@ -1,0 +1,39 @@
+export class IdentityManager {
+  constructor() {
+    this.storageKey = 'playerIdentity'
+    this.identity = this.loadIdentity()
+  }
+  
+  loadIdentity() {
+    const stored = localStorage.getItem(this.storageKey)
+    if (stored) {
+      try {
+        return JSON.parse(stored)
+      } catch (e) {
+        console.error('Failed to parse stored identity:', e)
+      }
+    }
+    
+    return {
+      name: `Player${Math.floor(Math.random() * 1000)}`,
+      color: '#00ff00'
+    }
+  }
+  
+  saveIdentity(name, color) {
+    this.identity = { name, color }
+    localStorage.setItem(this.storageKey, JSON.stringify(this.identity))
+  }
+  
+  getName() {
+    return this.identity.name
+  }
+  
+  getColor() {
+    return this.identity.color
+  }
+  
+  getIdentity() {
+    return { ...this.identity }
+  }
+}

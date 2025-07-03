@@ -11,12 +11,13 @@ import {
   createPhysicsBodyComponent
 } from '../ecs/components.js'
 
-export function createPlayer(world, position = { x: 0, y: 0.5, z: 0 }, isLocal = true, physicsWorld = null) {
+export function createPlayer(world, position = { x: 0, y: 0.5, z: 0 }, isLocal = true, physicsWorld = null, identity = null) {
   const entityId = world.createEntity()
   
   const geometry = new THREE.BoxGeometry(1, 1, 1)
+  const color = identity?.color || (isLocal ? '#00ff00' : '#ff0000')
   const material = new THREE.MeshStandardMaterial({ 
-    color: isLocal ? 0x00ff00 : 0xff0000
+    color: color
   })
   const mesh = new THREE.Mesh(geometry, material)
   mesh.castShadow = true
@@ -25,6 +26,28 @@ export function createPlayer(world, position = { x: 0, y: 0.5, z: 0 }, isLocal =
   
   const scene = mesh.parent || window.scene
   if (scene) scene.add(mesh)
+  
+  if (identity?.name) {
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+    canvas.width = 256
+    canvas.height = 64
+    
+    context.fillStyle = 'rgba(0, 0, 0, 0.5)'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    
+    context.font = '32px Arial'
+    context.fillStyle = 'white'
+    context.textAlign = 'center'
+    context.fillText(identity.name, canvas.width / 2, canvas.height / 2 + 10)
+    
+    const texture = new THREE.CanvasTexture(canvas)
+    const spriteMaterial = new THREE.SpriteMaterial({ map: texture })
+    const sprite = new THREE.Sprite(spriteMaterial)
+    sprite.scale.set(2, 0.5, 1)
+    sprite.position.set(0, 1.5, 0)
+    mesh.add(sprite)
+  }
   
   world.addComponent(entityId, ComponentTypes.POSITION, createPositionComponent(position.x, position.y, position.z))
   world.addComponent(entityId, ComponentTypes.VELOCITY, createVelocityComponent())

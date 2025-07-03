@@ -53,7 +53,7 @@ export function createNetworkSystem() {
           }
           
           message.players.forEach(playerData => {
-            const remoteEntityId = createPlayer(world, playerData.position, false, window.physicsWorld)
+            const remoteEntityId = createPlayer(world, playerData.position, false, window.physicsWorld, playerData.identity)
             world.addComponent(remoteEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
             remotePlayers.set(playerData.id, remoteEntityId)
           })
@@ -61,7 +61,7 @@ export function createNetworkSystem() {
           
         case 'playerJoined':
           if (inRoom) {
-            const newEntityId = createPlayer(world, message.player.position, false, window.physicsWorld)
+            const newEntityId = createPlayer(world, message.player.position, false, window.physicsWorld, message.player.identity)
             world.addComponent(newEntityId, ComponentTypes.INTERPOLATION, createInterpolationComponent())
             remotePlayers.set(message.player.id, newEntityId)
             console.log(`Player ${message.player.id} joined`)
@@ -165,9 +165,12 @@ export function createNetworkSystem() {
       gameStateManager = gsm
     },
     
-    joinGame() {
+    joinGame(identity) {
       if (connected && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'joinGame' }))
+        ws.send(JSON.stringify({ 
+          type: 'joinGame',
+          identity: identity
+        }))
       }
     },
 
