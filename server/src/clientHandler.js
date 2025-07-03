@@ -99,7 +99,10 @@ export function handleConnection(ws) {
 
       switch (message.type) {
         case "joinGame":
-          client.identity = message.identity || { name: `Player${client.id}`, avatarId: 'BitcoinGuy' };
+          client.identity = message.identity || {
+            name: `Player${client.id}`,
+            avatarId: "low-poly-girl",
+          };
           const room = findOrCreateRoom();
           handleJoinGame(client, room);
           break;

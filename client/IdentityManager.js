@@ -1,39 +1,39 @@
 export class IdentityManager {
   constructor() {
-    this.storageKey = 'playerIdentity'
-    this.identity = this.loadIdentity()
+    this.storageKey = "playerIdentity";
+    this.identity = this.loadIdentity();
   }
-  
+
   loadIdentity() {
-    const stored = localStorage.getItem(this.storageKey)
+    const stored = localStorage.getItem(this.storageKey);
     if (stored) {
       try {
-        return JSON.parse(stored)
+        return JSON.parse(stored);
       } catch (e) {
-        console.error('Failed to parse stored identity:', e)
+        console.error("Failed to parse stored identity:", e);
       }
     }
-    
+
     return {
       name: `Player${Math.floor(Math.random() * 1000)}`,
-      avatarId: 'BitcoinGuy'
-    }
+      avatarId: "low-poly-girl",
+    };
   }
-  
+
   saveIdentity(name, avatarId) {
-    this.identity = { name, avatarId }
-    localStorage.setItem(this.storageKey, JSON.stringify(this.identity))
+    this.identity = { name, avatarId };
+    localStorage.setItem(this.storageKey, JSON.stringify(this.identity));
   }
-  
+
   getName() {
-    return this.identity.name
+    return this.identity.name;
   }
-  
+
   getAvatarId() {
-    return this.identity.avatarId
+    return this.identity.avatarId;
   }
-  
+
   getIdentity() {
-    return { ...this.identity }
+    return { ...this.identity };
   }
 }

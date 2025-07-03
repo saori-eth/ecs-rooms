@@ -32,7 +32,7 @@ export async function createPlayer(
   if (scene) scene.add(playerGroup);
 
   // Load VRM model
-  const avatarId = identity?.avatarId || "BitcoinGuy";
+  const avatarId = identity?.avatarId || "low-poly-girl";
   const vrm = await vrmManager.loadVRM(avatarId);
 
   // Reset to T-pose before applying any transforms or animations
@@ -105,11 +105,11 @@ export async function createPlayer(
     // Ensure animations don't accumulate transforms
     actions.idle.setLoop(THREE.LoopRepeat);
     actions.walking.setLoop(THREE.LoopRepeat);
-    
+
     // Reset any accumulated transforms
     actions.idle.reset();
     actions.walking.reset();
-    
+
     // Start with idle animation
     actions.idle.play();
 
@@ -141,9 +141,9 @@ export async function createPlayer(
     const radius = 0.3;
     const height = 1.0; // Height between top and bottom sphere centers
     const sphereShape = new CANNON.Sphere(radius);
-    
+
     // Create material with low friction to reduce bouncing
-    const playerMaterial = new CANNON.Material('playerMaterial');
+    const playerMaterial = new CANNON.Material("playerMaterial");
     playerMaterial.friction = 0.1;
     playerMaterial.restitution = 0.0; // No bouncing
     body.material = playerMaterial;

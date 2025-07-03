@@ -8,13 +8,13 @@ class VRMManager {
     this.loader.register((parser) => new VRMLoaderPlugin(parser));
     this.availableAvatars = [
       {
-        id: "BitcoinGuy",
-        name: "Bitcoin Guy",
-        path: "/avatars/BitcoinGuy.vrm",
+        id: "low-poly-girl",
+        name: "Low Poly Girl",
+        path: "/avatars/low-poly-girl.vrm",
       },
-      { id: "bayc", name: "BAYC", path: "/avatars/bayc.vrm" },
-      { id: "bezos", name: "Bezos", path: "/avatars/bezos.vrm" },
-      { id: "buterin", name: "Buterin", path: "/avatars/buterin.vrm" },
+      { id: "glasses", name: "Glasses", path: "/avatars/glasses.vrm" },
+      { id: "bonnie", name: "Bonnie", path: "/avatars/bonnie.vrm" },
+      { id: "taiga", name: "Taiga", path: "/avatars/taiga.vrm" },
     ];
   }
 
