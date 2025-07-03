@@ -1,8 +1,12 @@
+import * as CANNON from 'cannon-es';
+
 export class ScriptingAPI {
-  constructor(world, physicsWorld, loadedScene = null) {
+  constructor(world, physicsWorld, loadedScene = null, networkSystem = null) {
     this.world = world;
     this.physicsWorld = physicsWorld;
     this.loadedScene = loadedScene;
+    this.networkSystem = networkSystem;
+    this.gameObjects = new Map(); // Track game objects by ID
   }
 
   // Entity and Component Access
@@ -26,7 +30,47 @@ export class ScriptingAPI {
     return this.world.getEntitiesWithComponents(...componentTypes);
   }
 
-  // You can add more helper methods here later, for example:
-  // getPlayer(playerId) { ... }
-  // spawnObject(asset, position) { ... }
+  // Network Events
+  sendGameEvent(eventType, data) {
+    if (this.networkSystem) {
+      this.networkSystem.sendGameEvent(eventType, data);
+    }
+  }
+  
+  // Game Object Management
+  registerGameObject(id, entityId) {
+    this.gameObjects.set(id, entityId);
+  }
+  
+  getGameObject(id) {
+    return this.gameObjects.get(id);
+  }
+  
+  removeGameObject(id) {
+    const entityId = this.gameObjects.get(id);
+    if (entityId) {
+      this.destroyEntity(entityId);
+      this.gameObjects.delete(id);
+    }
+  }
+  
+  // Physics Helpers
+  createPhysicsBody(shape, position, mass = 0) {
+    const body = new CANNON.Body({
+      mass: mass,
+      shape: shape,
+      position: new CANNON.Vec3(position.x, position.y, position.z)
+    });
+    this.physicsWorld.addBody(body);
+    return body;
+  }
+  
+  removePhysicsBody(body) {
+    this.physicsWorld.removeBody(body);
+  }
+  
+  // Visual Helpers
+  getThreeScene() {
+    return window.scene; // Reference to the main Three.js scene
+  }
 }

@@ -23,10 +23,10 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 2.5, 2.5);
+camera.position.set(0, 5, 5);
 camera.lookAt(0, 0, 0);
-console.log('[main] Initial camera position:', camera.position);
-console.log('[main] Initial camera target:', new THREE.Vector3(0, 0, 0));
+console.log("[main] Initial camera position:", camera.position);
+console.log("[main] Initial camera target:", new THREE.Vector3(0, 0, 0));
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -70,7 +70,12 @@ world.registerSystem(createAnimationSystem());
 window.scene = scene;
 window.physicsWorld = physicsSystem.world;
 
-const sceneManager = new SceneManager(scene, physicsSystem.world, world);
+const sceneManager = new SceneManager(
+  scene,
+  physicsSystem.world,
+  world,
+  networkSystem
+);
 
 // Debug cube removed
 
@@ -109,12 +114,12 @@ class GameManager {
     };
 
     networkSystem.onJoinedRoom = (roomData) => {
-      console.log('[main] onJoinedRoom called with:', roomData);
+      console.log("[main] onJoinedRoom called with:", roomData);
       if (roomData.roomType) {
-        console.log('[main] Loading room type:', roomData.roomType);
+        console.log("[main] Loading room type:", roomData.roomType);
         sceneManager.loadRoom(roomData.roomType);
       } else {
-        console.warn('[main] No roomType in roomData');
+        console.warn("[main] No roomType in roomData");
       }
     };
 
@@ -124,6 +129,14 @@ class GameManager {
 
     networkSystem.onDisconnect = () => {
       callbacks.setGameState("menu");
+    };
+    
+    networkSystem.onPlayerJoined = (playerId) => {
+      sceneManager.onPlayerJoin(playerId);
+    };
+    
+    networkSystem.onPlayerLeft = (playerId) => {
+      sceneManager.onPlayerLeave(playerId);
     };
 
     // Set up chat message handler

@@ -91,6 +91,25 @@ function handleChatMessage(client, message) {
   }
 }
 
+function handleGameEvent(client, message) {
+  if (client.roomId) {
+    const room = getRoom(client.roomId);
+    if (room) {
+      // Forward game events to all players in the room
+      const gameEvent = {
+        type: "gameEvent",
+        eventType: message.eventType,
+        data: message.data,
+        playerId: client.id,
+        timestamp: Date.now()
+      };
+      
+      // Broadcast to all players including the sender for consistency
+      room.broadcastToAll(gameEvent);
+    }
+  }
+}
+
 export function handleConnection(ws) {
   const clientId = nextClientId++;
   const client = {
@@ -135,6 +154,10 @@ export function handleConnection(ws) {
           
         case "chatMessage":
           handleChatMessage(client, message);
+          break;
+          
+        case "gameEvent":
+          handleGameEvent(client, message);
           break;
       }
     } catch (error) {

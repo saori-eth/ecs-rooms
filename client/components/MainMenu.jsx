@@ -13,7 +13,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
 
   return (
     <div className="main-menu">
-      <h1>Digispace</h1>
+      <img src="/images/logo.png" alt="Digispace" className="logo" />
       <div className="player-customization">
         <input
           type="text"

@@ -2,9 +2,9 @@ export const rooms = {
   "default-arena": {
     name: "Default Arena",
     sceneModel: "/environments/arena.glb",
-    script: "/rooms/scripts/arena-logic.js",
+    script: "/rooms/scripts/arena-shooting-game.js",
     sceneTransform: {
-      position: { x: 0, y: 0, z: 5 },
+      position: { x: 0, y: 0, z: 0 },
       rotation: { x: 0, y: 0, z: 0 }, // in radians
       scale: { x: 1, y: 1, z: 1 },
     },

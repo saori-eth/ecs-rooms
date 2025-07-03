@@ -5,10 +5,11 @@ import { rooms } from "../rooms/room-definitions.js";
 import { ScriptingAPI } from "./ScriptingAPI.js";
 
 export class SceneManager {
-  constructor(scene, physicsWorld, world) {
+  constructor(scene, physicsWorld, world, networkSystem) {
     this.threeScene = scene;
     this.physicsWorld = physicsWorld;
     this.world = world; // ECS World
+    this.networkSystem = networkSystem;
     this.loader = new GLTFLoader();
     this.activeRoom = null;
     this.activeScript = null;
@@ -207,7 +208,7 @@ export class SceneManager {
       try {
         const scriptModule = await import(/* @vite-ignore */ roomData.script);
         const ScriptClass = Object.values(scriptModule)[0];
-        const scriptingAPI = new ScriptingAPI(this.world, this.physicsWorld, this.loadedScene);
+        const scriptingAPI = new ScriptingAPI(this.world, this.physicsWorld, this.loadedScene, this.networkSystem);
         this.activeScript = new ScriptClass(scriptingAPI);
         if (this.activeScript.onLoad) {
           this.activeScript.onLoad();
@@ -240,6 +241,22 @@ export class SceneManager {
   update(deltaTime) {
     if (this.activeScript && this.activeScript.onUpdate) {
       this.activeScript.onUpdate(deltaTime);
+    } else if (this.activeScript) {
+      console.log('[SceneManager] Script exists but no onUpdate method');
+    } else {
+      console.log('[SceneManager] No active script');
+    }
+  }
+  
+  onPlayerJoin(playerId) {
+    if (this.activeScript && this.activeScript.onPlayerJoin) {
+      this.activeScript.onPlayerJoin(playerId);
+    }
+  }
+  
+  onPlayerLeave(playerId) {
+    if (this.activeScript && this.activeScript.onPlayerLeave) {
+      this.activeScript.onPlayerLeave(playerId);
     }
   }
 }
