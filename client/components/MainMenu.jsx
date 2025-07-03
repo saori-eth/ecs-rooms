@@ -34,10 +34,9 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
           onChange={(e) => setAvatarId(e.target.value)}
           className="player-avatar-select"
         >
-          <option value="low-poly-girl">Low Poly Girl</option>
-          <option value="glasses">Glasses</option>
-          <option value="bonnie">Bonnie</option>
-          <option value="taiga">Taiga</option>
+          <option value="cryptovoxels">Cryptovoxels</option>
+          <option value="homerpepe">Homerpepe</option>
+          <option value="wassie">Wassie</option>
         </select>
         <label className="input-label">Room</label>
         <select
