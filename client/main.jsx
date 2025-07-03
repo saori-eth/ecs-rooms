@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
 import { World } from "./ecs/World.js";
 import { createMovementSystem } from "./ecs/systems/MovementSystem.js";
 import { createRenderSystem } from "./ecs/systems/RenderSystem.js";
@@ -8,10 +11,10 @@ import { createInterpolationSystem } from "./ecs/systems/InterpolationSystem.js"
 import { createPhysicsSystem } from "./ecs/systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./ecs/systems/AnimationSystem.js";
 import { createPlayer } from "./entities/Player.js";
-import { GameStateManager } from "./GameStateManager.js";
 
+// Three.js setup
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x202020);
+scene.background = new THREE.Color(0x0a0a0a);
 
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -19,14 +22,14 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-camera.position.set(0, 5, 5);
+camera.position.set(0, 2.5, 2.5);
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.body.appendChild(renderer.domElement);
+document.getElementById("canvas-container").appendChild(renderer.domElement);
 
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
 scene.add(ambientLight);
@@ -43,20 +46,19 @@ directionalLight.shadow.camera.bottom = -10;
 scene.add(directionalLight);
 
 const groundGeometry = new THREE.PlaneGeometry(50, 50);
-const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x404040 });
+const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
 const ground = new THREE.Mesh(groundGeometry, groundMaterial);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 scene.add(ground);
 
+// ECS setup
 const world = new World();
-const gameStateManager = new GameStateManager();
 
 const physicsSystem = createPhysicsSystem();
 world.physicsWorld = physicsSystem.world;
 
 const networkSystem = createNetworkSystem();
-networkSystem.setGameStateManager(gameStateManager);
 
 world.registerSystem(createInputSystem());
 world.registerSystem(createMovementSystem());
@@ -69,48 +71,92 @@ world.registerSystem(createAnimationSystem());
 window.scene = scene;
 window.physicsWorld = physicsSystem.world;
 
-let localPlayerId = null;
-let gameStarted = false;
+// Game manager to bridge React and Three.js
+class GameManager {
+  constructor() {
+    this.localPlayerId = null;
+    this.gameStarted = false;
+    this.stateCallbacks = null;
+  }
 
-gameStateManager.playButton.addEventListener("click", () => {
-  const identity = gameStateManager.getPlayerIdentity();
-  networkSystem.joinGame(identity);
-});
+  setStateCallbacks(callbacks) {
+    this.stateCallbacks = callbacks;
 
-gameStateManager.onStateChange = async (newState) => {
-  if (newState === "playing" && !gameStarted) {
-    const identity = gameStateManager.getPlayerIdentity();
-    localPlayerId = await createPlayer(
-      world,
-      { x: 0, y: 1.5, z: 0 },
-      true,
-      physicsSystem.world,
-      identity
-    );
-    gameStarted = true;
-  } else if (newState === "menu" && gameStarted) {
-    if (localPlayerId) {
-      const meshComponent = world.getComponent(localPlayerId, "mesh");
+    // Set up network system callbacks
+    networkSystem.onConnectionStatusChange = (status) => {
+      callbacks.setConnectionStatus(status);
+    };
+
+    networkSystem.onConnectionReady = (ready) => {
+      callbacks.setPlayEnabled(ready);
+    };
+
+    networkSystem.onRoomUpdate = (roomId, playerCount, maxPlayers) => {
+      callbacks.updateRoomInfo(roomId, playerCount, maxPlayers);
+    };
+
+    networkSystem.onGameStart = () => {
+      callbacks.setGameState("playing");
+    };
+
+    networkSystem.onDisconnect = () => {
+      callbacks.setGameState("menu");
+    };
+  }
+
+  async onPlay(playerIdentity) {
+    networkSystem.joinGame(playerIdentity);
+  }
+
+  async startGame(playerIdentity) {
+    if (!this.gameStarted) {
+      this.localPlayerId = await createPlayer(
+        world,
+        { x: 0, y: 1.5, z: 0 },
+        true,
+        physicsSystem.world,
+        playerIdentity
+      );
+      this.gameStarted = true;
+      if (this.stateCallbacks) {
+        this.stateCallbacks.setGameState("playing");
+      }
+    }
+  }
+
+  stopGame() {
+    if (this.gameStarted && this.localPlayerId) {
+      const meshComponent = world.getComponent(this.localPlayerId, "mesh");
       if (meshComponent && meshComponent.mesh) {
         scene.remove(meshComponent.mesh);
       }
-      const physicsComponent = world.getComponent(localPlayerId, "physicsBody");
+      const physicsComponent = world.getComponent(
+        this.localPlayerId,
+        "physicsBody"
+      );
       if (physicsComponent && physicsComponent.body) {
         physicsSystem.world.removeBody(physicsComponent.body);
       }
-      world.destroyEntity(localPlayerId);
-      localPlayerId = null;
+      world.destroyEntity(this.localPlayerId);
+      this.localPlayerId = null;
+      this.gameStarted = false;
     }
-    gameStarted = false;
   }
-};
+}
 
+const gameManager = new GameManager();
+
+// Pass game manager to network system
+networkSystem.setGameManager(gameManager);
+
+// Window resize handler
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+// Animation loop
 let lastTime = 0;
 function animate(time) {
   requestAnimationFrame(animate);
@@ -124,3 +170,7 @@ function animate(time) {
 }
 
 requestAnimationFrame(animate);
+
+// React app initialization
+const root = ReactDOM.createRoot(document.getElementById("react-root"));
+root.render(<App gameManager={gameManager} />);

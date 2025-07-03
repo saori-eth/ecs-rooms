@@ -65,8 +65,8 @@ export async function createPlayer(
     const texture = new THREE.CanvasTexture(canvas);
     const spriteMaterial = new THREE.SpriteMaterial({ map: texture });
     const sprite = new THREE.Sprite(spriteMaterial);
-    sprite.scale.set(2, 0.5, 1);
-    sprite.position.set(0, 1.5, 0);
+    sprite.scale.set(1, 0.25, 1);
+    sprite.position.set(0, 0.5, 0);
     playerGroup.add(sprite);
   }
 

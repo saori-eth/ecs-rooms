@@ -10,9 +10,16 @@ export function createNetworkSystem() {
   let lastUpdateTime = 0
   const updateRate = 50
   const remotePlayers = new Map()
-  let gameStateManager = null
+  let gameManager = null
   let roomId = null
   let inRoom = false
+  
+  // Callback functions
+  let onConnectionStatusChange = null
+  let onConnectionReady = null
+  let onRoomUpdate = null
+  let onGameStart = null
+  let onDisconnect = null
 
   const connect = () => {
     ws = new WebSocket('ws://localhost:8080')
@@ -21,10 +28,8 @@ export function createNetworkSystem() {
       console.log('Connected to server')
       connected = true
       
-      if (gameStateManager) {
-        gameStateManager.setConnectionStatus('Connected')
-        gameStateManager.enablePlayButton(true)
-      }
+      if (onConnectionStatusChange) onConnectionStatusChange('Connected')
+      if (onConnectionReady) onConnectionReady(true)
       
       heartbeatInterval = setInterval(() => {
         if (connected) {
@@ -47,9 +52,16 @@ export function createNetworkSystem() {
           inRoom = true
           console.log(`Joined ${roomId}`)
           
-          if (gameStateManager) {
-            gameStateManager.setState('playing')
-            gameStateManager.updateRoomInfo(roomId, message.players.length + 1, message.maxPlayers)
+          if (onGameStart) {
+            onGameStart()
+          }
+          if (onRoomUpdate) {
+            onRoomUpdate(roomId, message.players.length + 1, message.maxPlayers)
+          }
+          
+          if (gameManager) {
+            const identity = gameManager.stateCallbacks.getPlayerIdentity()
+            gameManager.startGame(identity)
           }
           
           message.players.forEach(async playerData => {
@@ -99,15 +111,9 @@ export function createNetworkSystem() {
                   y: message.position.y,
                   z: message.position.z
                 },
-                timestamp: message.timestamp || Date.now()
+                rotation: message.rotation,
+                timestamp: message.timestamp
               })
-              
-              if (message.rotation) {
-                interpolation.rotationBuffer.push({
-                  rotation: message.rotation,
-                  timestamp: message.timestamp || Date.now()
-                })
-              }
               
               if (interpolation.positionBuffer.length > 20) {
                 interpolation.positionBuffer.shift()
@@ -130,8 +136,8 @@ export function createNetworkSystem() {
           break
           
         case 'roomUpdate':
-          if (gameStateManager) {
-            gameStateManager.updateRoomInfo(roomId, message.playerCount, message.maxPlayers)
+          if (onRoomUpdate && inRoom) {
+            onRoomUpdate(roomId, message.playerCount, message.maxPlayers)
           }
           break
       }
@@ -143,11 +149,10 @@ export function createNetworkSystem() {
       inRoom = false
       roomId = null
       
-      if (gameStateManager) {
-        gameStateManager.setConnectionStatus('Disconnected. Reconnecting...')
-        gameStateManager.enablePlayButton(false)
-        gameStateManager.setState('menu')
-      }
+      if (onConnectionStatusChange) onConnectionStatusChange('Disconnected. Reconnecting...')
+      if (onConnectionReady) onConnectionReady(false)
+      if (onDisconnect) onDisconnect()
+      if (gameManager) gameManager.stopGame()
       
       if (heartbeatInterval) {
         clearInterval(heartbeatInterval)
@@ -172,20 +177,20 @@ export function createNetworkSystem() {
     
     ws.onerror = (error) => {
       console.error('WebSocket error:', error)
-      if (gameStateManager) {
-        gameStateManager.setConnectionStatus('Connection error')
+      if (onConnectionStatusChange) {
+        onConnectionStatusChange('Connection error')
       }
     }
   }
 
-  return {
+  const networkSystem = {
     init(w) {
       world = w
       connect()
     },
     
-    setGameStateManager(gsm) {
-      gameStateManager = gsm
+    setGameManager(gm) {
+      gameManager = gm
     },
     
     joinGame(identity) {
@@ -234,4 +239,37 @@ export function createNetworkSystem() {
       })
     }
   }
+  
+  // Define setter properties
+  Object.defineProperty(networkSystem, 'onConnectionStatusChange', {
+    set(callback) {
+      onConnectionStatusChange = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onConnectionReady', {
+    set(callback) {
+      onConnectionReady = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onRoomUpdate', {
+    set(callback) {
+      onRoomUpdate = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onGameStart', {
+    set(callback) {
+      onGameStart = callback
+    }
+  })
+  
+  Object.defineProperty(networkSystem, 'onDisconnect', {
+    set(callback) {
+      onDisconnect = callback
+    }
+  })
+  
+  return networkSystem
 }
