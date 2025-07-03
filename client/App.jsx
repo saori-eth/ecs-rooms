@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MainMenu from './components/MainMenu';
 import GameUI from './components/GameUI';
+import LoadingScreen from './components/LoadingScreen';
 import { useGameState } from './hooks/useGameState';
 import './App.css';
 
@@ -46,6 +47,9 @@ function App({ gameManager }) {
     setPlayerIdentity(updatedIdentity);
     localStorage.setItem('playerIdentity', JSON.stringify(updatedIdentity));
     
+    // Set game state to loading immediately
+    setGameState('loading');
+    
     if (gameManager && gameManager.onPlay) {
       gameManager.onPlay(updatedIdentity, roomType);
     }
@@ -60,6 +64,9 @@ function App({ gameManager }) {
           playEnabled={playEnabled}
           onPlay={handlePlay}
         />
+      )}
+      {gameState === 'loading' && (
+        <LoadingScreen />
       )}
       {gameState === 'playing' && (
         <GameUI roomInfo={roomInfo} gameManager={gameManager} />

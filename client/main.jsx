@@ -58,13 +58,15 @@ world.physicsWorld = physicsSystem.world;
 const networkSystem = createNetworkSystem();
 const inputSystem = createInputSystem();
 
+const animationSystem = createAnimationSystem();
+
 world.registerSystem(inputSystem);
 world.registerSystem(createMovementSystem());
 world.registerSystem(physicsSystem);
 world.registerSystem(createInterpolationSystem());
 world.registerSystem(createRenderSystem(scene));
 world.registerSystem(networkSystem);
-world.registerSystem(createAnimationSystem());
+world.registerSystem(animationSystem);
 world.addSystem(new CameraSystem());
 
 window.scene = scene;
@@ -122,10 +124,13 @@ class GameManager {
     };
 
     networkSystem.onGameStart = () => {
-      callbacks.setGameState("playing");
+      // Don't set playing state here anymore - wait for idle animation
+      // callbacks.setGameState("playing");
     };
 
     networkSystem.onDisconnect = () => {
+      // Reset animation system notification flag
+      animationSystem.notifiedIdle = false;
       callbacks.setGameState("menu");
     };
 
@@ -181,6 +186,9 @@ class GameManager {
       world.destroyEntity(this.localPlayerId);
       this.localPlayerId = null;
       this.gameStarted = false;
+      
+      // Reset animation system notification flag
+      animationSystem.notifiedIdle = false;
     }
   }
 
@@ -196,6 +204,13 @@ networkSystem.setGameManager(gameManager);
 
 // Bind the send chat message method
 gameManager.sendChatMessage = gameManager.sendChatMessage.bind(gameManager);
+
+// Set up animation system callback to transition from loading to playing
+animationSystem.onLocalPlayerIdleAnimation = () => {
+  if (gameManager && gameManager.stateCallbacks) {
+    gameManager.stateCallbacks.setGameState('playing');
+  }
+};
 
 // Window resize handler
 window.addEventListener("resize", () => {

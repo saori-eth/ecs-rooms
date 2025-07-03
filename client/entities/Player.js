@@ -78,13 +78,16 @@ export async function createPlayer(
   );
   world.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
 
-  // Add camera target for local player
+  // Add camera target and local player tag for local player
   if (isLocal) {
     world.addComponent(
       entityId,
       ComponentTypes.CAMERA_TARGET,
       createCameraTargetComponent()
     );
+    
+    // Tag as local player for animation system detection
+    world.addComponent(entityId, 'localPlayer', { isLocal: true });
   }
 
   // Load animations
