@@ -1,29 +1,23 @@
-// Script loading utilities for production environments
+// Script loading utilities
 export async function loadGameScript(scriptPath) {
   try {
-    // Extract script name from path
-    const scriptName = scriptPath.split("/").pop().replace(".js", "");
-
-    // Import all scripts statically for production bundling
-    const scriptRegistry = {
-      "arena-shooting-game": () =>
-        import("./rooms/scripts/arena-shooting-game.js"),
-      "arena-logic": () => import("./rooms/scripts/arena-logic.js"),
+    // Extract the script name from the path
+    const scriptName = scriptPath.split('/').pop().replace('.js', '');
+    
+    // Map of available scripts - these are bundled with the app
+    const scriptModules = {
+      'arena-shooting-game': () => import('./rooms/scripts/arena-shooting-game.js'),
+      'arena-logic': () => import('./rooms/scripts/arena-logic.js'),
     };
-
-    if (scriptRegistry[scriptName]) {
-      return await scriptRegistry[scriptName]();
-    }
-
-    // In development, try dynamic import as fallback
-    if (import.meta.env.DEV) {
-      const module = await import(/* @vite-ignore */ scriptPath);
+    
+    if (scriptModules[scriptName]) {
+      const module = await scriptModules[scriptName]();
       return module;
     }
-
+    
     throw new Error(`Script '${scriptName}' not found in registry`);
   } catch (error) {
-    console.error("[ScriptLoader] Failed to load script:", error);
+    console.error(`[ScriptLoader] Failed to load script: ${scriptPath}`, error);
     throw error;
   }
 }
