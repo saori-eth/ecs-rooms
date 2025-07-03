@@ -26,6 +26,7 @@ export function createInputComponent() {
       s: false,
       d: false,
     },
+    moveVector: { x: 0, y: 0, z: 0 },
   };
 }
 
