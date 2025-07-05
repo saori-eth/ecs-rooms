@@ -2,6 +2,10 @@ import { ComponentTypes } from "../components.js";
 import * as THREE from "three";
 
 export function createInterpolationSystem() {
+  // Create reusable objects to avoid allocation in update loop
+  const tempQuaternion1 = new THREE.Quaternion();
+  const tempQuaternion2 = new THREE.Quaternion();
+
   return {
     update(world, deltaTime) {
       const entities = world.getEntitiesWithComponents(
@@ -92,15 +96,21 @@ export function createInterpolationSystem() {
               const t =
                 (renderTime - r0.timestamp) / (r1.timestamp - r0.timestamp);
 
-              const q1 = new THREE.Quaternion().fromArray(r0.rotation);
-              const q2 = new THREE.Quaternion().fromArray(r1.rotation);
+              // Use reusable quaternions instead of creating new ones
+              tempQuaternion1.fromArray(r0.rotation);
+              tempQuaternion2.fromArray(r1.rotation);
 
-              vrmComponent.vrm.scene.quaternion.slerpQuaternions(q1, q2, t);
+              vrmComponent.vrm.scene.quaternion.slerpQuaternions(
+                tempQuaternion1,
+                tempQuaternion2,
+                t
+              );
             } else if (interpolation.rotationBuffer.length === 1) {
-              const targetQuat = new THREE.Quaternion().fromArray(
+              // Use reusable quaternion instead of creating new one
+              tempQuaternion1.fromArray(
                 interpolation.rotationBuffer[0].rotation
               );
-              vrmComponent.vrm.scene.quaternion.slerp(targetQuat, 0.1);
+              vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion1, 0.1);
             }
           }
         }

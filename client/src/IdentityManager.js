@@ -11,7 +11,10 @@ export class IdentityManager {
       try {
         const identity = JSON.parse(stored);
         // Validate avatarId
-        if (this.availableAvatars.length > 0 && !this.availableAvatars.find(a => a.id === identity.avatarId)) {
+        if (
+          this.availableAvatars.length > 0 &&
+          !this.availableAvatars.find((a) => a.id === identity.avatarId)
+        ) {
           identity.avatarId = this.availableAvatars[0].id;
           localStorage.setItem(this.storageKey, JSON.stringify(identity));
         }
@@ -23,7 +26,8 @@ export class IdentityManager {
 
     return {
       name: `Player${Math.floor(Math.random() * 1000)}`,
-      avatarId: this.availableAvatars.length > 0 ? this.availableAvatars[0].id : "killua",
+      avatarId:
+        this.availableAvatars.length > 0 ? this.availableAvatars[0].id : "lain",
     };
   }
 

@@ -3,6 +3,10 @@ import * as CANNON from "cannon-es";
 import * as THREE from "three";
 
 export function createMovementSystem() {
+  // Create reusable objects to avoid allocation in update loop
+  const tempQuaternion = new THREE.Quaternion();
+  const yAxis = new THREE.Vector3(0, 1, 0);
+
   return {
     update(world, deltaTime) {
       const entities = world.getEntitiesWithComponents(
@@ -35,11 +39,9 @@ export function createMovementSystem() {
         // Rotate VRM to face movement direction
         if (vrmComponent && vrmComponent.vrm && (x !== 0 || z !== 0)) {
           const angle = Math.atan2(x, z) + Math.PI;
-          const targetQuaternion = new THREE.Quaternion().setFromAxisAngle(
-            new THREE.Vector3(0, 1, 0),
-            angle
-          );
-          vrmComponent.vrm.scene.quaternion.slerp(targetQuaternion, 0.15);
+          // Use reusable quaternion instead of creating new one
+          tempQuaternion.setFromAxisAngle(yAxis, angle);
+          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, 0.15);
         }
 
         physicsComponent.body.velocity.y = Math.max(

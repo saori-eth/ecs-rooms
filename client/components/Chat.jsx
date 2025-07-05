@@ -1,13 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Chat.css";
 
-function Chat() {
+function Chat({ gameManager }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    // Set up chat message handler
+    if (gameManager) {
+      gameManager.onChatMessage = (message) => {
+        setMessages((prev) => [...prev, message]);
+      };
+    }
+  }, [gameManager]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -31,7 +40,14 @@ function Chat() {
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmedMessage = inputValue.trim();
-    // TODO: Implement chat message sending
+    if (trimmedMessage && gameManager && gameManager.sendChatMessage) {
+      gameManager.sendChatMessage(trimmedMessage);
+      setInputValue("");
+    } else {
+      console.error(
+        "[Chat] Cannot send message - missing gameManager or sendChatMessage"
+      );
+    }
   };
 
   const handleInputFocus = () => {

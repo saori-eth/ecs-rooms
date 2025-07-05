@@ -141,6 +141,7 @@
   font-size: 14px;
   line-height: 1.4;
   word-wrap: break-word;
+  user-select: none;
 }
 
 .chat-author {

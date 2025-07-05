@@ -135,7 +135,7 @@ export function handleConnection(ws) {
         case "joinGame":
           client.identity = message.identity || {
             name: `Player${client.id}`,
-            avatarId: process.env.DEFAULT_AVATAR_ID || "killua",
+            avatarId: process.env.DEFAULT_AVATAR_ID || "lain",
           };
           const roomType = message.roomType || "default-arena";
           const room = findOrCreateRoom(roomType);
