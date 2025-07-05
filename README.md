@@ -48,38 +48,6 @@ npm start
 - Dynamic room/scene loading
 - Scripting system for game logic
 
-## Documentation
-
-- [Scene Setup](docs/scenes.md) - How to create and configure 3D scenes
-- [Scripting Guide](docs/scripting.md) - Writing game logic scripts
-- [Entity API](docs/api/entities.md) - Entity and component management
-- [Physics API](docs/api/physics.md) - Physics bodies and collision
-- [Networking API](docs/api/networking.md) - Multiplayer events and sync
-- [Visual API](docs/api/visual.md) - Three.js scene and rendering
-
-## Project Structure
-```
-client/
-├── src/
-│   ├── systems/         # ECS systems
-│   ├── ecs/            # Core ECS implementation
-│   ├── rooms/          # Room definitions
-│   └── main.js         # Entry point
-public/
-├── models/             # 3D models (GLTF/GLB)
-├── rooms/
-│   └── scripts/        # Game logic scripts
-server/
-└── index.js           # WebSocket server
-```
-
-## Creating a Game
-
-1. **Add 3D model** to `/public/models/`
-2. **Define room** in `/client/rooms/room-definitions.js`
-3. **Write script** in `/public/rooms/scripts/`
-4. **Test** by joining the room
-
 Example room:
 ```javascript
 "my-game": {
