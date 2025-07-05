@@ -34,7 +34,7 @@ export async function createPlayer(
   if (scene) scene.add(playerGroup);
 
   // Load VRM model
-  const avatarId = identity?.avatarId || "killua";
+  const avatarId = identity?.avatarId || "cryptovoxels";
   if (!vrmManager) {
     throw new Error("VRMManager is required to create a player");
   }

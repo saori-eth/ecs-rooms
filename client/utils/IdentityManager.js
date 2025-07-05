@@ -16,7 +16,7 @@ export class IdentityManager {
 
     return {
       name: `Player${Math.floor(Math.random() * 1000)}`,
-      avatarId: "killua",
+      avatarId: "cryptovoxels",
     };
   }
 
