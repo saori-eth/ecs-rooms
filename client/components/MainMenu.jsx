@@ -4,19 +4,15 @@ import { MenuScene } from "../src/MenuScene.js";
 import { MenuTabs } from "./MenuTabs.jsx";
 import { Inventory } from "./Inventory.jsx";
 import { RoomSelector } from "./RoomSelector.jsx";
+import { rooms } from "../ecs/rooms/room-definitions.js";
 
-const rooms = {
-  "default-arena": {
-    name: "Default Arena",
-    description: "A default arena for testing",
-  },
-  "test-room": {
-    name: "Test Room",
-    description: "A test room for testing",
-  },
-};
-
-function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay, onIdentityUpdate }) {
+function MainMenu({
+  playerIdentity,
+  connectionStatus,
+  playEnabled,
+  onPlay,
+  onIdentityUpdate,
+}) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
   const [roomType, setRoomType] = useState(
@@ -77,11 +73,11 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay, onIde
 
   const handleNameChange = (newName) => {
     setName(newName);
-    
+
     // Update localStorage with the new name
     const updatedIdentity = { ...playerIdentity, name: newName };
     localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
-    
+
     // Notify parent component if callback is provided
     if (onIdentityUpdate) {
       onIdentityUpdate(updatedIdentity);
@@ -94,7 +90,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay, onIde
     // Save the avatar selection to localStorage immediately
     const updatedIdentity = { ...playerIdentity, avatarId: newAvatarId };
     localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
-    
+
     // Notify parent component if callback is provided
     if (onIdentityUpdate) {
       onIdentityUpdate(updatedIdentity);
@@ -135,6 +131,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay, onIde
             <button
               className="play-button"
               disabled={!playEnabled}
+              onClick={handlePlay}
             >
               <span className="play-button-text">PLAY</span>
               <svg

@@ -1,17 +1,7 @@
 import React from "react";
 import { RoomCard } from "./RoomCard.jsx";
 import "./RoomSelector.css";
-
-const rooms = {
-  "default-arena": {
-    name: "Default Arena",
-    description: "A default arena for testing",
-  },
-  "test-room": {
-    name: "Test Room",
-    description: "A test room for testing",
-  },
-};
+import { rooms } from "../ecs/rooms/room-definitions.js";
 
 export const RoomSelector = ({ selectedRoom, onRoomSelect }) => {
   // Convert rooms object to array with IDs
