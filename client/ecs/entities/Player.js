@@ -12,8 +12,8 @@ import {
   createVRMComponent,
   createAnimationComponent,
   createCameraTargetComponent,
-} from "../ecs/components.js";
-import { createNameplateSprite } from "../utils/NameplateGenerator.js";
+} from "../components.js";
+import { createNameplateSprite } from "../../src/NameplateGenerator.js";
 
 export async function createPlayer(
   world,

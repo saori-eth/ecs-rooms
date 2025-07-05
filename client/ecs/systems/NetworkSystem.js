@@ -1,5 +1,5 @@
 import { ComponentTypes, createInterpolationComponent } from "../components.js";
-import { createPlayer } from "../../entities/Player.js";
+import { createPlayer } from "../entities/Player.js";
 
 export function createNetworkSystem() {
   let ws = null;

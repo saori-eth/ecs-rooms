@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import MainMenu from "./components/MainMenu";
+import GameUI from "./components/GameUI";
 import LoadingScreen from "./components/LoadingScreen";
 import { useGameState } from "./hooks/useGameState";
-import { IdentityManager } from "./src/IdentityManager";
-import { VRMManager } from "./src/VRMLoader";
+import { ECSManager } from "./ecs/ECSManager";
 import "./App.css";
 
 function App() {
+  const [gameManager] = useState(() => new ECSManager());
   const [isInitialized, setIsInitialized] = useState(false);
   const {
     gameState,
@@ -24,21 +25,57 @@ function App() {
   }, [gameState]);
 
   const [playerIdentity, setPlayerIdentity] = useState(() => {
-    // Create VRMManager instance to get available avatars
-    const vrmManager = new VRMManager();
-    const availableAvatars = vrmManager.getAvailableAvatars();
-    
-    // Create IdentityManager with available avatars for validation
-    const identityManager = new IdentityManager(availableAvatars);
-    const identity = identityManager.getIdentity();
-    
-    // Add a unique ID if not present
-    if (!identity.id) {
-      identity.id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const saved = localStorage.getItem("playerIdentity");
+    if (saved) {
+      return JSON.parse(saved);
     }
-    
-    return identity;
+    return {
+      name: "",
+      avatarId: "cryptovoxels",
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    };
   });
+
+  // Pass state setters to game manager
+  useEffect(() => {
+    if (gameManager) {
+      gameManager.setStateCallbacks({
+        setGameState,
+        setConnectionStatus,
+        setPlayEnabled,
+        updateRoomInfo,
+        getPlayerIdentity: () => playerIdentity,
+      });
+    }
+  }, [gameManager, playerIdentity]);
+
+  const handlePlay = async (name, avatarId, roomType) => {
+    const updatedIdentity = { ...playerIdentity, name, avatarId };
+    setPlayerIdentity(updatedIdentity);
+    localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
+
+    // Set game state to loading immediately
+    setGameState("loading");
+
+    // Initialize game if not already done
+    if (!isInitialized) {
+      const container = document.getElementById("canvas-container");
+      await gameManager.initialize(container);
+      setIsInitialized(true);
+    }
+
+    if (gameManager && gameManager.onPlay) {
+      gameManager.onPlay(updatedIdentity, roomType);
+    }
+  };
+
+  const handleExit = () => {
+    if (gameManager) {
+      gameManager.reset();
+    }
+    setIsInitialized(false);
+    setGameState("menu");
+  };
 
   return (
     <div className="app">
@@ -47,10 +84,17 @@ function App() {
           playerIdentity={playerIdentity}
           connectionStatus={connectionStatus}
           playEnabled={playEnabled}
-          onIdentityUpdate={setPlayerIdentity}
+          onPlay={handlePlay}
         />
       )}
       {gameState === "loading" && <LoadingScreen />}
+      {gameState === "playing" && (
+        <GameUI
+          roomInfo={roomInfo}
+          gameManager={gameManager}
+          onExit={handleExit}
+        />
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { createPlayer } from "../entities/Player.js";
+import { createPlayer } from "./entities/Player.js";
 import { ECSApi } from "./ECSApi.js";
 import { createMovementSystem } from "./systems/MovementSystem.js";
 import { createRenderSystem } from "./systems/RenderSystem.js";
@@ -7,10 +7,10 @@ import { createNetworkSystem } from "./systems/NetworkSystem.js";
 import { createInterpolationSystem } from "./systems/InterpolationSystem.js";
 import { createPhysicsSystem } from "./systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./systems/AnimationSystem.js";
-import { SceneManager } from "../src/SceneManager.js";
+import { SceneManager } from "./SceneManager.js";
 import { CameraSystem } from "./systems/CameraSystem.js";
-import { VRMManager } from "../utils/VRMLoader.js";
-import { AnimationManager } from "../utils/AnimationManager.js";
+import { VRMManager } from "../src/VRMLoader.js";
+import { AnimationManager } from "../src/AnimationManager.js";
 
 // Game manager to bridge React and Three.js
 export class ECSManager {
