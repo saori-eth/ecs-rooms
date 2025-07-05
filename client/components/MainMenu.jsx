@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./MainMenu.css";
-import { rooms } from "../src/room-definitions.js";
 import { MenuScene } from "../src/MenuScene.js";
 import { MenuTabs } from "./MenuTabs.jsx";
 import { Inventory } from "./Inventory.jsx";
 import { RoomSelector } from "./RoomSelector.jsx";
 
-function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
+const rooms = {
+  "default-arena": {
+    name: "Default Arena",
+    description: "A default arena for testing",
+  },
+  "test-room": {
+    name: "Test Room",
+    description: "A test room for testing",
+  },
+};
+
+function MainMenu({ playerIdentity, connectionStatus, playEnabled }) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
   const [roomType, setRoomType] = useState(
@@ -104,7 +114,6 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
           <div className="player-info-container">
             <button
               className="play-button"
-              onClick={handlePlay}
               disabled={!playEnabled}
             >
               <span className="play-button-text">PLAY</span>

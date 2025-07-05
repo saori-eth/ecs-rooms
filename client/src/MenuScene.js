@@ -1,6 +1,6 @@
 import * as THREE from "three";
-import { VRMManager } from "../utils/VRMLoader.js";
-import { AnimationManager } from "../utils/AnimationManager.js";
+import { VRMManager } from "./VRMLoader.js";
+import { AnimationManager } from "./AnimationManager.js";
 import gsap from "gsap";
 
 // Helper function to dispose of Three.js objects
