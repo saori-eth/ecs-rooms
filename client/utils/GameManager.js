@@ -1,87 +1,46 @@
 import { createPlayer } from "../entities/Player.js";
+import { World } from "../ecs/World.js";
+import { createMovementSystem } from "../ecs/systems/MovementSystem.js";
+import { createRenderSystem } from "../ecs/systems/RenderSystem.js";
+import { createInputSystem } from "../ecs/systems/InputSystem.js";
+import { createNetworkSystem } from "../ecs/systems/NetworkSystem.js";
+import { createInterpolationSystem } from "../ecs/systems/InterpolationSystem.js";
+import { createPhysicsSystem } from "../ecs/systems/PhysicsSystem.js";
+import { createAnimationSystem } from "../ecs/systems/AnimationSystem.js";
+import { SceneManager } from "../src/SceneManager.js";
+import { CameraSystem } from "../ecs/systems/CameraSystem.js";
 
 // Game manager to bridge React and Three.js
 export class GameManager {
-  constructor({
-    networkSystem,
-    inputSystem,
-    sceneManager,
-    world,
-    physicsSystem,
-    animationSystem,
-    scene,
-  }) {
+  constructor() {
     this.localPlayerId = null;
     this.gameStarted = false;
     this.stateCallbacks = null;
-    this.networkSystem = networkSystem;
-    this.inputSystem = inputSystem;
-    this.sceneManager = sceneManager;
-    this.world = world;
-    this.physicsSystem = physicsSystem;
-    this.animationSystem = animationSystem;
-    this.scene = scene;
+    this.inputSystem = null;
+    this.sceneManager = null;
+    this.world = null;
+    this.physicsSystem = null;
+    this.animationSystem = null;
+    this.scene = null;
+    this.initialized = false;
 
     // Set up mobile input callback
-    this.mobileInputCallback = (moveVector) => {
-      if (inputSystem.handleMobileInput) {
-        inputSystem.handleMobileInput(moveVector);
-      }
-    };
+    this.mobileInputCallback = null;
 
     // Chat message handler placeholder
     this.onChatMessage = null;
+
+    // Create network system early for connection status
+    this.networkSystem = createNetworkSystem();
+    // Connect immediately for connection status in menu
+    this.networkSystem.connect();
   }
 
   setStateCallbacks(callbacks) {
     this.stateCallbacks = callbacks;
-
-    // Set up network system callbacks
-    this.networkSystem.onConnectionStatusChange = (status) => {
-      callbacks.setConnectionStatus(status);
-    };
-
-    this.networkSystem.onConnectionReady = (ready) => {
-      callbacks.setPlayEnabled(ready);
-    };
-
-    this.networkSystem.onRoomUpdate = (roomId, playerCount, maxPlayers) => {
-      callbacks.updateRoomInfo(roomId, playerCount, maxPlayers);
-    };
-
-    this.networkSystem.onJoinedRoom = (roomData) => {
-      if (roomData.roomType) {
-        this.sceneManager.loadRoom(roomData.roomType);
-      } else {
-        console.warn("[main] No roomType in roomData");
-      }
-    };
-
-    this.networkSystem.onGameStart = () => {
-      // Don't set playing state here anymore - wait for idle animation
-      // callbacks.setGameState("playing");
-    };
-
-    this.networkSystem.onDisconnect = () => {
-      // Reset animation system notification flag
-      this.animationSystem.notifiedIdle = false;
-      callbacks.setGameState("menu");
-    };
-
-    this.networkSystem.onPlayerJoined = (playerId) => {
-      this.sceneManager.onPlayerJoin(playerId);
-    };
-
-    this.networkSystem.onPlayerLeft = (playerId) => {
-      this.sceneManager.onPlayerLeave(playerId);
-    };
-
-    // Set up chat message handler
-    this.networkSystem.onChatMessage = (message) => {
-      if (this.onChatMessage) {
-        this.onChatMessage(message);
-      }
-    };
+    
+    // Always set up network callbacks since network system exists from constructor
+    this.setupNetworkCallbacks();
   }
 
   async onPlay(playerIdentity, roomType) {
@@ -128,5 +87,152 @@ export class GameManager {
 
   sendChatMessage(text) {
     this.networkSystem.sendChatMessage(text);
+  }
+
+  reset() {
+    this.stopGame();
+
+    if (this.world) {
+      this.world.reset();
+    }
+    
+    if (this.sceneManager) {
+      this.sceneManager.reset();
+    }
+
+    // Reset GameManager state
+    this.gameStarted = false;
+    this.localPlayerId = null;
+
+    if (this.animationSystem) {
+      this.animationSystem.notifiedIdle = false;
+    }
+  }
+
+  async initialize(container) {
+    if (this.initialized) {
+      console.warn("GameManager already initialized");
+      return;
+    }
+
+    // Create the ECS world
+    this.world = new World();
+    
+    // Initialize Three.js components
+    this.world.initialize(container);
+    this.scene = this.world.scene;
+
+    // Create all systems
+    this.physicsSystem = createPhysicsSystem();
+    this.world.physicsWorld = this.physicsSystem.world;
+    
+    // Network system already created in constructor
+    // Update its world reference
+    this.networkSystem.init(this.world);
+    
+    this.inputSystem = createInputSystem();
+    this.animationSystem = createAnimationSystem();
+
+    // Register systems with the world
+    this.world.registerSystem(this.inputSystem);
+    this.world.registerSystem(createMovementSystem());
+    this.world.registerSystem(this.physicsSystem);
+    this.world.registerSystem(createInterpolationSystem());
+    this.world.registerSystem(createRenderSystem(this.scene));
+    this.world.registerSystem(this.networkSystem);
+    this.world.registerSystem(this.animationSystem);
+    this.world.addSystem(new CameraSystem());
+
+    // Set global references for debugging
+    window.physicsWorld = this.physicsSystem.world;
+
+    // Create scene manager
+    this.sceneManager = new SceneManager(
+      this.scene,
+      this.physicsSystem.world,
+      this.world,
+      this.networkSystem
+    );
+    
+    // Set sceneManager reference in world for update calls
+    this.world.sceneManager = this.sceneManager;
+
+    // Pass game manager to network system
+    this.networkSystem.setGameManager(this);
+
+    // Bind the send chat message method
+    this.sendChatMessage = this.sendChatMessage.bind(this);
+
+    // Set up mobile input callback
+    this.mobileInputCallback = (moveVector) => {
+      if (this.inputSystem.handleMobileInput) {
+        this.inputSystem.handleMobileInput(moveVector);
+      }
+    };
+
+    // Set up animation system callback to transition from loading to playing
+    this.animationSystem.onLocalPlayerIdleAnimation = () => {
+      if (this.stateCallbacks) {
+        this.stateCallbacks.setGameState("playing");
+      }
+    };
+
+    // Set up network system callbacks if stateCallbacks already exist
+    if (this.stateCallbacks) {
+      this.setupNetworkCallbacks();
+    }
+
+    // Start the game loop
+    this.world.start();
+    
+    this.initialized = true;
+  }
+
+  setupNetworkCallbacks() {
+    if (!this.networkSystem || !this.stateCallbacks) return;
+
+    this.networkSystem.onConnectionStatusChange = (status) => {
+      this.stateCallbacks.setConnectionStatus(status);
+    };
+
+    this.networkSystem.onConnectionReady = (ready) => {
+      this.stateCallbacks.setPlayEnabled(ready);
+    };
+
+    this.networkSystem.onRoomUpdate = (roomId, playerCount, maxPlayers) => {
+      this.stateCallbacks.updateRoomInfo(roomId, playerCount, maxPlayers);
+    };
+
+    this.networkSystem.onJoinedRoom = (roomData) => {
+      if (roomData.roomType) {
+        this.sceneManager.loadRoom(roomData.roomType);
+      } else {
+        console.warn("[main] No roomType in roomData");
+      }
+    };
+
+    this.networkSystem.onGameStart = () => {
+      // Don't set playing state here anymore - wait for idle animation
+    };
+
+    this.networkSystem.onDisconnect = () => {
+      this.reset();
+      this.stateCallbacks.setGameState("menu");
+    };
+
+    this.networkSystem.onPlayerJoined = (playerId) => {
+      this.sceneManager.onPlayerJoin(playerId);
+    };
+
+    this.networkSystem.onPlayerLeft = (playerId) => {
+      this.sceneManager.onPlayerLeave(playerId);
+    };
+
+    // Set up chat message handler
+    this.networkSystem.onChatMessage = (message) => {
+      if (this.onChatMessage) {
+        this.onChatMessage(message);
+      }
+    };
   }
 }

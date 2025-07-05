@@ -1,9 +1,15 @@
+import * as THREE from "three";
+
 export class World {
   constructor() {
     this.entities = new Map()
     this.components = new Map()
     this.systems = []
     this.nextEntityId = 1
+    this.scene = null
+    this.camera = null
+    this.renderer = null
+    this.animationFrameId = null
   }
 
   createEntity() {
@@ -84,6 +90,11 @@ export class World {
   }
 
   update(deltaTime, ...args) {
+    // Update scene manager if it exists
+    if (this.sceneManager) {
+      this.sceneManager.update(deltaTime);
+    }
+    
     for (const system of this.systems) {
       system.update(this, deltaTime, ...args)
     }
@@ -96,5 +107,116 @@ export class World {
       }
     }
     return null
+  }
+
+  initialize(container) {
+    // Three.js setup
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0a0a0a);
+
+    this.camera = new THREE.PerspectiveCamera(
+      75,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    this.camera.position.set(0, 5, 5);
+    this.camera.lookAt(0, 0, 0);
+
+    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(this.renderer.domElement);
+
+    // Lighting setup
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    this.scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(10, 10, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.near = 0.1;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -10;
+    directionalLight.shadow.camera.right = 10;
+    directionalLight.shadow.camera.top = 10;
+    directionalLight.shadow.camera.bottom = -10;
+    this.scene.add(directionalLight);
+
+    // Window resize handler
+    window.addEventListener("resize", () => {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Set global references for debugging
+    window.scene = this.scene;
+  }
+
+  start() {
+    if (!this.renderer || !this.scene || !this.camera) {
+      throw new Error("World must be initialized before starting");
+    }
+
+    let lastTime = 0;
+    const animate = (time) => {
+      this.animationFrameId = requestAnimationFrame(animate);
+
+      const deltaTime = (time - lastTime) / 1000;
+      lastTime = time;
+
+      this.update(deltaTime, this.camera);
+      this.renderer.render(this.scene, this.camera);
+    };
+
+    requestAnimationFrame(animate);
+  }
+
+  stop() {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+  }
+
+  reset() {
+    this.stop();
+
+    // Clear all entities and their components
+    // Create a copy of entities keys to avoid mutation issues while iterating
+    const allEntityIds = [...this.entities.keys()];
+    allEntityIds.forEach(entityId => {
+      this.destroyEntity(entityId);
+    });
+
+    // Remove all objects from the scene, but keep essentials like camera and lights
+    if (this.scene) {
+      for (let i = this.scene.children.length - 1; i >= 0; i--) {
+        const object = this.scene.children[i];
+        if (object.type !== 'PerspectiveCamera' && 
+            object.type !== 'DirectionalLight' && 
+            object.type !== 'AmbientLight') {
+          this.scene.remove(object);
+          // Dispose of geometries and materials to free memory
+          if (object.geometry) object.geometry.dispose();
+          if (object.material) {
+            if (Array.isArray(object.material)) {
+              object.material.forEach(mat => mat.dispose());
+            } else {
+              object.material.dispose();
+            }
+          }
+        }
+      }
+    }
+
+    // Reset entity counter
+    this.nextEntityId = 1;
+    
+    // Clear component storages
+    this.components.clear();
+    this.entities.clear();
   }
 }

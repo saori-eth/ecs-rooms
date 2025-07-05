@@ -293,7 +293,15 @@ export function createNetworkSystem() {
   const networkSystem = {
     init(w) {
       world = w;
-      connect();
+      if (!ws) {
+        connect();
+      }
+    },
+
+    connect() {
+      if (!ws) {
+        connect();
+      }
     },
 
     setGameManager(gm) {

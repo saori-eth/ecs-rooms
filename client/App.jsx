@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import MainMenu from "./components/MainMenu";
 import GameUI from "./components/GameUI";
 import LoadingScreen from "./components/LoadingScreen";
@@ -6,6 +6,7 @@ import { useGameState } from "./hooks/useGameState";
 import "./App.css";
 
 function App({ gameManager }) {
+  const [isInitialized, setIsInitialized] = useState(false);
   const {
     gameState,
     connectionStatus,
@@ -42,13 +43,20 @@ function App({ gameManager }) {
     }
   }, [gameManager, playerIdentity]);
 
-  const handlePlay = (name, avatarId, roomType) => {
+  const handlePlay = async (name, avatarId, roomType) => {
     const updatedIdentity = { ...playerIdentity, name, avatarId };
     setPlayerIdentity(updatedIdentity);
     localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
 
     // Set game state to loading immediately
     setGameState("loading");
+
+    // Initialize game if not already done
+    if (!isInitialized) {
+      const container = document.getElementById("canvas-container");
+      await gameManager.initialize(container);
+      setIsInitialized(true);
+    }
 
     if (gameManager && gameManager.onPlay) {
       gameManager.onPlay(updatedIdentity, roomType);

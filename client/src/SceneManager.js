@@ -249,4 +249,10 @@ export class SceneManager {
       this.activeScript.onPlayerLeave(playerId);
     }
   }
+
+  reset() {
+    this.unloadCurrentRoom();
+    this.activeRoom = null;
+    this.activeScript = null;
+  }
 }
