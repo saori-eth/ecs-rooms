@@ -1,0 +1,128 @@
+.inventory-container {
+  position: absolute;
+  right: 40px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 600px;
+  animation: slideInRight 0.5s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px) translateY(-50%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) translateY(-50%);
+  }
+}
+
+.inventory-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.inventory-header h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+}
+
+.inventory-header p {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  padding: 20px;
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+  .inventory-container {
+    right: 20px;
+    max-width: 500px;
+  }
+
+  .inventory-grid {
+    gap: 12px;
+    padding: 16px;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .inventory-container {
+    position: fixed;
+    right: 0;
+    left: 0;
+    top: auto;
+    bottom: 80px;
+    transform: none;
+    max-width: 100%;
+    padding: 0 20px;
+    animation: slideInUp 0.5s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .inventory-header {
+    margin-bottom: 16px;
+  }
+
+  .inventory-header h2 {
+    font-size: 22px;
+  }
+
+  .inventory-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 12px;
+    gap: 16px;
+    /* Add padding to the end of the list to ensure box-shadow is not cut off */
+    padding-right: 20px;
+  }
+
+  /* Add a specific rule for avatar cards within the mobile grid */
+  .inventory-grid .avatar-card {
+    flex-shrink: 0;
+  }
+
+  .inventory-grid::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .inventory-grid::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+  }
+
+  .inventory-grid::-webkit-scrollbar-thumb {
+    background: rgba(64, 128, 255, 0.5);
+    border-radius: 2px;
+  }
+}

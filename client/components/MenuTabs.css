@@ -1,0 +1,136 @@
+.menu-tabs-container {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    animation: fadeInDown 0.5s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.menu-tabs {
+    display: flex;
+    gap: 4px;
+    background: rgba(10, 10, 15, 0.6);
+    backdrop-filter: blur(20px);
+    padding: 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.menu-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-radius: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.menu-tab::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, transparent, rgba(64, 128, 255, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.menu-tab:hover {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.menu-tab:hover::before {
+    opacity: 1;
+}
+
+.menu-tab.active {
+    background: rgba(64, 128, 255, 0.2);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(64, 128, 255, 0.3);
+}
+
+.menu-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 3px;
+    background: #4080ff;
+    border-radius: 2px;
+    box-shadow: 0 0 8px rgba(64, 128, 255, 0.8);
+}
+
+.tab-icon {
+    font-size: 18px;
+}
+
+.tab-label {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+    .menu-tabs-container {
+        top: 20px;
+    }
+
+    .menu-tab {
+        padding: 10px 20px;
+        font-size: 13px;
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .menu-tabs-container {
+        top: 10px;
+    }
+
+    .menu-tabs {
+        gap: 2px;
+        padding: 6px;
+    }
+
+    .menu-tab {
+        padding: 8px 16px;
+        font-size: 12px;
+        gap: 6px;
+    }
+
+    .tab-icon {
+        font-size: 16px;
+    }
+
+    .tab-label {
+        display: none; /* Hide labels on mobile to save space */
+    }
+
+    .menu-tab {
+        padding: 10px 16px;
+    }
+}

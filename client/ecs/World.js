@@ -2,91 +2,91 @@ import * as THREE from "three";
 
 export class World {
   constructor() {
-    this.entities = new Map()
-    this.components = new Map()
-    this.systems = []
-    this.nextEntityId = 1
-    this.scene = null
-    this.camera = null
-    this.renderer = null
-    this.animationFrameId = null
+    this.entities = new Map();
+    this.components = new Map();
+    this.systems = [];
+    this.nextEntityId = 1;
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.animationFrameId = null;
   }
 
   createEntity() {
-    const id = this.nextEntityId++
-    this.entities.set(id, new Set())
-    return id
+    const id = this.nextEntityId++;
+    this.entities.set(id, new Set());
+    return id;
   }
 
   destroyEntity(entityId) {
-    const componentTypes = this.entities.get(entityId)
+    const componentTypes = this.entities.get(entityId);
     if (componentTypes) {
-      componentTypes.forEach(type => {
-        const storage = this.components.get(type)
+      componentTypes.forEach((type) => {
+        const storage = this.components.get(type);
         if (storage) {
-          storage.delete(entityId)
+          storage.delete(entityId);
         }
-      })
-      this.entities.delete(entityId)
+      });
+      this.entities.delete(entityId);
     }
   }
 
   addComponent(entityId, componentType, data) {
     if (!this.entities.has(entityId)) {
-      throw new Error(`Entity ${entityId} does not exist`)
+      throw new Error(`Entity ${entityId} does not exist`);
     }
 
     if (!this.components.has(componentType)) {
-      this.components.set(componentType, new Map())
+      this.components.set(componentType, new Map());
     }
 
-    this.components.get(componentType).set(entityId, data)
-    this.entities.get(entityId).add(componentType)
+    this.components.get(componentType).set(entityId, data);
+    this.entities.get(entityId).add(componentType);
   }
 
   removeComponent(entityId, componentType) {
-    const storage = this.components.get(componentType)
+    const storage = this.components.get(componentType);
     if (storage) {
-      storage.delete(entityId)
+      storage.delete(entityId);
     }
 
-    const entity = this.entities.get(entityId)
+    const entity = this.entities.get(entityId);
     if (entity) {
-      entity.delete(componentType)
+      entity.delete(componentType);
     }
   }
 
   getComponent(entityId, componentType) {
-    const storage = this.components.get(componentType)
-    return storage ? storage.get(entityId) : null
+    const storage = this.components.get(componentType);
+    return storage ? storage.get(entityId) : null;
   }
 
   hasComponent(entityId, componentType) {
-    const entity = this.entities.get(entityId)
-    return entity ? entity.has(componentType) : false
+    const entity = this.entities.get(entityId);
+    return entity ? entity.has(componentType) : false;
   }
 
   getEntitiesWithComponents(...componentTypes) {
-    const result = []
-    
+    const result = [];
+
     for (const [entityId, entityComponents] of this.entities) {
-      if (componentTypes.every(type => entityComponents.has(type))) {
-        result.push(entityId)
+      if (componentTypes.every((type) => entityComponents.has(type))) {
+        result.push(entityId);
       }
     }
-    
-    return result
+
+    return result;
   }
 
   registerSystem(system) {
-    this.systems.push(system)
+    this.systems.push(system);
     if (system.init) {
-      system.init(this)
+      system.init(this);
     }
   }
 
   addSystem(system) {
-    return this.registerSystem(system)
+    return this.registerSystem(system);
   }
 
   update(deltaTime, ...args) {
@@ -94,19 +94,19 @@ export class World {
     if (this.sceneManager) {
       this.sceneManager.update(deltaTime);
     }
-    
+
     for (const system of this.systems) {
-      system.update(this, deltaTime, ...args)
+      system.update(this, deltaTime, ...args);
     }
   }
 
   findEntityWithComponent(componentType) {
     for (const [entityId, entityComponents] of this.entities) {
       if (entityComponents.has(componentType)) {
-        return { id: entityId }
+        return { id: entityId };
       }
     }
-    return null
+    return null;
   }
 
   initialize(container) {
@@ -187,7 +187,7 @@ export class World {
     // Clear all entities and their components
     // Create a copy of entities keys to avoid mutation issues while iterating
     const allEntityIds = [...this.entities.keys()];
-    allEntityIds.forEach(entityId => {
+    allEntityIds.forEach((entityId) => {
       this.destroyEntity(entityId);
     });
 
@@ -195,15 +195,17 @@ export class World {
     if (this.scene) {
       for (let i = this.scene.children.length - 1; i >= 0; i--) {
         const object = this.scene.children[i];
-        if (object.type !== 'PerspectiveCamera' && 
-            object.type !== 'DirectionalLight' && 
-            object.type !== 'AmbientLight') {
+        if (
+          object.type !== "PerspectiveCamera" &&
+          object.type !== "DirectionalLight" &&
+          object.type !== "AmbientLight"
+        ) {
           this.scene.remove(object);
           // Dispose of geometries and materials to free memory
           if (object.geometry) object.geometry.dispose();
           if (object.material) {
             if (Array.isArray(object.material)) {
-              object.material.forEach(mat => mat.dispose());
+              object.material.forEach((mat) => mat.dispose());
             } else {
               object.material.dispose();
             }
@@ -214,7 +216,7 @@ export class World {
 
     // Reset entity counter
     this.nextEntityId = 1;
-    
+
     // Clear component storages
     this.components.clear();
     this.entities.clear();

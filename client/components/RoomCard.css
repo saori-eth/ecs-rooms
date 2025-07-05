@@ -1,0 +1,136 @@
+.room-card {
+    position: relative;
+    width: 280px;
+    height: 180px;
+    background: rgba(20, 20, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.room-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(64, 128, 255, 0.5);
+    box-shadow: 0 12px 32px rgba(64, 128, 255, 0.3);
+}
+
+.room-card.selected {
+    border-color: #4080ff;
+    background: rgba(64, 128, 255, 0.2);
+    box-shadow: 0 8px 24px rgba(64, 128, 255, 0.4);
+}
+
+.room-card-image {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.room-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.room-card:hover .room-card-image img {
+    transform: scale(1.1);
+}
+
+.room-card-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.8) 100%);
+    pointer-events: none;
+}
+
+.room-card-players {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 4px 8px;
+    border-radius: 12px;
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.room-card-players svg {
+    opacity: 0.8;
+}
+
+.room-card-info {
+    padding: 12px 16px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.room-card-info h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 4px 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.room-card-info p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.room-card-selected-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #4080ff;
+    color: #ffffff;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 8px rgba(64, 128, 255, 0.6);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .room-card {
+        width: 100%;
+        min-width: 240px;
+        height: 160px;
+    }
+
+    .room-card-image {
+        height: 100px;
+    }
+
+    .room-card-info {
+        padding: 10px 14px;
+    }
+
+    .room-card-info h3 {
+        font-size: 14px;
+    }
+
+    .room-card-info p {
+        font-size: 11px;
+    }
+}

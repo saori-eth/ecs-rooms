@@ -14,20 +14,16 @@
   overflow-y: auto;
   margin-bottom: 16px;
   padding: 0 16px;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 20%,
-    black 80%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 20%,
-    black 80%,
-    transparent 100%
-  );
+  mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    black 20%, 
+    black 80%, 
+    transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    black 20%, 
+    black 80%, 
+    transparent 100%);
 }
 
 .chat-container.desktop .chat-input-form {
@@ -38,7 +34,8 @@
   -webkit-backdrop-filter: blur(16px);
   padding: 12px;
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(255, 255, 255, 0.05);
   pointer-events: auto;
 }
 
@@ -105,20 +102,16 @@
   flex-direction: column;
   justify-content: flex-end;
   min-height: 0;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 10%,
-    black 90%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 10%,
-    black 90%,
-    transparent 100%
-  );
+  mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    black 10%, 
+    black 90%, 
+    transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, 
+    transparent 0%, 
+    black 10%, 
+    black 90%, 
+    transparent 100%);
 }
 
 .chat-container.mobile.input-focused .chat-input-form {
@@ -137,7 +130,7 @@
 .chat-message {
   margin: 4px 0;
   color: rgba(255, 255, 255, 0.9);
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   line-height: 1.4;
   word-wrap: break-word;
@@ -160,7 +153,7 @@
   border-radius: 12px;
   padding: 12px 16px;
   color: rgba(255, 255, 255, 0.9);
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
   font-size: 14px;
   outline: none;
   transition: all 0.2s ease;
@@ -222,7 +215,7 @@
   text-align: center;
   color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
   cursor: pointer;
   flex-shrink: 0;
 }

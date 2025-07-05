@@ -65,4 +65,8 @@ export class VRMManager {
   getAvailableAvatars() {
     return this.availableAvatars;
   }
+
+  dispose() {
+    this.loader.clear();
+  }
 }

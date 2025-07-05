@@ -1,11 +1,13 @@
 import * as THREE from "three";
-import { vrmManager } from "../utils/VRMLoader.js";
-import { animationManager } from "../utils/AnimationManager.js";
+import { VRMManager } from "../utils/VRMLoader.js";
+import { AnimationManager } from "../utils/AnimationManager.js";
 import gsap from "gsap";
 
 export class MenuScene {
   constructor(canvas) {
     this.canvas = canvas;
+    this.vrmManager = new VRMManager();
+    this.animationManager = new AnimationManager();
     this.scene = null;
     this.camera = null;
     this.renderer = null;
@@ -237,7 +239,7 @@ export class MenuScene {
       }
 
       // Load VRM model
-      const vrm = await vrmManager.loadVRM(avatarId);
+      const vrm = await this.vrmManager.loadVRM(avatarId);
       this.currentVRM = vrm;
 
       // Create container for the avatar
@@ -265,7 +267,7 @@ export class MenuScene {
       this.currentAvatar = avatarGroup;
 
       // Load and apply idle animation
-      const animations = await animationManager.loadAndRetarget(vrm);
+      const animations = await this.animationManager.loadAndRetarget(vrm);
       if (animations && animations.idle) {
         this.mixer = new THREE.AnimationMixer(vrm.scene);
         const action = this.mixer.clipAction(animations.idle);
@@ -427,6 +429,16 @@ export class MenuScene {
     // Dispose renderer
     if (this.renderer) {
       this.renderer.dispose();
+    }
+
+    // Dispose VRM manager
+    if (this.vrmManager) {
+      this.vrmManager.dispose();
+    }
+
+    // Dispose animation manager
+    if (this.animationManager) {
+      this.animationManager.dispose();
     }
 
     // Clear references

@@ -1,0 +1,144 @@
+.room-selector-container {
+  position: absolute;
+  bottom: 40px;
+  left: 40px;
+  max-width: 800px;
+  animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.room-selector-header {
+  margin-bottom: 16px;
+}
+
+.room-selector-header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.room-selector-scroll {
+  position: relative;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 40px 40px 48px 40px;
+}
+
+.room-selector-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.room-selector-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.room-selector-scroll::-webkit-scrollbar-thumb {
+  background: rgba(64, 128, 255, 0.5);
+  border-radius: 3px;
+}
+
+.room-selector-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(64, 128, 255, 0.7);
+}
+
+.room-selector-list {
+  display: flex;
+  gap: 16px;
+  padding-right: 20px;
+}
+
+.room-selector-navigation {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.nav-button {
+  width: 40px;
+  height: 40px;
+  background: rgba(20, 20, 30, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+  background: rgba(64, 128, 255, 0.2);
+  border-color: rgba(64, 128, 255, 0.5);
+  transform: scale(1.1);
+}
+
+.nav-button:active {
+  transform: scale(0.95);
+}
+
+/* Tablet adjustments */
+@media (max-width: 1024px) {
+  .room-selector-container {
+    left: 20px;
+    bottom: 20px;
+    max-width: calc(100vw - 40px);
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .room-selector-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 20px;
+    max-width: 100%;
+    padding: 0 20px;
+    animation: slideInUp 0.5s ease-out;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .room-selector-header h3 {
+    font-size: 18px;
+  }
+
+  .room-selector-scroll {
+    margin: 0 -20px;
+    padding: 0 20px 8px 20px;
+  }
+
+  .room-selector-list {
+    gap: 12px;
+  }
+
+  .room-selector-navigation {
+    display: none; /* Hide navigation buttons on mobile, rely on scroll */
+  }
+}

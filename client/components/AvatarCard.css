@@ -1,0 +1,88 @@
+.avatar-card {
+    position: relative;
+    width: 120px;
+    height: 160px;
+    background: rgba(20, 20, 30, 0.8);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px;
+}
+
+.avatar-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(64, 128, 255, 0.5);
+    box-shadow: 0 8px 24px rgba(64, 128, 255, 0.3);
+}
+
+.avatar-card.selected {
+    border-color: #4080ff;
+    background: rgba(64, 128, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(64, 128, 255, 0.4);
+}
+
+.avatar-card-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.avatar-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-card-info {
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+}
+
+.avatar-card-info h3 {
+    font-size: 14px;
+    font-weight: 600;
+    color: #ffffff;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.avatar-card-selected-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    color: #4080ff;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .avatar-card {
+        width: 100px;
+        height: 140px;
+        padding: 10px;
+    }
+
+    .avatar-card-image {
+        width: 60px;
+        height: 60px;
+    }
+
+    .avatar-card-info h3 {
+        font-size: 12px;
+    }
+}

@@ -8,7 +8,7 @@ export class AnimationManager {
   async loadAndRetarget(vrm) {
     // Generate a unique key for caching based on VRM instance
     const vrmId = vrm.scene.uuid;
-    
+
     // Check if we already have clips for this VRM
     if (this.cachedClips.has(vrmId)) {
       return this.cachedClips.get(vrmId);
@@ -35,7 +35,7 @@ export class AnimationManager {
     return clips;
   }
 
-  destroy() {
+  dispose() {
     this.cachedClips.clear();
   }
 }
