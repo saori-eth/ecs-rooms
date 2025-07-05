@@ -9,6 +9,8 @@ import { createPhysicsSystem } from "../ecs/systems/PhysicsSystem.js";
 import { createAnimationSystem } from "../ecs/systems/AnimationSystem.js";
 import { SceneManager } from "../src/SceneManager.js";
 import { CameraSystem } from "../ecs/systems/CameraSystem.js";
+import { VRMManager } from "./VRMLoader.js";
+import { AnimationManager } from "./AnimationManager.js";
 
 // Game manager to bridge React and Three.js
 export class GameManager {
@@ -23,6 +25,8 @@ export class GameManager {
     this.animationSystem = null;
     this.scene = null;
     this.initialized = false;
+    this.vrmManager = null;
+    this.animationManager = null;
 
     // Set up mobile input callback
     this.mobileInputCallback = null;
@@ -54,7 +58,9 @@ export class GameManager {
         { x: 0, y: 1.5, z: 0 },
         true,
         this.physicsSystem.world,
-        playerIdentity
+        playerIdentity,
+        this.vrmManager,
+        this.animationManager
       );
       this.gameStarted = true;
       if (this.stateCallbacks) {
@@ -69,7 +75,7 @@ export class GameManager {
       if (meshComponent && meshComponent.mesh) {
         this.scene.remove(meshComponent.mesh);
       }
-      const physicsComponent = world.getComponent(
+      const physicsComponent = this.world.getComponent(
         this.localPlayerId,
         "physicsBody"
       );
@@ -90,23 +96,60 @@ export class GameManager {
   }
 
   reset() {
+    // Stop the game and clean up player
     this.stopGame();
 
+    // Disconnect from network
+    if (this.networkSystem) {
+      this.networkSystem.disconnect();
+    }
+
+    // Reset the ECS world
     if (this.world) {
       this.world.reset();
+      // Stop the animation loop
+      this.world.stop();
     }
     
+    // Reset scene manager
     if (this.sceneManager) {
       this.sceneManager.reset();
+    }
+
+    // Clean up managers
+    if (this.animationManager) {
+      this.animationManager.destroy();
+      this.animationManager = null;
+    }
+    
+    this.vrmManager = null;
+
+    // Remove renderer canvas from DOM
+    if (this.world && this.world.renderer && this.world.renderer.domElement) {
+      const canvas = this.world.renderer.domElement;
+      if (canvas.parentNode) {
+        canvas.parentNode.removeChild(canvas);
+      }
+      this.world.renderer.dispose();
+      this.world.renderer = null;
     }
 
     // Reset GameManager state
     this.gameStarted = false;
     this.localPlayerId = null;
+    this.initialized = false;
 
     if (this.animationSystem) {
       this.animationSystem.notifiedIdle = false;
     }
+
+    // Clear all system references
+    this.physicsSystem = null;
+    this.inputSystem = null;
+    this.animationSystem = null;
+    this.world = null;
+    this.scene = null;
+    this.sceneManager = null;
   }
 
   async initialize(container) {
@@ -114,6 +157,10 @@ export class GameManager {
       console.warn("GameManager already initialized");
       return;
     }
+
+    // Create managers
+    this.vrmManager = new VRMManager();
+    this.animationManager = new AnimationManager();
 
     // Create the ECS world
     this.world = new World();

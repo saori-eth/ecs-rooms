@@ -13,8 +13,6 @@ import {
   createAnimationComponent,
   createCameraTargetComponent,
 } from "../ecs/components.js";
-import { vrmManager } from "../utils/VRMLoader.js";
-import { animationManager } from "../utils/AnimationManager.js";
 import { createNameplateSprite } from "../utils/NameplateGenerator.js";
 
 export async function createPlayer(
@@ -22,7 +20,9 @@ export async function createPlayer(
   position = { x: 0, y: 0.5, z: 0 },
   isLocal = true,
   physicsWorld = null,
-  identity = null
+  identity = null,
+  vrmManager = null,
+  animationManager = null
 ) {
   const entityId = world.createEntity();
 
@@ -35,6 +35,9 @@ export async function createPlayer(
 
   // Load VRM model
   const avatarId = identity?.avatarId || "wassie";
+  if (!vrmManager) {
+    throw new Error("VRMManager is required to create a player");
+  }
   const vrm = await vrmManager.loadVRM(avatarId);
 
   // Reset to T-pose before applying any transforms or animations
@@ -92,6 +95,9 @@ export async function createPlayer(
 
   // Load animations
   try {
+    if (!animationManager) {
+      throw new Error("AnimationManager is required to create a player");
+    }
     const clips = await animationManager.loadAndRetarget(vrm);
     const mixer = new THREE.AnimationMixer(vrm.scene);
     const actions = {

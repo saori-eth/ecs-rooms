@@ -1,6 +1,6 @@
 import { loadAnim } from "./retarget.js";
 
-class AnimationManager {
+export class AnimationManager {
   constructor() {
     this.cachedClips = new Map();
   }
@@ -34,6 +34,8 @@ class AnimationManager {
 
     return clips;
   }
-}
 
-export const animationManager = new AnimationManager();
+  destroy() {
+    this.cachedClips.clear();
+  }
+}

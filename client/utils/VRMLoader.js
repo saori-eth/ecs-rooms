@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
 
-class VRMManager {
+export class VRMManager {
   constructor() {
     this.loader = new GLTFLoader();
     this.loader.register((parser) => new VRMLoaderPlugin(parser));
@@ -66,5 +66,3 @@ class VRMManager {
     return this.availableAvatars;
   }
 }
-
-export const vrmManager = new VRMManager();

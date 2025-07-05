@@ -63,6 +63,14 @@ function App({ gameManager }) {
     }
   };
 
+  const handleExit = () => {
+    if (gameManager) {
+      gameManager.reset();
+    }
+    setIsInitialized(false);
+    setGameState("menu");
+  };
+
   return (
     <div className="app">
       {gameState === "menu" && (
@@ -75,7 +83,7 @@ function App({ gameManager }) {
       )}
       {gameState === "loading" && <LoadingScreen />}
       {gameState === "playing" && (
-        <GameUI roomInfo={roomInfo} gameManager={gameManager} />
+        <GameUI roomInfo={roomInfo} gameManager={gameManager} onExit={handleExit} />
       )}
     </div>
   );

@@ -99,7 +99,9 @@ export function createNetworkSystem() {
               playerData.position,
               false,
               window.physicsWorld,
-              playerData.identity
+              playerData.identity,
+              gameManager?.vrmManager,
+              gameManager?.animationManager
             );
             world.addComponent(
               remoteEntityId,
@@ -117,7 +119,9 @@ export function createNetworkSystem() {
               message.player.position,
               false,
               window.physicsWorld,
-              message.player.identity
+              message.player.identity,
+              gameManager?.vrmManager,
+              gameManager?.animationManager
             ).then((newEntityId) => {
               world.addComponent(
                 newEntityId,
@@ -346,6 +350,21 @@ export function createNetworkSystem() {
         console.error(
           "[NetworkSystem] Cannot send game event - not connected or not in room"
         );
+      }
+    },
+
+    disconnect() {
+      if (ws) {
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
+        ws.close();
+        ws = null;
+        connected = false;
+        inRoom = false;
+        roomId = null;
+        remotePlayers.clear();
       }
     },
 

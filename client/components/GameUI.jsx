@@ -3,7 +3,7 @@ import MobileControls from './MobileControls';
 import Chat from './Chat';
 import './GameUI.css';
 
-function GameUI({ roomInfo, gameManager }) {
+function GameUI({ roomInfo, gameManager, onExit }) {
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
@@ -30,6 +30,7 @@ function GameUI({ roomInfo, gameManager }) {
       <div className="room-info">
         <div>Room: <span>{roomInfo.roomId || '-'}</span></div>
         <div>Players: <span>{roomInfo.playerCount}</span>/{roomInfo.maxPlayers}</div>
+        <button className="exit-button" onClick={onExit}>Exit</button>
       </div>
       {isMobile && <MobileControls onMove={handleMobileMove} />}
       <Chat gameManager={gameManager} />
