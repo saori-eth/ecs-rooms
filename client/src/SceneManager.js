@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { rooms } from "../rooms/room-definitions.js";
+import { rooms } from "./room-definitions.js";
 import { ScriptingAPI } from "./ScriptingAPI.js";
 import { loadGameScript } from "./ScriptLoader.js";
 

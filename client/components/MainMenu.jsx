@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./MainMenu.css";
-import { rooms } from "../rooms/room-definitions.js";
+import { rooms } from "../src/room-definitions.js";
 
 function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay }) {
   const [name, setName] = useState(playerIdentity.name);

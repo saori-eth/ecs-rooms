@@ -10,7 +10,7 @@ import { createNetworkSystem } from "./ecs/systems/NetworkSystem.js";
 import { createInterpolationSystem } from "./ecs/systems/InterpolationSystem.js";
 import { createPhysicsSystem } from "./ecs/systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./ecs/systems/AnimationSystem.js";
-import { createPlayer } from "./entities/Player.js";
+import { GameManager } from "./utils/GameManager.js";
 import { SceneManager } from "./src/SceneManager.js";
 import { CameraSystem } from "./ecs/systems/CameraSystem.js";
 
@@ -81,123 +81,15 @@ const sceneManager = new SceneManager(
 
 // Debug cube removed
 
-// Game manager to bridge React and Three.js
-class GameManager {
-  constructor() {
-    this.localPlayerId = null;
-    this.gameStarted = false;
-    this.stateCallbacks = null;
-
-    // Set up mobile input callback
-    this.mobileInputCallback = (moveVector) => {
-      if (inputSystem.handleMobileInput) {
-        inputSystem.handleMobileInput(moveVector);
-      }
-    };
-
-    // Chat message handler placeholder
-    this.onChatMessage = null;
-  }
-
-  setStateCallbacks(callbacks) {
-    this.stateCallbacks = callbacks;
-
-    // Set up network system callbacks
-    networkSystem.onConnectionStatusChange = (status) => {
-      callbacks.setConnectionStatus(status);
-    };
-
-    networkSystem.onConnectionReady = (ready) => {
-      callbacks.setPlayEnabled(ready);
-    };
-
-    networkSystem.onRoomUpdate = (roomId, playerCount, maxPlayers) => {
-      callbacks.updateRoomInfo(roomId, playerCount, maxPlayers);
-    };
-
-    networkSystem.onJoinedRoom = (roomData) => {
-      if (roomData.roomType) {
-        sceneManager.loadRoom(roomData.roomType);
-      } else {
-        console.warn("[main] No roomType in roomData");
-      }
-    };
-
-    networkSystem.onGameStart = () => {
-      // Don't set playing state here anymore - wait for idle animation
-      // callbacks.setGameState("playing");
-    };
-
-    networkSystem.onDisconnect = () => {
-      // Reset animation system notification flag
-      animationSystem.notifiedIdle = false;
-      callbacks.setGameState("menu");
-    };
-
-    networkSystem.onPlayerJoined = (playerId) => {
-      sceneManager.onPlayerJoin(playerId);
-    };
-
-    networkSystem.onPlayerLeft = (playerId) => {
-      sceneManager.onPlayerLeave(playerId);
-    };
-
-    // Set up chat message handler
-    networkSystem.onChatMessage = (message) => {
-      if (this.onChatMessage) {
-        this.onChatMessage(message);
-      }
-    };
-  }
-
-  async onPlay(playerIdentity, roomType) {
-    networkSystem.joinGame(playerIdentity, roomType);
-  }
-
-  async startGame(playerIdentity) {
-    if (!this.gameStarted) {
-      this.localPlayerId = await createPlayer(
-        world,
-        { x: 0, y: 1.5, z: 0 },
-        true,
-        physicsSystem.world,
-        playerIdentity
-      );
-      this.gameStarted = true;
-      if (this.stateCallbacks) {
-        this.stateCallbacks.setGameState("playing");
-      }
-    }
-  }
-
-  stopGame() {
-    if (this.gameStarted && this.localPlayerId) {
-      const meshComponent = world.getComponent(this.localPlayerId, "mesh");
-      if (meshComponent && meshComponent.mesh) {
-        scene.remove(meshComponent.mesh);
-      }
-      const physicsComponent = world.getComponent(
-        this.localPlayerId,
-        "physicsBody"
-      );
-      if (physicsComponent && physicsComponent.body) {
-        physicsSystem.world.removeBody(physicsComponent.body);
-      }
-      world.destroyEntity(this.localPlayerId);
-      this.localPlayerId = null;
-      this.gameStarted = false;
-      
-      // Reset animation system notification flag
-      animationSystem.notifiedIdle = false;
-    }
-  }
-
-  sendChatMessage(text) {
-    networkSystem.sendChatMessage(text);
-  }
-}
-
-const gameManager = new GameManager();
+const gameManager = new GameManager({
+  networkSystem,
+  inputSystem,
+  sceneManager,
+  world,
+  physicsSystem,
+  animationSystem,
+  scene,
+});
 
 // Pass game manager to network system
 networkSystem.setGameManager(gameManager);
@@ -208,7 +100,7 @@ gameManager.sendChatMessage = gameManager.sendChatMessage.bind(gameManager);
 // Set up animation system callback to transition from loading to playing
 animationSystem.onLocalPlayerIdleAnimation = () => {
   if (gameManager && gameManager.stateCallbacks) {
-    gameManager.stateCallbacks.setGameState('playing');
+    gameManager.stateCallbacks.setGameState("playing");
   }
 };
 
