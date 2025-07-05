@@ -70,12 +70,7 @@ export class VRMManager {
           resolve(vrm);
         },
         (progress) => {
-          console.log(
-            `Loading ${avatarId}: ${(
-              (progress.loaded / progress.total) *
-              100
-            ).toFixed(0)}%`
-          );
+          //...
         },
         (error) => {
           console.error("Error loading VRM:", error);
