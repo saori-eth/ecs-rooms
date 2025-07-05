@@ -8,12 +8,35 @@ export class VRMManager {
     this.loader.register((parser) => new VRMLoaderPlugin(parser));
     this.availableAvatars = [
       {
-        id: "cryptovoxels",
-        name: "Cryptovoxels",
-        path: "/avatars/cryptovoxels.vrm",
+        id: "yuji_itadori",
+        name: "Yuji Itadori",
+        path: "/avatars/yuji_itadori.vrm",
       },
-      { id: "homerpepe", name: "Homerpepe", path: "/avatars/homerpepe.vrm" },
-      { id: "wassie", name: "Wassie", path: "/avatars/wassie.vrm" },
+      {
+        id: "luffy",
+        name: "Luffy",
+        path: "/avatars/luffy.vrm",
+      },
+      {
+        id: "lain",
+        name: "Lain",
+        path: "/avatars/lain.vrm",
+      },
+      {
+        id: "killua",
+        name: "Killua",
+        path: "/avatars/killua.vrm",
+      },
+      {
+        id: "kagura",
+        name: "Kagura",
+        path: "/avatars/kagura.vrm",
+      },
+      {
+        id: "asuka",
+        name: "Asuka",
+        path: "/avatars/asuka.vrm",
+      },
     ];
   }
 

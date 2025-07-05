@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import Stats from "stats.js";
 
 export class World {
   constructor() {
@@ -10,6 +11,7 @@ export class World {
     this.camera = null;
     this.renderer = null;
     this.animationFrameId = null;
+    this.stats = null;
   }
 
   createEntity() {
@@ -95,9 +97,11 @@ export class World {
       this.sceneManager.update(deltaTime);
     }
 
+    if (this.stats) this.stats.begin();
     for (const system of this.systems) {
       system.update(this, deltaTime, ...args);
     }
+    if (this.stats) this.stats.end();
   }
 
   findEntityWithComponent(componentType) {
@@ -128,6 +132,13 @@ export class World {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
+
+    this.stats = new Stats();
+    this.stats.dom.style.position = "absolute";
+    this.stats.dom.style.top = "0px";
+    this.stats.dom.style.left = "0px";
+    this.stats.dom.style.display = "none"; // Start hidden
+    container.appendChild(this.stats.dom);
 
     // Lighting setup
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -181,6 +192,12 @@ export class World {
     }
   }
 
+  toggleStats() {
+    if (!this.stats) return;
+    const display = this.stats.dom.style.display;
+    this.stats.dom.style.display = display === "none" ? "block" : "none";
+  }
+
   reset() {
     this.stop();
 
@@ -216,6 +233,10 @@ export class World {
 
     // Reset entity counter
     this.nextEntityId = 1;
+
+    if (this.stats) {
+      this.stats.dom.style.display = "none";
+    }
 
     // Clear component storages
     this.components.clear();

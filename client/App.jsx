@@ -29,7 +29,7 @@ function App({ gameManager }) {
     }
     return {
       name: "",
-      avatarId: "wassie",
+      avatarId: "killua",
       id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     };
   });

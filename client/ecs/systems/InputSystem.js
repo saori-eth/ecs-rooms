@@ -14,7 +14,7 @@ export function createInputSystem() {
   const inputState = {
     keys: {},
     mobileMove: { x: 0, z: 0 },
-    isMobile: false
+    isMobile: false,
   };
 
   // Mobile input handler
@@ -26,16 +26,27 @@ export function createInputSystem() {
     init(world) {
       window.addEventListener("keydown", handleKeyDown);
       window.addEventListener("keyup", handleKeyUp);
-      
+
       // Check if mobile
-      inputState.isMobile = window.matchMedia('(max-width: 767px)').matches || 
-                           'ontouchstart' in window;
-      
+      inputState.isMobile =
+        window.matchMedia("(max-width: 767px)").matches ||
+        "ontouchstart" in window;
+
       // Store reference for mobile input callback
       this.handleMobileInput = handleMobileInput;
     },
 
     update(world, deltaTime) {
+      // Toggle stats with 'p' key
+      if (inputState.keys.p && !this.p_pressed) {
+        if (world.toggleStats) {
+          world.toggleStats();
+        }
+        this.p_pressed = true;
+      } else if (!inputState.keys.p) {
+        this.p_pressed = false;
+      }
+
       const entities = world.getEntitiesWithComponents(
         ComponentTypes.INPUT,
         ComponentTypes.PLAYER
@@ -47,7 +58,7 @@ export function createInputSystem() {
 
         if (player.isLocal) {
           let moveVector = { x: 0, y: 0, z: 0 };
-          
+
           if (inputState.isMobile) {
             // Use mobile input
             moveVector.x = inputState.mobileMove.x;
@@ -77,10 +88,10 @@ export function createInputSystem() {
         }
       });
     },
-    
+
     // Expose mobile input handler
     setMobileInputHandler(callback) {
       this.handleMobileInput = callback;
-    }
+    },
   };
 }
