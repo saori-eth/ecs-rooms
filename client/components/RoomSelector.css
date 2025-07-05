@@ -132,10 +132,18 @@
   .room-selector-scroll {
     margin: 0 -20px;
     padding: 0 20px 8px 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .room-selector-list {
     gap: 12px;
+  }
+  
+  .room-selector-list::after {
+    content: '';
+    min-width: 20px;
+    height: 1px;
   }
 
   .room-selector-navigation {

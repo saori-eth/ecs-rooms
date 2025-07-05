@@ -16,7 +16,7 @@ const rooms = {
   },
 };
 
-function MainMenu({ playerIdentity, connectionStatus, playEnabled }) {
+function MainMenu({ playerIdentity, connectionStatus, playEnabled, onPlay, onIdentityUpdate }) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
   const [roomType, setRoomType] = useState(
@@ -70,7 +70,22 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled }) {
   const handlePlay = () => {
     const playerName =
       name.trim() || `Player${Math.floor(Math.random() * 1000)}`;
-    onPlay(playerName, avatarId, roomType);
+    if (onPlay) {
+      onPlay(playerName, avatarId, roomType);
+    }
+  };
+
+  const handleNameChange = (newName) => {
+    setName(newName);
+    
+    // Update localStorage with the new name
+    const updatedIdentity = { ...playerIdentity, name: newName };
+    localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
+    
+    // Notify parent component if callback is provided
+    if (onIdentityUpdate) {
+      onIdentityUpdate(updatedIdentity);
+    }
   };
 
   const handleAvatarSelect = (newAvatarId) => {
@@ -79,6 +94,11 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled }) {
     // Save the avatar selection to localStorage immediately
     const updatedIdentity = { ...playerIdentity, avatarId: newAvatarId };
     localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
+    
+    // Notify parent component if callback is provided
+    if (onIdentityUpdate) {
+      onIdentityUpdate(updatedIdentity);
+    }
 
     if (menuSceneRef.current) {
       setIsAvatarLoading(true);
@@ -100,7 +120,7 @@ function MainMenu({ playerIdentity, connectionStatus, playEnabled }) {
         <input
           type="text"
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={(e) => handleNameChange(e.target.value)}
           placeholder="Enter your name"
           maxLength={20}
           className="player-name-input"

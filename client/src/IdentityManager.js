@@ -1,6 +1,7 @@
 export class IdentityManager {
-  constructor() {
+  constructor(availableAvatars = []) {
     this.storageKey = "playerIdentity";
+    this.availableAvatars = availableAvatars;
     this.identity = this.loadIdentity();
   }
 
@@ -8,7 +9,13 @@ export class IdentityManager {
     const stored = localStorage.getItem(this.storageKey);
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const identity = JSON.parse(stored);
+        // Validate avatarId
+        if (this.availableAvatars.length > 0 && !this.availableAvatars.find(a => a.id === identity.avatarId)) {
+          identity.avatarId = this.availableAvatars[0].id;
+          localStorage.setItem(this.storageKey, JSON.stringify(identity));
+        }
+        return identity;
       } catch (e) {
         console.error("Failed to parse stored identity:", e);
       }
@@ -16,7 +23,7 @@ export class IdentityManager {
 
     return {
       name: `Player${Math.floor(Math.random() * 1000)}`,
-      avatarId: "cryptovoxels",
+      avatarId: this.availableAvatars.length > 0 ? this.availableAvatars[0].id : "killua",
     };
   }
 

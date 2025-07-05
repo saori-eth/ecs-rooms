@@ -113,9 +113,19 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
     .room-card {
-        width: 100%;
+        width: 240px;
         min-width: 240px;
         height: 160px;
+        flex-shrink: 0;
+    }
+    
+    .room-card:hover {
+        transform: translateY(-2px) scale(1.01);
+    }
+    
+    .room-card.selected {
+        transform: scale(1);
+        box-shadow: 0 4px 16px rgba(64, 128, 255, 0.4);
     }
 
     .room-card-image {
