@@ -14,6 +14,7 @@ import {
   createCameraTargetComponent,
 } from "../components.js";
 import { createNameplateSprite } from "../../src/NameplateGenerator.js";
+import { availableAvatars } from "../../src/VRMLoader.js";
 
 export async function createPlayer(
   world,
@@ -34,7 +35,7 @@ export async function createPlayer(
   if (scene) scene.add(playerGroup);
 
   // Load VRM model
-  const avatarId = identity?.avatarId || "cryptovoxels";
+  const avatarId = identity?.avatarId || availableAvatars[0].id;
   if (!vrmManager) {
     throw new Error("VRMManager is required to create a player");
   }

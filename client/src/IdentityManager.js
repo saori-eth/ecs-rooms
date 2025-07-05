@@ -24,11 +24,13 @@ export class IdentityManager {
       }
     }
 
-    return {
-      name: `Player${Math.floor(Math.random() * 1000)}`,
+    const defaultIdentity = {
+      name: "Anon",
       avatarId:
         this.availableAvatars.length > 0 ? this.availableAvatars[0].id : "lain",
     };
+    localStorage.setItem(this.storageKey, JSON.stringify(defaultIdentity));
+    return defaultIdentity;
   }
 
   saveIdentity(name, avatarId) {

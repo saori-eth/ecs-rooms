@@ -1,38 +1,39 @@
-import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { VRMLoaderPlugin, VRMUtils } from "@pixiv/three-vrm";
+
+export const availableAvatars = [
+  {
+    id: "killua",
+    name: "Killua",
+    path: "/avatars/killua.vrm",
+  },
+  {
+    id: "asuka",
+    name: "Asuka",
+    path: "/avatars/asuka.vrm",
+  },
+  {
+    id: "kagura",
+    name: "Kagura",
+    path: "/avatars/kagura.vrm",
+  },
+  {
+    id: "luffy",
+    name: "Luffy",
+    path: "/avatars/luffy.vrm",
+  },
+  {
+    id: "yuji_itadori",
+    name: "Yuji Itadori",
+    path: "/avatars/yuji_itadori.vrm",
+  },
+];
 
 export class VRMManager {
   constructor() {
     this.loader = new GLTFLoader();
     this.loader.register((parser) => new VRMLoaderPlugin(parser));
-    this.availableAvatars = [
-      {
-        id: "asuka",
-        name: "Asuka",
-        path: "/avatars/asuka.vrm",
-      },
-      {
-        id: "kagura", 
-        name: "Kagura",
-        path: "/avatars/kagura.vrm",
-      },
-      {
-        id: "killua",
-        name: "Killua",
-        path: "/avatars/killua.vrm", 
-      },
-      {
-        id: "luffy",
-        name: "Luffy",
-        path: "/avatars/luffy.vrm",
-      },
-      {
-        id: "yuji_itadori",
-        name: "Yuji Itadori",
-        path: "/avatars/yuji_itadori.vrm",
-      },
-    ];
+    this.availableAvatars = availableAvatars;
   }
 
   async loadVRM(avatarId) {

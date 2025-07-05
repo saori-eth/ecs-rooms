@@ -133,10 +133,14 @@ export function handleConnection(ws) {
 
       switch (message.type) {
         case "joinGame":
-          client.identity = message.identity || {
-            name: `Player${client.id}`,
-            avatarId: process.env.DEFAULT_AVATAR_ID || "lain",
-          };
+          if (!message.identity) {
+            console.error(
+              "joinGame message without identity, closing connection"
+            );
+            ws.close(1008, "Identity is required to join.");
+            return;
+          }
+          client.identity = message.identity;
           const roomType = message.roomType || "default-arena";
           const room = findOrCreateRoom(roomType);
           handleJoinGame(client, room);

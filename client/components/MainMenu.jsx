@@ -12,6 +12,7 @@ function MainMenu({
   playEnabled,
   onPlay,
   onIdentityUpdate,
+  identityManager,
 }) {
   const [name, setName] = useState(playerIdentity.name);
   const [avatarId, setAvatarId] = useState(playerIdentity.avatarId);
@@ -73,27 +74,21 @@ function MainMenu({
 
   const handleNameChange = (newName) => {
     setName(newName);
-
-    // Update localStorage with the new name
-    const updatedIdentity = { ...playerIdentity, name: newName };
-    localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
+    identityManager.saveIdentity(newName, avatarId);
 
     // Notify parent component if callback is provided
     if (onIdentityUpdate) {
-      onIdentityUpdate(updatedIdentity);
+      onIdentityUpdate(identityManager.getIdentity());
     }
   };
 
   const handleAvatarSelect = (newAvatarId) => {
     setAvatarId(newAvatarId);
-
-    // Save the avatar selection to localStorage immediately
-    const updatedIdentity = { ...playerIdentity, avatarId: newAvatarId };
-    localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
+    identityManager.saveIdentity(name, newAvatarId);
 
     // Notify parent component if callback is provided
     if (onIdentityUpdate) {
-      onIdentityUpdate(updatedIdentity);
+      onIdentityUpdate(identityManager.getIdentity());
     }
 
     if (menuSceneRef.current) {

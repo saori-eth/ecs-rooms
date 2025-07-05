@@ -4,6 +4,8 @@ import GameUI from "./components/GameUI";
 import LoadingScreen from "./components/LoadingScreen";
 import { useGameState } from "./hooks/useGameState";
 import { ECSManager } from "./ecs/ECSManager";
+import { availableAvatars } from "./src/VRMLoader";
+import { IdentityManager } from "./src/IdentityManager";
 import "./App.css";
 
 function App() {
@@ -24,17 +26,14 @@ function App() {
     console.log("Game state changed:", gameState);
   }, [gameState]);
 
-  const [playerIdentity, setPlayerIdentity] = useState(() => {
-    const saved = localStorage.getItem("playerIdentity");
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
-      name: "",
-      avatarId: "cryptovoxels",
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    };
-  });
+  const identityManager = useMemo(
+    () => new IdentityManager(availableAvatars),
+    []
+  );
+
+  const [playerIdentity, setPlayerIdentity] = useState(
+    identityManager.getIdentity()
+  );
 
   // Pass state setters to game manager
   useEffect(() => {
@@ -50,9 +49,9 @@ function App() {
   }, [gameManager, playerIdentity]);
 
   const handlePlay = async (name, avatarId, roomType) => {
-    const updatedIdentity = { ...playerIdentity, name, avatarId };
+    identityManager.saveIdentity(name, avatarId);
+    const updatedIdentity = identityManager.getIdentity();
     setPlayerIdentity(updatedIdentity);
-    localStorage.setItem("playerIdentity", JSON.stringify(updatedIdentity));
 
     // Set game state to loading immediately
     setGameState("loading");
@@ -85,6 +84,7 @@ function App() {
           connectionStatus={connectionStatus}
           playEnabled={playEnabled}
           onPlay={handlePlay}
+          identityManager={identityManager}
         />
       )}
       {gameState === "loading" && <LoadingScreen />}
