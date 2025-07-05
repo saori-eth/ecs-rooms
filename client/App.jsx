@@ -18,6 +18,10 @@ function App({ gameManager }) {
     updateRoomInfo,
   } = useGameState();
 
+  useEffect(() => {
+    console.log("Game state changed:", gameState);
+  }, [gameState]);
+
   const [playerIdentity, setPlayerIdentity] = useState(() => {
     const saved = localStorage.getItem("playerIdentity");
     if (saved) {

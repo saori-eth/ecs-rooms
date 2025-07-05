@@ -118,7 +118,7 @@ export class GameManager {
 
     // Clean up managers
     if (this.animationManager) {
-      this.animationManager.destroy();
+      this.animationManager.dispose();
       this.animationManager = null;
     }
     

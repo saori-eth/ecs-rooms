@@ -67,6 +67,7 @@ export class VRMManager {
   }
 
   dispose() {
-    this.loader.clear();
+    // GLTFLoader doesn't need explicit disposal
+    // It doesn't hold references to loaded resources
   }
 }

@@ -4,6 +4,7 @@ import Chat from "./Chat";
 import "./GameUI.css";
 
 function GameUI({ roomInfo, gameManager, onExit }) {
+  console.log("GameUI rendered");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {

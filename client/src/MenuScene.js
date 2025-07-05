@@ -3,6 +3,32 @@ import { VRMManager } from "../utils/VRMLoader.js";
 import { AnimationManager } from "../utils/AnimationManager.js";
 import gsap from "gsap";
 
+// Helper function to dispose of Three.js objects
+function disposeNode(node) {
+  if (node.isMesh) {
+    if (node.geometry) {
+      node.geometry.dispose();
+    }
+    if (node.material) {
+      if (Array.isArray(node.material)) {
+        node.material.forEach((material) => {
+          if (material.map) material.map.dispose();
+          if (material.metalnessMap) material.metalnessMap.dispose();
+          if (material.normalMap) material.normalMap.dispose();
+          if (material.roughnessMap) material.roughnessMap.dispose();
+          material.dispose();
+        });
+      } else {
+        if (node.material.map) node.material.map.dispose();
+        if (node.material.metalnessMap) node.material.metalnessMap.dispose();
+        if (node.material.normalMap) node.material.normalMap.dispose();
+        if (node.material.roughnessMap) node.material.roughnessMap.dispose();
+        node.material.dispose();
+      }
+    }
+  }
+}
+
 export class MenuScene {
   constructor(canvas) {
     this.canvas = canvas;
@@ -419,11 +445,18 @@ export class MenuScene {
 
     // Dispose of Three.js objects
     if (this.currentAvatar) {
+      // Properly dispose of all geometry and materials
+      this.currentAvatar.traverse(disposeNode);
       this.scene.remove(this.currentAvatar);
     }
 
     if (this.mixer) {
       this.mixer.stopAllAction();
+    }
+
+    // Dispose of scene objects
+    if (this.scene) {
+      this.scene.traverse(disposeNode);
     }
 
     // Dispose renderer
