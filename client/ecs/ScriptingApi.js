@@ -2,8 +2,8 @@ import * as CANNON from "cannon-es";
 import { ComponentTypes } from "./components.js";
 
 export class ScriptingAPI {
-  constructor(world, physicsWorld, loadedScene = null, networkSystem = null) {
-    this.world = world;
+  constructor(ecsAPI, physicsWorld, loadedScene = null, networkSystem = null) {
+    this.ecsAPI = ecsAPI;
     this.physicsWorld = physicsWorld;
     this.loadedScene = loadedScene;
     this.networkSystem = networkSystem;
@@ -12,23 +12,23 @@ export class ScriptingAPI {
 
   // Entity and Component Access
   createEntity() {
-    return this.world.createEntity();
+    return this.ecsAPI.createEntity();
   }
 
   destroyEntity(entityId) {
-    this.world.destroyEntity(entityId);
+    this.ecsAPI.destroyEntity(entityId);
   }
 
   addComponent(entityId, componentType, data) {
-    this.world.addComponent(entityId, componentType, data);
+    this.ecsAPI.addComponent(entityId, componentType, data);
   }
 
   getComponent(entityId, componentType) {
-    return this.world.getComponent(entityId, componentType);
+    return this.ecsAPI.getComponent(entityId, componentType);
   }
 
   getEntitiesWithComponents(...componentTypes) {
-    return this.world.getEntitiesWithComponents(...componentTypes);
+    return this.ecsAPI.getEntitiesWithComponents(...componentTypes);
   }
 
   // Network Events
@@ -41,28 +41,28 @@ export class ScriptingAPI {
   // Camera Control
   setCameraTarget(entityId) {
     // First, remove cameraTarget from any other entity
-    const currentTargets = this.world.getEntitiesWithComponents(
+    const currentTargets = this.ecsAPI.getEntitiesWithComponents(
       ComponentTypes.CAMERA_TARGET
     );
     for (const target of currentTargets) {
-      this.world.removeComponent(target, ComponentTypes.CAMERA_TARGET);
+      this.ecsAPI.removeComponent(target, ComponentTypes.CAMERA_TARGET);
     }
 
-    if (entityId !== null && this.world.entities.has(entityId)) {
+    if (entityId !== null && this.ecsAPI.entities.has(entityId)) {
       // Set new entity as target
-      this.world.addComponent(entityId, ComponentTypes.CAMERA_TARGET, {});
+      this.ecsAPI.addComponent(entityId, ComponentTypes.CAMERA_TARGET, {});
     } else {
       // Reset to local player if entityId is null or invalid
-      const localPlayer = this.world.findEntityWithComponent(
+      const localPlayer = this.ecsAPI.findEntityWithComponent(
         ComponentTypes.PLAYER
       );
       if (localPlayer) {
-        const playerComponent = this.world.getComponent(
+        const playerComponent = this.ecsAPI.getComponent(
           localPlayer.id,
           ComponentTypes.PLAYER
         );
         if (playerComponent && playerComponent.isLocal) {
-          this.world.addComponent(
+          this.ecsAPI.addComponent(
             localPlayer.id,
             ComponentTypes.CAMERA_TARGET,
             {}

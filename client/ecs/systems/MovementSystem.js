@@ -8,21 +8,21 @@ export function createMovementSystem() {
   const yAxis = new THREE.Vector3(0, 1, 0);
 
   return {
-    update(world, deltaTime) {
-      const entities = world.getEntitiesWithComponents(
+    update(ecsAPI, deltaTime) {
+      const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.PHYSICS_BODY,
         ComponentTypes.INPUT,
         ComponentTypes.PLAYER
       );
 
       entities.forEach((entityId) => {
-        const physicsComponent = world.getComponent(
+        const physicsComponent = ecsAPI.getComponent(
           entityId,
           ComponentTypes.PHYSICS_BODY
         );
-        const input = world.getComponent(entityId, ComponentTypes.INPUT);
-        const player = world.getComponent(entityId, ComponentTypes.PLAYER);
-        const vrmComponent = world.getComponent(entityId, ComponentTypes.VRM);
+        const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
+        const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
+        const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
 
         if (!player.isLocal || !physicsComponent.body) return;
 

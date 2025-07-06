@@ -20,7 +20,7 @@ export class ECSManager {
     this.stateCallbacks = null;
     this.inputSystem = null;
     this.sceneManager = null;
-    this.world = null;
+    this.ecsAPI = null;
     this.physicsSystem = null;
     this.animationSystem = null;
     this.scene = null;
@@ -54,7 +54,7 @@ export class ECSManager {
   async startGame(playerIdentity) {
     if (!this.gameStarted) {
       this.localPlayerId = await createPlayer(
-        this.world,
+        this.ecsAPI,
         { x: 0, y: 1.5, z: 0 },
         true,
         this.physicsSystem.world,
@@ -71,18 +71,21 @@ export class ECSManager {
 
   stopGame() {
     if (this.gameStarted && this.localPlayerId) {
-      const meshComponent = this.world.getComponent(this.localPlayerId, "mesh");
+      const meshComponent = this.ecsAPI.getComponent(
+        this.localPlayerId,
+        "mesh"
+      );
       if (meshComponent && meshComponent.mesh) {
         this.scene.remove(meshComponent.mesh);
       }
-      const physicsComponent = this.world.getComponent(
+      const physicsComponent = this.ecsAPI.getComponent(
         this.localPlayerId,
         "physicsBody"
       );
       if (physicsComponent && physicsComponent.body) {
         this.physicsSystem.world.removeBody(physicsComponent.body);
       }
-      this.world.destroyEntity(this.localPlayerId);
+      this.ecsAPI.destroyEntity(this.localPlayerId);
       this.localPlayerId = null;
       this.gameStarted = false;
 
@@ -104,11 +107,11 @@ export class ECSManager {
       this.networkSystem.disconnect();
     }
 
-    // Reset the ECS world
-    if (this.world) {
-      this.world.reset();
+    // Reset the ECS ecsAPI
+    if (this.ecsAPI) {
+      this.ecsAPI.reset();
       // Stop the animation loop
-      this.world.stop();
+      this.ecsAPI.stop();
     }
 
     // Reset scene manager
@@ -125,13 +128,17 @@ export class ECSManager {
     this.vrmManager = null;
 
     // Remove renderer canvas from DOM
-    if (this.world && this.world.renderer && this.world.renderer.domElement) {
-      const canvas = this.world.renderer.domElement;
+    if (
+      this.ecsAPI &&
+      this.ecsAPI.renderer &&
+      this.ecsAPI.renderer.domElement
+    ) {
+      const canvas = this.ecsAPI.renderer.domElement;
       if (canvas.parentNode) {
         canvas.parentNode.removeChild(canvas);
       }
-      this.world.renderer.dispose();
-      this.world.renderer = null;
+      this.ecsAPI.renderer.dispose();
+      this.ecsAPI.renderer = null;
     }
 
     // Reset GameManager state
@@ -147,7 +154,7 @@ export class ECSManager {
     this.physicsSystem = null;
     this.inputSystem = null;
     this.animationSystem = null;
-    this.world = null;
+    this.ecsAPI = null;
     this.scene = null;
     this.sceneManager = null;
   }
@@ -162,33 +169,33 @@ export class ECSManager {
     this.vrmManager = new VRMManager();
     this.animationManager = new AnimationManager();
 
-    // Create the ECS world
-    this.world = new ECSApi();
+    // Create the ECS ecsAPI
+    this.ecsAPI = new ECSApi();
 
     // Initialize Three.js components
-    this.world.initialize(container);
-    this.scene = this.world.scene;
+    this.ecsAPI.initialize(container);
+    this.scene = this.ecsAPI.scene;
 
     // Create all systems
     this.physicsSystem = createPhysicsSystem();
-    this.world.physicsWorld = this.physicsSystem.world;
+    this.ecsAPI.physicsWorld = this.physicsSystem.world;
 
     // Network system already created in constructor
-    // Update its world reference
-    this.networkSystem.init(this.world);
+    // Update its ecsAPI reference
+    this.networkSystem.init(this.ecsAPI);
 
     this.inputSystem = createInputSystem();
     this.animationSystem = createAnimationSystem();
 
-    // Register systems with the world
-    this.world.registerSystem(this.inputSystem);
-    this.world.registerSystem(createMovementSystem());
-    this.world.registerSystem(this.physicsSystem);
-    this.world.registerSystem(createInterpolationSystem());
-    this.world.registerSystem(createRenderSystem(this.scene));
-    this.world.registerSystem(this.networkSystem);
-    this.world.registerSystem(this.animationSystem);
-    this.world.addSystem(new CameraSystem());
+    // Register systems with the ecsAPI
+    this.ecsAPI.registerSystem(this.inputSystem);
+    this.ecsAPI.registerSystem(createMovementSystem());
+    this.ecsAPI.registerSystem(this.physicsSystem);
+    this.ecsAPI.registerSystem(createInterpolationSystem());
+    this.ecsAPI.registerSystem(createRenderSystem(this.scene));
+    this.ecsAPI.registerSystem(this.networkSystem);
+    this.ecsAPI.registerSystem(this.animationSystem);
+    this.ecsAPI.addSystem(new CameraSystem());
 
     // Set global references for debugging
     window.physicsWorld = this.physicsSystem.world;
@@ -197,12 +204,12 @@ export class ECSManager {
     this.sceneManager = new SceneManager(
       this.scene,
       this.physicsSystem.world,
-      this.world,
+      this.ecsAPI,
       this.networkSystem
     );
 
-    // Set sceneManager reference in world for update calls
-    this.world.sceneManager = this.sceneManager;
+    // Set sceneManager reference in ecsAPI for update calls
+    this.ecsAPI.sceneManager = this.sceneManager;
 
     // Pass game manager to network system
     this.networkSystem.setGameManager(this);
@@ -230,7 +237,7 @@ export class ECSManager {
     }
 
     // Start the game loop
-    this.world.start();
+    this.ecsAPI.start();
 
     this.initialized = true;
   }

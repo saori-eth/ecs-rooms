@@ -4,7 +4,7 @@ import { createPlayer } from "../entities/Player.js";
 export function createNetworkSystem() {
   let ws = null;
   let localPlayerId = null;
-  let world = null;
+  let ecsAPI = null;
   let connected = false;
   let heartbeatInterval = null;
   let lastUpdateTime = 0;
@@ -95,7 +95,7 @@ export function createNetworkSystem() {
 
           message.players.forEach(async (playerData) => {
             const remoteEntityId = await createPlayer(
-              world,
+              ecsAPI,
               playerData.position,
               false,
               window.physicsWorld,
@@ -103,7 +103,7 @@ export function createNetworkSystem() {
               gameManager?.vrmManager,
               gameManager?.animationManager
             );
-            world.addComponent(
+            ecsAPI.addComponent(
               remoteEntityId,
               ComponentTypes.INTERPOLATION,
               createInterpolationComponent()
@@ -115,7 +115,7 @@ export function createNetworkSystem() {
         case "playerJoined":
           if (inRoom) {
             createPlayer(
-              world,
+              ecsAPI,
               message.player.position,
               false,
               window.physicsWorld,
@@ -123,7 +123,7 @@ export function createNetworkSystem() {
               gameManager?.vrmManager,
               gameManager?.animationManager
             ).then((newEntityId) => {
-              world.addComponent(
+              ecsAPI.addComponent(
                 newEntityId,
                 ComponentTypes.INTERPOLATION,
                 createInterpolationComponent()
@@ -140,21 +140,21 @@ export function createNetworkSystem() {
         case "playerLeft":
           const leavingEntityId = remotePlayers.get(message.id);
           if (leavingEntityId) {
-            const meshComponent = world.getComponent(
+            const meshComponent = ecsAPI.getComponent(
               leavingEntityId,
               ComponentTypes.MESH
             );
             if (meshComponent && meshComponent.mesh) {
               window.scene.remove(meshComponent.mesh);
             }
-            const physicsComponent = world.getComponent(
+            const physicsComponent = ecsAPI.getComponent(
               leavingEntityId,
               ComponentTypes.PHYSICS_BODY
             );
             if (physicsComponent && physicsComponent.body) {
               window.physicsWorld.removeBody(physicsComponent.body);
             }
-            world.destroyEntity(leavingEntityId);
+            ecsAPI.destroyEntity(leavingEntityId);
             remotePlayers.delete(message.id);
             console.log(`Player ${message.id} left`);
             if (onPlayerLeft) {
@@ -166,11 +166,11 @@ export function createNetworkSystem() {
         case "playerMoved":
           const movingEntityId = remotePlayers.get(message.id);
           if (movingEntityId) {
-            const interpolation = world.getComponent(
+            const interpolation = ecsAPI.getComponent(
               movingEntityId,
               ComponentTypes.INTERPOLATION
             );
-            const animation = world.getComponent(
+            const animation = ecsAPI.getComponent(
               movingEntityId,
               ComponentTypes.ANIMATION
             );
@@ -266,18 +266,21 @@ export function createNetworkSystem() {
       }
 
       remotePlayers.forEach((entityId) => {
-        const meshComponent = world.getComponent(entityId, ComponentTypes.MESH);
+        const meshComponent = ecsAPI.getComponent(
+          entityId,
+          ComponentTypes.MESH
+        );
         if (meshComponent && meshComponent.mesh) {
           window.scene.remove(meshComponent.mesh);
         }
-        const physicsComponent = world.getComponent(
+        const physicsComponent = ecsAPI.getComponent(
           entityId,
           ComponentTypes.PHYSICS_BODY
         );
         if (physicsComponent && physicsComponent.body) {
           window.physicsWorld.removeBody(physicsComponent.body);
         }
-        world.destroyEntity(entityId);
+        ecsAPI.destroyEntity(entityId);
       });
       remotePlayers.clear();
 
@@ -296,7 +299,7 @@ export function createNetworkSystem() {
 
   const networkSystem = {
     init(w) {
-      world = w;
+      ecsAPI = w;
       if (!ws) {
         connect();
       }
@@ -368,7 +371,7 @@ export function createNetworkSystem() {
       }
     },
 
-    update(world, deltaTime) {
+    update(ecsAPI, deltaTime) {
       if (!connected || !ws || ws.readyState !== WebSocket.OPEN || !inRoom)
         return;
 
@@ -376,20 +379,20 @@ export function createNetworkSystem() {
       if (now - lastUpdateTime < updateRate) return;
       lastUpdateTime = now;
 
-      const localPlayers = world.getEntitiesWithComponents(
+      const localPlayers = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.PLAYER
       );
 
       localPlayers.forEach((entityId) => {
-        const player = world.getComponent(entityId, ComponentTypes.PLAYER);
+        const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
         if (player.isLocal) {
-          const position = world.getComponent(
+          const position = ecsAPI.getComponent(
             entityId,
             ComponentTypes.POSITION
           );
-          const input = world.getComponent(entityId, ComponentTypes.INPUT);
-          const vrm = world.getComponent(entityId, ComponentTypes.VRM);
+          const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
+          const vrm = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
 
           if (position && input && vrm) {
             const isMoving =

@@ -6,16 +6,16 @@ export class CameraSystem {
     this.offset = new THREE.Vector3(0, 2.5, 2.5);
   }
 
-  update(world, dt, camera) {
+  update(ecsAPI, dt, camera) {
     if (!camera) return;
 
-    const targets = world.getEntitiesWithComponents(
+    const targets = ecsAPI.getEntitiesWithComponents(
       ComponentTypes.CAMERA_TARGET,
       ComponentTypes.POSITION
     );
     if (targets.length > 0) {
       const targetId = targets[0];
-      const position = world.getComponent(targetId, ComponentTypes.POSITION);
+      const position = ecsAPI.getComponent(targetId, ComponentTypes.POSITION);
 
       if (position) {
         // Set camera position with offset

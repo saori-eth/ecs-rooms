@@ -17,7 +17,7 @@ import { createNameplateSprite } from "../../src/NameplateGenerator.js";
 import { availableAvatars } from "../../src/VRMLoader.js";
 
 export async function createPlayer(
-  world,
+  ecsAPI,
   position = { x: 0, y: 0.5, z: 0 },
   isLocal = true,
   physicsWorld = null,
@@ -25,7 +25,7 @@ export async function createPlayer(
   vrmManager = null,
   animationManager = null
 ) {
-  const entityId = world.createEntity();
+  const entityId = ecsAPI.createEntity();
 
   // Create a container group for the player
   const playerGroup = new THREE.Group();
@@ -59,39 +59,39 @@ export async function createPlayer(
     playerGroup.add(nameplate);
   }
 
-  world.addComponent(
+  ecsAPI.addComponent(
     entityId,
     ComponentTypes.POSITION,
     createPositionComponent(position.x, position.y, position.z)
   );
-  world.addComponent(
+  ecsAPI.addComponent(
     entityId,
     ComponentTypes.VELOCITY,
     createVelocityComponent()
   );
-  world.addComponent(entityId, ComponentTypes.INPUT, createInputComponent());
-  world.addComponent(
+  ecsAPI.addComponent(entityId, ComponentTypes.INPUT, createInputComponent());
+  ecsAPI.addComponent(
     entityId,
     ComponentTypes.MESH,
     createMeshComponent(playerGroup)
   );
-  world.addComponent(
+  ecsAPI.addComponent(
     entityId,
     ComponentTypes.PLAYER,
     createPlayerComponent(isLocal)
   );
-  world.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
+  ecsAPI.addComponent(entityId, ComponentTypes.VRM, createVRMComponent(vrm));
 
   // Add camera target and local player tag for local player
   if (isLocal) {
-    world.addComponent(
+    ecsAPI.addComponent(
       entityId,
       ComponentTypes.CAMERA_TARGET,
       createCameraTargetComponent()
     );
 
     // Tag as local player for animation system detection
-    world.addComponent(entityId, "localPlayer", { isLocal: true });
+    ecsAPI.addComponent(entityId, "localPlayer", { isLocal: true });
   }
 
   // Load animations
@@ -117,7 +117,7 @@ export async function createPlayer(
     // Start with idle animation
     actions.idle.play();
 
-    world.addComponent(
+    ecsAPI.addComponent(
       entityId,
       ComponentTypes.ANIMATION,
       createAnimationComponent({
@@ -161,7 +161,7 @@ export async function createPlayer(
     body.addShape(sphereShape, new CANNON.Vec3(0, height / 2, 0));
 
     physicsWorld.addBody(body);
-    world.addComponent(
+    ecsAPI.addComponent(
       entityId,
       ComponentTypes.PHYSICS_BODY,
       createPhysicsBodyComponent(body)
@@ -169,7 +169,7 @@ export async function createPlayer(
   }
 
   if (!isLocal) {
-    world.addComponent(
+    ecsAPI.addComponent(
       entityId,
       ComponentTypes.NETWORK,
       createNetworkComponent(entityId)

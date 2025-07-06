@@ -5,17 +5,17 @@ export function createAnimationSystem() {
     onLocalPlayerIdleAnimation: null,
     notifiedIdle: false,
 
-    update(world, deltaTime) {
-      const entities = world.getEntitiesWithComponents(
+    update(ecsAPI, deltaTime) {
+      const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.ANIMATION,
         ComponentTypes.INPUT,
         ComponentTypes.PLAYER
       );
 
       entities.forEach((entityId) => {
-        const anim = world.getComponent(entityId, ComponentTypes.ANIMATION);
-        const input = world.getComponent(entityId, ComponentTypes.INPUT);
-        const player = world.getComponent(entityId, ComponentTypes.PLAYER);
+        const anim = ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
+        const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
+        const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
 
         if (player.isLocal) {
           const isMoving = input.moveVector.x !== 0 || input.moveVector.z !== 0;
@@ -37,13 +37,13 @@ export function createAnimationSystem() {
 
       // Check for local player with idle animation
       if (!this.notifiedIdle && this.onLocalPlayerIdleAnimation) {
-        const localPlayerEntities = world.getEntitiesWithComponents(
+        const localPlayerEntities = ecsAPI.getEntitiesWithComponents(
           ComponentTypes.ANIMATION,
           "localPlayer"
         );
 
         localPlayerEntities.forEach((entityId) => {
-          const anim = world.getComponent(entityId, ComponentTypes.ANIMATION);
+          const anim = ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
 
           // Check if idle animation is playing
           if (

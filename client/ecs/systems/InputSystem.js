@@ -23,7 +23,7 @@ export function createInputSystem() {
   };
 
   return {
-    init(world) {
+    init(ecsAPI) {
       window.addEventListener("keydown", handleKeyDown);
       window.addEventListener("keyup", handleKeyUp);
 
@@ -36,25 +36,25 @@ export function createInputSystem() {
       this.handleMobileInput = handleMobileInput;
     },
 
-    update(world, deltaTime) {
+    update(ecsAPI, deltaTime) {
       // Toggle stats with 'p' key
       if (inputState.keys.p && !this.p_pressed) {
-        if (world.toggleStats) {
-          world.toggleStats();
+        if (ecsAPI.toggleStats) {
+          ecsAPI.toggleStats();
         }
         this.p_pressed = true;
       } else if (!inputState.keys.p) {
         this.p_pressed = false;
       }
 
-      const entities = world.getEntitiesWithComponents(
+      const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.INPUT,
         ComponentTypes.PLAYER
       );
 
       entities.forEach((entityId) => {
-        const input = world.getComponent(entityId, ComponentTypes.INPUT);
-        const player = world.getComponent(entityId, ComponentTypes.PLAYER);
+        const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
+        const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
 
         if (player.isLocal) {
           let moveVector = { x: 0, y: 0, z: 0 };

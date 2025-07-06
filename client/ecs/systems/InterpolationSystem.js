@@ -7,8 +7,8 @@ export function createInterpolationSystem() {
   const tempQuaternion2 = new THREE.Quaternion();
 
   return {
-    update(world, deltaTime) {
-      const entities = world.getEntitiesWithComponents(
+    update(ecsAPI, deltaTime) {
+      const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.INTERPOLATION,
         ComponentTypes.PLAYER,
@@ -17,17 +17,17 @@ export function createInterpolationSystem() {
       );
 
       entities.forEach((entityId) => {
-        const position = world.getComponent(entityId, ComponentTypes.POSITION);
-        const interpolation = world.getComponent(
+        const position = ecsAPI.getComponent(entityId, ComponentTypes.POSITION);
+        const interpolation = ecsAPI.getComponent(
           entityId,
           ComponentTypes.INTERPOLATION
         );
-        const player = world.getComponent(entityId, ComponentTypes.PLAYER);
-        const physicsComponent = world.getComponent(
+        const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
+        const physicsComponent = ecsAPI.getComponent(
           entityId,
           ComponentTypes.PHYSICS_BODY
         );
-        const vrmComponent = world.getComponent(entityId, ComponentTypes.VRM);
+        const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
 
         if (!player.isLocal) {
           const now = Date.now();

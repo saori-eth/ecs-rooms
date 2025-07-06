@@ -6,10 +6,10 @@ import { ScriptingAPI } from "./ScriptingApi.js";
 import { loadGameScript } from "./ScriptLoader.js";
 
 export class SceneManager {
-  constructor(scene, physicsWorld, world, networkSystem) {
+  constructor(scene, physicsWorld, ecsAPI, networkSystem) {
     this.threeScene = scene;
     this.physicsWorld = physicsWorld;
-    this.world = world; // ECS World
+    this.ecsAPI = ecsAPI; // ECS World
     this.networkSystem = networkSystem;
     this.loader = new GLTFLoader();
     this.activeRoom = null;
@@ -146,7 +146,7 @@ export class SceneManager {
                 worldQuat.w
               );
 
-              // Add to physics world
+              // Add to physics ecsAPI
               this.physicsWorld.addBody(trimeshBody);
               this.physicsBodies.push(trimeshBody);
             }
@@ -193,7 +193,7 @@ export class SceneManager {
         const scriptModule = await loadGameScript(roomData.script);
         const ScriptClass = Object.values(scriptModule)[0];
         const scriptingAPI = new ScriptingAPI(
-          this.world,
+          this.ecsAPI,
           this.physicsWorld,
           this.loadedScene,
           this.networkSystem
