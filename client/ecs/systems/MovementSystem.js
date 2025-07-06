@@ -9,10 +9,14 @@ export function createMovementSystem() {
   const moveVector = new THREE.Vector3();
   const rotatedVector = new THREE.Vector3();
   const euler = new THREE.Euler();
-  
+
   // For raycasting ground check
   const rayFrom = new CANNON.Vec3();
   const rayTo = new CANNON.Vec3();
+  const ray = new CANNON.Ray();
+  const intersectionResult = new CANNON.RaycastResult();
+  const closestHitResult = new CANNON.RaycastResult();
+  const bodiesToTest = [];
 
   return {
     update(ecsAPI, deltaTime) {
@@ -36,68 +40,74 @@ export function createMovementSystem() {
         // Apply sprint modifier if sprinting
         const baseSpeed = player.speed;
         const sprintMultiplier = 1.5; // 50% faster when sprinting
-        const moveSpeed = (ecsAPI.inputState && ecsAPI.inputState.sprint) ? baseSpeed * sprintMultiplier : baseSpeed;
-        
+        const moveSpeed =
+          ecsAPI.inputState && ecsAPI.inputState.sprint
+            ? baseSpeed * sprintMultiplier
+            : baseSpeed;
+
         const { x, z } = input.moveVector;
-        
+
         // Get physics world from ecsAPI
         const physicsWorld = ecsAPI.physicsWorld;
         if (!physicsWorld) return;
-        
+
         // Ground check using raycast
         let isGrounded = false;
         const bodyPosition = physicsComponent.body.position;
         rayFrom.set(bodyPosition.x, bodyPosition.y, bodyPosition.z);
         rayTo.set(bodyPosition.x, bodyPosition.y - 1.1, bodyPosition.z); // Slightly more than half player height
-        
-        // First, let's try a different approach - cast ray from below the player's feet
-        const ray = new CANNON.Ray(rayFrom, rayTo);
-        const rayResult = new CANNON.RaycastResult();
-        
+
+        ray.from.copy(rayFrom);
+        ray.to.copy(rayTo);
+
         // Store all bodies except the player's
-        const bodiesToTest = [];
-        physicsWorld.bodies.forEach(body => {
+        bodiesToTest.length = 0;
+        physicsWorld.bodies.forEach((body) => {
           if (body !== physicsComponent.body) {
             bodiesToTest.push(body);
           }
         });
-        
+
         // Manually test intersection with each body except the player's
-        let closestHit = null;
         let closestDistance = Infinity;
-        
-        bodiesToTest.forEach(body => {
-          const result = new CANNON.RaycastResult();
-          ray.intersectBody(body, result);
-          
-          if (result.hasHit && result.distance < closestDistance) {
-            closestDistance = result.distance;
-            closestHit = result;
+        closestHitResult.reset();
+
+        bodiesToTest.forEach((body) => {
+          intersectionResult.reset();
+          ray.intersectBody(body, intersectionResult);
+
+          if (
+            intersectionResult.hasHit &&
+            intersectionResult.distance < closestDistance
+          ) {
+            closestDistance = intersectionResult.distance;
+            closestHitResult.hasHit = intersectionResult.hasHit;
+            closestHitResult.distance = intersectionResult.distance;
+            closestHitResult.body = intersectionResult.body;
+            closestHitResult.hitPointWorld.copy(
+              intersectionResult.hitPointWorld
+            );
+            closestHitResult.hitNormalWorld.copy(
+              intersectionResult.hitNormalWorld
+            );
           }
         });
-        
-        if (closestHit) {
-          rayResult.body = closestHit.body;
-          rayResult.distance = closestHit.distance;
-          rayResult.hasHit = true;
-          rayResult.hitPointWorld.copy(closestHit.hitPointWorld);
-        }
-        
-        isGrounded = rayResult.hasHit;
-        
+
+        isGrounded = closestHitResult.hasHit;
+
         // Check if we're on a slope
         let isOnSlope = false;
         let slopeNormal = null;
-        if (closestHit && closestHit.hitNormalWorld) {
-          slopeNormal = closestHit.hitNormalWorld;
+        if (closestHitResult.hasHit && closestHitResult.hitNormalWorld) {
+          slopeNormal = closestHitResult.hitNormalWorld;
           // If the normal's Y component is less than 0.95, we're on a slope (not flat ground)
           isOnSlope = slopeNormal.y < 0.95 && slopeNormal.y > 0.5;
         }
-        
+
         // Store grounded state on the player component
         player.isGrounded = isGrounded;
         player.isOnSlope = isOnSlope;
-        
+
         // Handle jump
         if (isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
           physicsComponent.body.velocity.y = 12; // Jump velocity
@@ -105,37 +115,35 @@ export function createMovementSystem() {
         } else if (!isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
           ecsAPI.inputState.jump = false; // Reset jump flag even when not grounded
         }
-        
+
         // Get camera yaw from ecsAPI
         const cameraYaw = ecsAPI.cameraYaw || 0;
-        
+
         // Create movement vector in camera space
         moveVector.set(x, 0, z);
-        
+
         // Rotate movement vector by camera yaw to make it camera-relative
         euler.set(0, cameraYaw, 0);
         rotatedVector.copy(moveVector).applyEuler(euler);
 
         const currentVelocity = physicsComponent.body.velocity;
-        
+
         // Check if on slope and not moving to prevent sliding
         if (isGrounded && x === 0 && z === 0) {
           // Stop completely when not moving on ground
-          physicsComponent.body.velocity.set(
-            0,
-            currentVelocity.y,
-            0
-          );
+          physicsComponent.body.velocity.set(0, currentVelocity.y, 0);
         } else if (!isGrounded && (x !== 0 || z !== 0)) {
           // In air with input - blend current velocity with desired velocity for air control
           const airControlFactor = 0.15; // Much lower air control
           const desiredVelX = rotatedVector.x * moveSpeed;
           const desiredVelZ = rotatedVector.z * moveSpeed;
-          
+
           physicsComponent.body.velocity.set(
-            currentVelocity.x * (1 - airControlFactor) + desiredVelX * airControlFactor,
+            currentVelocity.x * (1 - airControlFactor) +
+              desiredVelX * airControlFactor,
             currentVelocity.y,
-            currentVelocity.z * (1 - airControlFactor) + desiredVelZ * airControlFactor
+            currentVelocity.z * (1 - airControlFactor) +
+              desiredVelZ * airControlFactor
           );
         } else if (isGrounded) {
           // On ground - full control
@@ -147,7 +155,11 @@ export function createMovementSystem() {
         }
 
         // Rotate VRM to face movement direction (camera-relative)
-        if (vrmComponent && vrmComponent.vrm && (rotatedVector.x !== 0 || rotatedVector.z !== 0)) {
+        if (
+          vrmComponent &&
+          vrmComponent.vrm &&
+          (rotatedVector.x !== 0 || rotatedVector.z !== 0)
+        ) {
           const angle = Math.atan2(rotatedVector.x, rotatedVector.z) + Math.PI;
           // Use reusable quaternion instead of creating new one
           tempQuaternion.setFromAxisAngle(yAxis, angle);
