@@ -41,26 +41,32 @@ export function createInputSystem() {
   let lastTouchX = 0;
   let lastTouchY = 0;
   let initialPinchDistance = 0;
-  let isCameraTouch = false;
+  let cameraTouchId = null;
 
   const handleTouchStart = (e) => {
-    // Only handle camera touch if it's not on the joystick
-    const touch = e.touches[0];
-    const target = e.target;
-    
-    // Check if the touch is on the joystick area
-    if (target.closest('.mobile-controls')) {
-      return;
+    // Find a touch that's not on the joystick area
+    for (let i = 0; i < e.touches.length; i++) {
+      const touch = e.touches[i];
+      const target = document.elementFromPoint(touch.clientX, touch.clientY);
+      
+      // Check if this touch is on the joystick area
+      if (target && target.closest('.mobile-controls')) {
+        continue;
+      }
+      
+      // This touch is not on joystick, use it for camera
+      if (!cameraTouchId) {
+        cameraTouchId = touch.identifier;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        break;
+      }
     }
     
-    if (e.touches.length === 1) {
-      isCameraTouch = true;
-      touchStartX = touch.clientX;
-      touchStartY = touch.clientY;
-      lastTouchX = touch.clientX;
-      lastTouchY = touch.clientY;
-    } else if (e.touches.length === 2) {
-      // Handle pinch zoom
+    // Handle pinch zoom with any two touches
+    if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
@@ -68,21 +74,25 @@ export function createInputSystem() {
   };
 
   const handleTouchMove = (e) => {
-    if (!isCameraTouch && e.touches.length !== 2) return;
+    // Find the camera touch if we have one
+    if (cameraTouchId !== null) {
+      const cameraTouch = Array.from(e.touches).find(t => t.identifier === cameraTouchId);
+      
+      if (cameraTouch) {
+        // Single touch - rotate camera
+        const deltaX = cameraTouch.clientX - lastTouchX;
+        const deltaY = cameraTouch.clientY - lastTouchY;
+        
+        inputState.touchDelta.x += deltaX;
+        inputState.touchDelta.y += deltaY;
+        
+        lastTouchX = cameraTouch.clientX;
+        lastTouchY = cameraTouch.clientY;
+      }
+    }
     
-    if (e.touches.length === 1 && isCameraTouch) {
-      // Single touch - rotate camera
-      const touch = e.touches[0];
-      const deltaX = touch.clientX - lastTouchX;
-      const deltaY = touch.clientY - lastTouchY;
-      
-      inputState.touchDelta.x += deltaX;
-      inputState.touchDelta.y += deltaY;
-      
-      lastTouchX = touch.clientX;
-      lastTouchY = touch.clientY;
-    } else if (e.touches.length === 2) {
-      // Pinch zoom
+    // Handle pinch zoom with any two touches
+    if (e.touches.length === 2) {
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const distance = Math.sqrt(dx * dx + dy * dy);
@@ -97,8 +107,17 @@ export function createInputSystem() {
   };
 
   const handleTouchEnd = (e) => {
-    if (e.touches.length === 0) {
-      isCameraTouch = false;
+    // Check if the camera touch ended
+    if (cameraTouchId !== null) {
+      const remainingTouch = Array.from(e.touches).find(t => t.identifier === cameraTouchId);
+      if (!remainingTouch) {
+        // Camera touch has ended
+        cameraTouchId = null;
+      }
+    }
+    
+    // Reset pinch distance when less than 2 touches
+    if (e.touches.length < 2) {
       initialPinchDistance = 0;
     }
   };
