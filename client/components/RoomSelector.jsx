@@ -9,7 +9,7 @@ export const RoomSelector = ({ selectedRoom, onRoomSelect }) => {
   useEffect(() => {
     const fetchRoomData = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/rooms");
+        const response = await fetch("/api/rooms");
         const data = await response.json();
         setRoomData(data);
       } catch (error) {
