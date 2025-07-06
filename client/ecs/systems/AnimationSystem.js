@@ -19,16 +19,52 @@ export function createAnimationSystem() {
 
         if (player.isLocal) {
           const isMoving = input.moveVector.x !== 0 || input.moveVector.z !== 0;
-          const actionToPlay = isMoving
-            ? anim.actions.walking
-            : anim.actions.idle;
+          const isGrounded = player.isGrounded !== false; // Default to true if undefined
+          const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
+          
+          let actionToPlay;
+          
+          // Determine which animation to play
+          if (!isGrounded) {
+            actionToPlay = anim.actions.jump;
+          } else if (isMoving && isSprinting) {
+            actionToPlay = anim.actions.sprint;
+          } else if (isMoving) {
+            actionToPlay = anim.actions.walking;
+          } else {
+            actionToPlay = anim.actions.idle;
+          }
 
+          // Handle animation transitions
           if (actionToPlay !== anim.currentAction) {
             const lastAction = anim.currentAction;
             anim.currentAction = actionToPlay;
 
-            lastAction.fadeOut(0.2);
-            anim.currentAction.reset().fadeIn(0.2).play();
+            // Special handling for jump animation
+            if (actionToPlay === anim.actions.jump) {
+              lastAction.fadeOut(0.1);
+              anim.currentAction.reset().fadeIn(0.1).play();
+            } else {
+              lastAction.fadeOut(0.2);
+              anim.currentAction.reset().fadeIn(0.2).play();
+            }
+          }
+          
+          // If jump animation finished and player is grounded, transition back
+          if (anim.currentAction === anim.actions.jump && 
+              !anim.actions.jump.isRunning() && 
+              isGrounded) {
+            let nextAction;
+            if (isMoving && isSprinting) {
+              nextAction = anim.actions.sprint;
+            } else if (isMoving) {
+              nextAction = anim.actions.walking;
+            } else {
+              nextAction = anim.actions.idle;
+            }
+            anim.currentAction = nextAction;
+            anim.actions.jump.stop();
+            nextAction.reset().fadeIn(0.2).play();
           }
         }
 

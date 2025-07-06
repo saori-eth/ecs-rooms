@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import "./MobileControls.css";
 
-function MobileControls({ onMove }) {
+function MobileControls({ onMove, onJump }) {
   const joystickRef = useRef(null);
   const knobRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -30,8 +30,7 @@ function MobileControls({ onMove }) {
       e.preventDefault();
 
       const touch = e.touches
-        ? Array.from(e.touches).find((t) => t.identifier === touchId) ||
-          e.touches[0]
+        ? Array.from(e.touches).find((t) => t.identifier === touchId)
         : e;
 
       if (!touch) return;
@@ -58,14 +57,37 @@ function MobileControls({ onMove }) {
       const moveX = deltaX / maxDistance;
       const moveY = deltaY / maxDistance;
 
+      // Check if we're in the sprint zone (outer 25% = distance > 75% of max)
+      const normalizedDistance = distance / maxDistance;
+      const isSprinting = normalizedDistance > 0.75;
+
+      // Add sprint visual feedback
+      if (isSprinting) {
+        knob.classList.add("sprinting");
+      } else {
+        knob.classList.remove("sprinting");
+      }
+
       // Convert to game coordinates
       // Joystick up (negative Y) should move forward (negative Z)
       // Joystick down (positive Y) should move backward (positive Z)
-      onMove({ x: moveX, z: moveY });
+      onMove({ x: moveX, z: moveY, sprint: isSprinting });
     };
 
     const handleEnd = (e) => {
       if (!isDragging) return;
+
+      // Check if our specific touch ended
+      if (e.changedTouches) {
+        const endedTouch = Array.from(e.changedTouches).find(
+          (t) => t.identifier === touchId
+        );
+        if (!endedTouch) {
+          // Our touch didn't end, ignore this event
+          return;
+        }
+      }
+
       e.preventDefault();
 
       setIsDragging(false);
@@ -73,9 +95,10 @@ function MobileControls({ onMove }) {
 
       // Reset knob position
       knob.style.transform = "translate(0, 0)";
+      knob.classList.remove("sprinting");
 
-      // Stop movement
-      onMove({ x: 0, z: 0 });
+      // Stop movement and sprint
+      onMove({ x: 0, z: 0, sprint: false });
     };
 
     // Touch events
@@ -108,6 +131,17 @@ function MobileControls({ onMove }) {
           <div ref={knobRef} className="joystick-knob"></div>
         </div>
       </div>
+      <button
+        className="jump-button"
+        onTouchStart={(e) => {
+          if (onJump) onJump();
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+        }}
+      >
+        Jump
+      </button>
     </div>
   );
 }

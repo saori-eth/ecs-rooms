@@ -108,4 +108,33 @@ export class ScriptingAPI {
   getThreeScene() {
     return window.scene; // Reference to the main Three.js scene
   }
+
+  // Player State Helpers
+  getLocalPlayer() {
+    const entities = this.ecsAPI.getEntitiesWithComponents(ComponentTypes.PLAYER);
+    for (const entityId of entities) {
+      const player = this.ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
+      if (player && player.isLocal) {
+        return { entityId, player };
+      }
+    }
+    return null;
+  }
+
+  isPlayerGrounded(entityId) {
+    const player = this.ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
+    return player ? player.isGrounded : false;
+  }
+
+  getPlayerVelocity(entityId) {
+    const physics = this.ecsAPI.getComponent(entityId, ComponentTypes.PHYSICS_BODY);
+    if (physics && physics.body) {
+      return {
+        x: physics.body.velocity.x,
+        y: physics.body.velocity.y,
+        z: physics.body.velocity.z
+      };
+    }
+    return null;
+  }
 }

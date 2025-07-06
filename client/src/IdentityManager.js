@@ -26,8 +26,7 @@ export class IdentityManager {
 
     const defaultIdentity = {
       name: "Anon",
-      avatarId:
-        this.availableAvatars.length > 0 ? this.availableAvatars[0].id : "lain",
+      avatarId: this.availableAvatars[0].id,
     };
     localStorage.setItem(this.storageKey, JSON.stringify(defaultIdentity));
     return defaultIdentity;

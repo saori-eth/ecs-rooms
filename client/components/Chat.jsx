@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Chat.css";
 
-function Chat({ gameManager }) {
+function Chat({ ecsManager }) {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [isInputFocused, setIsInputFocused] = useState(false);
@@ -11,12 +11,12 @@ function Chat({ gameManager }) {
 
   useEffect(() => {
     // Set up chat message handler
-    if (gameManager) {
-      gameManager.onChatMessage = (message) => {
+    if (ecsManager) {
+      ecsManager.onChatMessage = (message) => {
         setMessages((prev) => [...prev, message]);
       };
     }
-  }, [gameManager]);
+  }, [ecsManager]);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -40,12 +40,12 @@ function Chat({ gameManager }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmedMessage = inputValue.trim();
-    if (trimmedMessage && gameManager && gameManager.sendChatMessage) {
-      gameManager.sendChatMessage(trimmedMessage);
+    if (trimmedMessage && ecsManager && ecsManager.sendChatMessage) {
+      ecsManager.sendChatMessage(trimmedMessage);
       setInputValue("");
     } else {
       console.error(
-        "[Chat] Cannot send message - missing gameManager or sendChatMessage"
+        "[Chat] Cannot send message - missing ecsManager or sendChatMessage"
       );
     }
   };

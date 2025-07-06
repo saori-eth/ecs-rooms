@@ -45,6 +45,9 @@ export class MenuScene {
     this.clock = new THREE.Clock();
     this.onAvatarLoaded = null; // Callback when avatar is loaded
     this.loadingSpinner = null;
+    this.isLoadingAvatar = false; // Track loading state
+    this.pendingAvatarId = null; // Track pending avatar to load
+    this.currentAnimations = []; // Track active GSAP animations
   }
 
   init() {
@@ -252,6 +255,9 @@ export class MenuScene {
 
   async loadAvatar(avatarId) {
     try {
+      // Set loading state
+      this.isLoadingAvatar = true;
+      
       // Show loading spinner
       this.showLoadingSpinner();
 
@@ -323,14 +329,33 @@ export class MenuScene {
         if (this.onAvatarLoaded) {
           this.onAvatarLoaded();
         }
+        
+        // Clear loading state
+        this.isLoadingAvatar = false;
+        
+        // Check if there's a pending avatar to load
+        if (this.pendingAvatarId) {
+          const nextAvatarId = this.pendingAvatarId;
+          this.pendingAvatarId = null;
+          this.switchAvatar(nextAvatarId);
+        }
       }, 300);
     } catch (error) {
       console.error("Failed to load avatar:", error);
       // Hide spinner on error
       this.hideLoadingSpinner();
+      // Clear loading state
+      this.isLoadingAvatar = false;
       // Still call the callback on error
       if (this.onAvatarLoaded) {
         this.onAvatarLoaded();
+      }
+      
+      // Check if there's a pending avatar to load
+      if (this.pendingAvatarId) {
+        const nextAvatarId = this.pendingAvatarId;
+        this.pendingAvatarId = null;
+        this.switchAvatar(nextAvatarId);
       }
     }
   }
@@ -356,13 +381,27 @@ export class MenuScene {
   }
 
   async switchAvatar(newAvatarId) {
+    // If currently loading an avatar
+    if (this.isLoadingAvatar) {
+      // Store the pending avatar to load after current one finishes
+      this.pendingAvatarId = newAvatarId;
+      return;
+    }
+    
+    // Kill any existing animations
+    this.currentAnimations.forEach(anim => {
+      if (anim && anim.kill) anim.kill();
+    });
+    this.currentAnimations = [];
+    
     // Fade out current avatar
     if (this.currentAvatar) {
       // Kill existing idle animations
       gsap.killTweensOf(this.currentAvatar.rotation);
       gsap.killTweensOf(this.currentAvatar.position);
+      gsap.killTweensOf(this.currentAvatar.scale);
 
-      gsap.to(this.currentAvatar.scale, {
+      const fadeOutAnim = gsap.to(this.currentAvatar.scale, {
         x: 0,
         y: 0,
         z: 0,
@@ -372,6 +411,8 @@ export class MenuScene {
           this.loadAvatar(newAvatarId);
         },
       });
+      
+      this.currentAnimations.push(fadeOutAnim);
     } else {
       this.loadAvatar(newAvatarId);
     }

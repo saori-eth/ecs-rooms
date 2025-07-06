@@ -27,11 +27,6 @@ export const availableAvatars = [
     name: "Yuji Itadori",
     path: "/avatars/yuji_itadori.vrm",
   },
-  {
-    id: "lain",
-    name: "Lain",
-    path: "/avatars/lain.vrm",
-  },
 ];
 
 export class VRMManager {

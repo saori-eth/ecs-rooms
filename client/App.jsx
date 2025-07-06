@@ -9,7 +9,7 @@ import { IdentityManager } from "./src/IdentityManager";
 import "./App.css";
 
 function App() {
-  const [gameManager] = useState(() => new ECSManager());
+  const [ecsManager] = useState(() => new ECSManager());
   const [isInitialized, setIsInitialized] = useState(false);
   const {
     gameState,
@@ -37,8 +37,8 @@ function App() {
 
   // Pass state setters to game manager
   useEffect(() => {
-    if (gameManager) {
-      gameManager.setStateCallbacks({
+    if (ecsManager) {
+      ecsManager.setStateCallbacks({
         setGameState,
         setConnectionStatus,
         setPlayEnabled,
@@ -46,7 +46,7 @@ function App() {
         getPlayerIdentity: () => playerIdentity,
       });
     }
-  }, [gameManager, playerIdentity]);
+  }, [ecsManager, playerIdentity]);
 
   const handlePlay = async (name, avatarId, roomType) => {
     identityManager.saveIdentity(name, avatarId);
@@ -59,18 +59,18 @@ function App() {
     // Initialize game if not already done
     if (!isInitialized) {
       const container = document.getElementById("canvas-container");
-      await gameManager.initialize(container);
+      await ecsManager.initialize(container);
       setIsInitialized(true);
     }
 
-    if (gameManager && gameManager.onPlay) {
-      gameManager.onPlay(updatedIdentity, roomType);
+    if (ecsManager && ecsManager.onPlay) {
+      ecsManager.onPlay(updatedIdentity, roomType);
     }
   };
 
   const handleExit = () => {
-    if (gameManager) {
-      gameManager.reset();
+    if (ecsManager) {
+      ecsManager.reset();
     }
     setIsInitialized(false);
     setGameState("menu");
@@ -91,7 +91,7 @@ function App() {
       {gameState === "playing" && (
         <GameUI
           roomInfo={roomInfo}
-          gameManager={gameManager}
+          ecsManager={ecsManager}
           onExit={handleExit}
         />
       )}

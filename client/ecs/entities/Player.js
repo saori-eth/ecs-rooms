@@ -104,15 +104,21 @@ export async function createPlayer(
     const actions = {
       idle: mixer.clipAction(clips.idle),
       walking: mixer.clipAction(clips.walking),
+      jump: mixer.clipAction(clips.jump),
+      sprint: mixer.clipAction(clips.sprint),
     };
 
     // Ensure animations don't accumulate transforms
     actions.idle.setLoop(THREE.LoopRepeat);
     actions.walking.setLoop(THREE.LoopRepeat);
+    actions.jump.setLoop(THREE.LoopOnce); // Jump plays once
+    actions.sprint.setLoop(THREE.LoopRepeat);
 
     // Reset any accumulated transforms
     actions.idle.reset();
     actions.walking.reset();
+    actions.jump.reset();
+    actions.sprint.reset();
 
     // Start with idle animation
     actions.idle.play();
@@ -146,9 +152,9 @@ export async function createPlayer(
     const height = 1.0; // Height between top and bottom sphere centers
     const sphereShape = new CANNON.Sphere(radius);
 
-    // Create material with low friction to reduce bouncing
+    // Create material with no friction to prevent sticking to walls/ledges
     const playerMaterial = new CANNON.Material("playerMaterial");
-    playerMaterial.friction = 0.1;
+    playerMaterial.friction = 0;
     playerMaterial.restitution = 0.0; // No bouncing
     body.material = playerMaterial;
 

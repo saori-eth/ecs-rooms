@@ -35,6 +35,17 @@
   cursor: pointer;
 }
 
+/* Sprint zone indicator - outer 25% ring */
+.joystick::before {
+  content: '';
+  position: absolute;
+  width: 75%;
+  height: 75%;
+  border: 2px dashed rgba(255, 136, 0, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .joystick-knob {
   position: absolute;
   width: 40px;
@@ -50,4 +61,41 @@
 /* Add visual feedback */
 .joystick:active .joystick-knob {
   box-shadow: 0 4px 30px rgba(0, 255, 136, 0.5), 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Sprint visual feedback */
+.joystick-knob.sprinting {
+  background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+  box-shadow: 0 4px 30px rgba(255, 136, 0, 0.6), 0 0 20px rgba(255, 136, 0, 0.4), 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Jump button styling */
+.jump-button {
+  position: fixed;
+  bottom: calc(15vh + 44px);
+  right: 24px;
+  width: 80px;
+  height: 80px;
+  background: rgba(10, 10, 10, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 50%;
+  border: none;
+  color: #00ff88;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 2px rgba(255, 255, 255, 0.1),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  touch-action: none;
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.jump-button:active {
+  transform: scale(0.95);
+  background: rgba(0, 255, 136, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.4), 0 0 0 2px rgba(0, 255, 136, 0.4),
+    inset 0 0 20px rgba(0, 0, 0, 0.3);
 }

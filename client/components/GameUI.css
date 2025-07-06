@@ -18,6 +18,8 @@
   -ms-user-select: none;
   user-select: none;
   cursor: default;
+  pointer-events: none;
+  max-width: 40%;
 }
 
 @media (max-width: 767px) {
@@ -49,6 +51,7 @@
   -ms-user-select: none;
   user-select: none;
   cursor: default;
+  pointer-events: auto;
 }
 
 @media (max-width: 767px) {

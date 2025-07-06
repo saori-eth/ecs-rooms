@@ -10,7 +10,7 @@ export function createNetworkSystem() {
   let lastUpdateTime = 0;
   const updateRate = 50;
   const remotePlayers = new Map();
-  let gameManager = null;
+  let ecsManager = null;
   let roomId = null;
   let inRoom = false;
 
@@ -88,9 +88,9 @@ export function createNetworkSystem() {
             );
           }
 
-          if (gameManager) {
-            const identity = gameManager.stateCallbacks.getPlayerIdentity();
-            gameManager.startGame(identity);
+          if (ecsManager) {
+            const identity = ecsManager.stateCallbacks.getPlayerIdentity();
+            ecsManager.startGame(identity);
           }
 
           message.players.forEach(async (playerData) => {
@@ -100,8 +100,8 @@ export function createNetworkSystem() {
               false,
               window.physicsWorld,
               playerData.identity,
-              gameManager?.vrmManager,
-              gameManager?.animationManager
+              ecsManager?.vrmManager,
+              ecsManager?.animationManager
             );
             ecsAPI.addComponent(
               remoteEntityId,
@@ -120,8 +120,8 @@ export function createNetworkSystem() {
               false,
               window.physicsWorld,
               message.player.identity,
-              gameManager?.vrmManager,
-              gameManager?.animationManager
+              ecsManager?.vrmManager,
+              ecsManager?.animationManager
             ).then((newEntityId) => {
               ecsAPI.addComponent(
                 newEntityId,
@@ -201,15 +201,28 @@ export function createNetworkSystem() {
               }
             }
 
-            if (animation && message.isMoving !== undefined) {
-              const actionToPlay = message.isMoving
-                ? animation.actions.walking
-                : animation.actions.idle;
+            if (animation && animation.actions) {
+              let actionToPlay;
+              
+              // Determine which animation to play based on received state
+              if (message.isGrounded === false && animation.actions.jump) {
+                actionToPlay = animation.actions.jump;
+              } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
+                actionToPlay = animation.actions.sprint;
+              } else if (message.isMoving && animation.actions.walking) {
+                actionToPlay = animation.actions.walking;
+              } else if (animation.actions.idle) {
+                actionToPlay = animation.actions.idle;
+              }
+              
               if (actionToPlay !== animation.currentAction) {
                 const lastAction = animation.currentAction;
                 animation.currentAction = actionToPlay;
-                lastAction.fadeOut(0.2);
-                animation.currentAction.reset().fadeIn(0.2).play();
+                
+                // Use faster transition for jump animation
+                const fadeTime = actionToPlay === animation.actions.jump ? 0.1 : 0.2;
+                lastAction.fadeOut(fadeTime);
+                actionToPlay.reset().fadeIn(fadeTime).play();
               }
             }
           }
@@ -258,7 +271,7 @@ export function createNetworkSystem() {
         onConnectionStatusChange("Disconnected. Reconnecting...");
       if (onConnectionReady) onConnectionReady(false);
       if (onDisconnect) onDisconnect();
-      if (gameManager) gameManager.stopGame();
+      if (ecsManager) ecsManager.stopGame();
 
       if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
@@ -311,8 +324,8 @@ export function createNetworkSystem() {
       }
     },
 
-    setGameManager(gm) {
-      gameManager = gm;
+    setecsManager(gm) {
+      ecsManager = gm;
     },
 
     joinGame(identity, roomType) {
@@ -397,19 +410,24 @@ export function createNetworkSystem() {
           if (position && input && vrm) {
             const isMoving =
               input.moveVector.x !== 0 || input.moveVector.z !== 0;
-            ws.send(
-              JSON.stringify({
-                type: "move",
-                position: {
-                  x: position.x,
-                  y: position.y,
-                  z: position.z,
-                },
-                rotation: vrm.vrm.scene.quaternion.toArray(),
-                isMoving,
-                timestamp: Date.now(),
-              })
-            );
+            const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
+            const isGrounded = player.isGrounded === true; // Will be false if undefined or false
+            
+            const moveMessage = {
+              type: "move",
+              position: {
+                x: position.x,
+                y: position.y,
+                z: position.z,
+              },
+              rotation: vrm.vrm.scene.quaternion.toArray(),
+              isMoving,
+              isSprinting,
+              isGrounded,
+              timestamp: Date.now(),
+            };
+            
+            ws.send(JSON.stringify(moveMessage));
           }
         }
       });

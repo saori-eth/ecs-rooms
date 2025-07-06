@@ -30,6 +30,7 @@ export class ECSManager {
 
     // Set up mobile input callback
     this.mobileInputCallback = null;
+    this.mobileJumpCallback = null;
 
     // Chat message handler placeholder
     this.onChatMessage = null;
@@ -141,7 +142,7 @@ export class ECSManager {
       this.ecsAPI.renderer = null;
     }
 
-    // Reset GameManager state
+    // Reset ecsManager state
     this.gameStarted = false;
     this.localPlayerId = null;
     this.initialized = false;
@@ -161,7 +162,7 @@ export class ECSManager {
 
   async initialize(container) {
     if (this.initialized) {
-      console.warn("GameManager already initialized");
+      console.warn("ecsManager already initialized");
       return;
     }
 
@@ -189,13 +190,16 @@ export class ECSManager {
 
     // Register systems with the ecsAPI
     this.ecsAPI.registerSystem(this.inputSystem);
-    this.ecsAPI.registerSystem(createMovementSystem());
     this.ecsAPI.registerSystem(this.physicsSystem);
+    this.ecsAPI.registerSystem(createMovementSystem());
     this.ecsAPI.registerSystem(createInterpolationSystem());
-    this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.networkSystem);
+    this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.animationSystem);
-    this.ecsAPI.addSystem(new CameraSystem());
+
+    // Create and register camera system
+    this.cameraSystem = new CameraSystem();
+    this.ecsAPI.addSystem(this.cameraSystem);
 
     // Set global references for debugging
     window.physicsWorld = this.physicsSystem.world;
@@ -212,15 +216,22 @@ export class ECSManager {
     this.ecsAPI.sceneManager = this.sceneManager;
 
     // Pass game manager to network system
-    this.networkSystem.setGameManager(this);
+    this.networkSystem.setecsManager(this);
 
     // Bind the send chat message method
     this.sendChatMessage = this.sendChatMessage.bind(this);
 
     // Set up mobile input callback
     this.mobileInputCallback = (moveVector) => {
-      if (this.inputSystem.handleMobileInput) {
+      if (this.inputSystem && this.inputSystem.handleMobileInput) {
         this.inputSystem.handleMobileInput(moveVector);
+      }
+    };
+
+    // Set up mobile jump callback
+    this.mobileJumpCallback = () => {
+      if (this.inputSystem && this.inputSystem.handleMobileJump) {
+        this.inputSystem.handleMobileJump();
       }
     };
 
