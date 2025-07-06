@@ -126,17 +126,23 @@ export function createMovementSystem() {
             currentVelocity.y,
             0
           );
-        } else {
-          // Normal movement with reduced air control and slope adjustment
-          const airControlFactor = isGrounded ? 1.0 : 0.6;
-          
-          // Don't reduce speed on slopes
-          let effectiveSpeed = moveSpeed;
+        } else if (!isGrounded && (x !== 0 || z !== 0)) {
+          // In air with input - blend current velocity with desired velocity for air control
+          const airControlFactor = 0.15; // Much lower air control
+          const desiredVelX = rotatedVector.x * moveSpeed;
+          const desiredVelZ = rotatedVector.z * moveSpeed;
           
           physicsComponent.body.velocity.set(
-            rotatedVector.x * effectiveSpeed * airControlFactor,
+            currentVelocity.x * (1 - airControlFactor) + desiredVelX * airControlFactor,
             currentVelocity.y,
-            rotatedVector.z * effectiveSpeed * airControlFactor
+            currentVelocity.z * (1 - airControlFactor) + desiredVelZ * airControlFactor
+          );
+        } else if (isGrounded) {
+          // On ground - full control
+          physicsComponent.body.velocity.set(
+            rotatedVector.x * moveSpeed,
+            currentVelocity.y,
+            rotatedVector.z * moveSpeed
           );
         }
 
