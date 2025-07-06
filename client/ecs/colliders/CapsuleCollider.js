@@ -15,6 +15,10 @@ export class CapsuleCollider {
       fixedRotation: true, // Prevent capsule from tipping over
     });
 
+    // Enable CCD (Continuous Collision Detection) to prevent tunneling at high speeds
+    body.ccdSpeedThreshold = 1; // Enable CCD when moving faster than 1 units/s
+    body.ccdIterations = 20; // Number of CCD iterations
+
     // Create shapes for the capsule
     const sphereShape = new CANNON.Sphere(this.radius);
     const cylinderShape = new CANNON.Cylinder(
