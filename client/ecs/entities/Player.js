@@ -104,15 +104,18 @@ export async function createPlayer(
     const actions = {
       idle: mixer.clipAction(clips.idle),
       walking: mixer.clipAction(clips.walking),
+      jump: mixer.clipAction(clips.jump),
     };
 
     // Ensure animations don't accumulate transforms
     actions.idle.setLoop(THREE.LoopRepeat);
     actions.walking.setLoop(THREE.LoopRepeat);
+    actions.jump.setLoop(THREE.LoopOnce); // Jump plays once
 
     // Reset any accumulated transforms
     actions.idle.reset();
     actions.walking.reset();
+    actions.jump.reset();
 
     // Start with idle animation
     actions.idle.play();

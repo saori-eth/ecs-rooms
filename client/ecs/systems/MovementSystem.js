@@ -81,28 +81,14 @@ export function createMovementSystem() {
         
         isGrounded = rayResult.hasHit;
         
-        // Debug logging for jump
-        if (ecsAPI.inputState && ecsAPI.inputState.jump) {
-          console.log("Jump attempt:", {
-            isGrounded,
-            hasHit: rayResult.hasHit,
-            rayFrom: { x: rayFrom.x, y: rayFrom.y, z: rayFrom.z },
-            rayTo: { x: rayTo.x, y: rayTo.y, z: rayTo.z },
-            bodyPosition: { x: bodyPosition.x, y: bodyPosition.y, z: bodyPosition.z },
-            currentVelocityY: physicsComponent.body.velocity.y,
-            hitPoint: rayResult.hasHit ? { x: rayResult.hitPointWorld.x, y: rayResult.hitPointWorld.y, z: rayResult.hitPointWorld.z } : null,
-            hitBody: rayResult.body ? rayResult.body.id : null,
-            distance: rayResult.distance
-          });
-        }
+        // Store grounded state on the player component
+        player.isGrounded = isGrounded;
         
         // Handle jump
         if (isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
-          console.log("Jump executed!");
           physicsComponent.body.velocity.y = 5; // Jump velocity
           ecsAPI.inputState.jump = false; // Reset jump flag
         } else if (!isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
-          console.log("Jump denied - not grounded");
           ecsAPI.inputState.jump = false; // Reset jump flag even when not grounded
         }
         

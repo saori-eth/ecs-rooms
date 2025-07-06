@@ -15,18 +15,21 @@ export class AnimationManager {
     }
 
     // Load animations using the custom retarget function
-    const [idleClip, walkingClip] = await Promise.all([
+    const [idleClip, walkingClip, jumpClip] = await Promise.all([
       loadAnim("/animations/idle.fbx", vrm),
       loadAnim("/animations/walk.fbx", vrm),
+      loadAnim("/animations/jump.fbx", vrm),
     ]);
 
     // Set clip names
     idleClip.name = "idle";
     walkingClip.name = "walking";
+    jumpClip.name = "jump";
 
     const clips = {
       idle: idleClip,
       walking: walkingClip,
+      jump: jumpClip,
     };
 
     // Cache the clips for this VRM
