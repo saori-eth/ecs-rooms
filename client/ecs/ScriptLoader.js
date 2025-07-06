@@ -9,6 +9,7 @@ export async function loadGameScript(scriptPath) {
       "arena-shooting-game": () =>
         import("./rooms/scripts/arena-shooting-game.js"),
       "arena-logic": () => import("./rooms/scripts/arena-logic.js"),
+      "particle-box-scene": () => import("./rooms/scripts/particle-box-scene.js"),
     };
 
     if (scriptModules[scriptName]) {
