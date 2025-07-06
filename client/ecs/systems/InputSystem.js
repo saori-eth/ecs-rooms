@@ -35,12 +35,82 @@ export function createInputSystem() {
     }
   };
 
+  // Touch handling for camera control
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let lastTouchX = 0;
+  let lastTouchY = 0;
+  let initialPinchDistance = 0;
+  let isCameraTouch = false;
+
+  const handleTouchStart = (e) => {
+    // Only handle camera touch if it's not on the joystick
+    const touch = e.touches[0];
+    const target = e.target;
+    
+    // Check if the touch is on the joystick area
+    if (target.closest('.mobile-controls')) {
+      return;
+    }
+    
+    if (e.touches.length === 1) {
+      isCameraTouch = true;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+    } else if (e.touches.length === 2) {
+      // Handle pinch zoom
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isCameraTouch && e.touches.length !== 2) return;
+    
+    if (e.touches.length === 1 && isCameraTouch) {
+      // Single touch - rotate camera
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - lastTouchX;
+      const deltaY = touch.clientY - lastTouchY;
+      
+      inputState.touchDelta.x += deltaX;
+      inputState.touchDelta.y += deltaY;
+      
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+    } else if (e.touches.length === 2) {
+      // Pinch zoom
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (initialPinchDistance > 0) {
+        const delta = (initialPinchDistance - distance) * 2; // Scale factor
+        inputState.pinchDelta += delta;
+      }
+      
+      initialPinchDistance = distance;
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.touches.length === 0) {
+      isCameraTouch = false;
+      initialPinchDistance = 0;
+    }
+  };
+
   const inputState = {
     keys: {},
     mobileMove: { x: 0, z: 0 },
     isMobile: false,
     mouseDelta: { x: 0, y: 0 },
     wheelDelta: 0,
+    touchDelta: { x: 0, y: 0 },
+    pinchDelta: 0,
   };
 
   const moveVector = { x: 0, y: 0, z: 0 };
@@ -66,6 +136,13 @@ export function createInputSystem() {
 
       // Store inputState reference on ecsAPI for access by other systems
       ecsAPI.inputState = inputState;
+      
+      // Add touch event listeners for mobile camera control
+      if (inputState.isMobile) {
+        document.addEventListener("touchstart", handleTouchStart, { passive: false });
+        document.addEventListener("touchmove", handleTouchMove, { passive: false });
+        document.addEventListener("touchend", handleTouchEnd, { passive: false });
+      }
     },
 
     update(ecsAPI, deltaTime) {

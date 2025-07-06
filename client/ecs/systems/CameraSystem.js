@@ -52,33 +52,64 @@ export class CameraSystem {
       const vrmComponent = ecsAPI.getComponent(targetId, ComponentTypes.VRM);
 
       if (position) {
-        // Get mouse input from InputSystem
-        if (ecsAPI.inputState && document.pointerLockElement) {
-          const { mouseDelta, wheelDelta } = ecsAPI.inputState;
+        // Get input from InputSystem
+        if (ecsAPI.inputState) {
+          const { mouseDelta, wheelDelta, touchDelta, pinchDelta, isMobile } = ecsAPI.inputState;
+          
+          if (isMobile) {
+            // Mobile touch controls
+            if (touchDelta.x !== 0 || touchDelta.y !== 0) {
+              // Touch sensitivity is different from mouse
+              const touchSensitivity = this.mouseSensitivity * 0.5;
+              this.yaw -= touchDelta.x * touchSensitivity;
+              this.pitch += touchDelta.y * touchSensitivity;
+              
+              // Clamp pitch to prevent camera flipping
+              this.pitch = Math.max(
+                this.minPitch,
+                Math.min(this.maxPitch, this.pitch)
+              );
+              
+              // Reset touch delta after using it
+              ecsAPI.inputState.touchDelta.x = 0;
+              ecsAPI.inputState.touchDelta.y = 0;
+            }
+            
+            // Pinch zoom
+            if (pinchDelta !== 0) {
+              this.targetDistance += pinchDelta * this.zoomSensitivity * 0.5;
+              this.targetDistance = Math.max(
+                this.minDistance,
+                Math.min(this.maxDistance, this.targetDistance)
+              );
+              ecsAPI.inputState.pinchDelta = 0;
+            }
+          } else if (document.pointerLockElement) {
+            // Desktop mouse controls
+            // Update camera rotation based on mouse movement
+            this.yaw -= mouseDelta.x * this.mouseSensitivity;
+            this.pitch += mouseDelta.y * this.mouseSensitivity; // Changed from -= to += to fix inversion
 
-          // Update camera rotation based on mouse movement
-          this.yaw -= mouseDelta.x * this.mouseSensitivity;
-          this.pitch += mouseDelta.y * this.mouseSensitivity; // Changed from -= to += to fix inversion
-
-          // Clamp pitch to prevent camera flipping
-          this.pitch = Math.max(
-            this.minPitch,
-            Math.min(this.maxPitch, this.pitch)
-          );
-
-          // Update zoom based on wheel input
-          if (wheelDelta !== 0) {
-            this.targetDistance += wheelDelta * this.zoomSensitivity;
-            this.targetDistance = Math.max(
-              this.minDistance,
-              Math.min(this.maxDistance, this.targetDistance)
+            // Clamp pitch to prevent camera flipping
+            this.pitch = Math.max(
+              this.minPitch,
+              Math.min(this.maxPitch, this.pitch)
             );
-            ecsAPI.inputState.wheelDelta = 0;
-          }
 
-          // Reset mouse delta after using it
-          ecsAPI.inputState.mouseDelta.x = 0;
-          ecsAPI.inputState.mouseDelta.y = 0;
+            // Update zoom based on wheel input
+            if (wheelDelta !== 0) {
+              this.targetDistance += wheelDelta * this.zoomSensitivity;
+              this.targetDistance = Math.max(
+                this.minDistance,
+                Math.min(this.maxDistance, this.targetDistance)
+              );
+              ecsAPI.inputState.wheelDelta = 0;
+            }
+
+            // Reset mouse delta after using it
+            ecsAPI.inputState.mouseDelta.x = 0;
+            ecsAPI.inputState.mouseDelta.y = 0;
+          }
         }
 
         // Smooth camera rotation and zoom

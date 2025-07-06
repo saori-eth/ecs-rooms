@@ -19,6 +19,7 @@
   user-select: none;
   cursor: default;
   pointer-events: none;
+  max-width: 40%;
 }
 
 @media (max-width: 767px) {

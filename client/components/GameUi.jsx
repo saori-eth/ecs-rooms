@@ -60,7 +60,7 @@ function GameUI({ roomInfo, gameManager, onExit }) {
   return (
     <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
       <div className="info">
-        {isMobile ? "Use joystick to move" : isPointerLocked ? "ESC to release mouse. WASD to move, mouse to look" : "Click to capture mouse. Use WASD to move, mouse to look"}
+        {isMobile ? "Joystick: move • Touch: rotate camera • Pinch: zoom" : isPointerLocked ? "ESC to release mouse. WASD to move, mouse to look" : "Click to capture mouse. Use WASD to move, mouse to look"}
       </div>
       <div className="room-info">
         <div>
