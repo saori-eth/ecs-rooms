@@ -18,7 +18,7 @@
 
 .logo {
   position: absolute;
-  top: 12px;
+  top: 24px;
   left: 32px;
   max-width: 120px;
   height: auto;
@@ -247,9 +247,9 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .logo {
-    top: 8px;
+    top: 16px;
     left: 16px;
-    max-width: 60px;
+    max-width: 100px;
   }
 
   .player-name-wrapper {
