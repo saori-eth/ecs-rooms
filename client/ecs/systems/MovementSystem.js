@@ -19,7 +19,8 @@ export function createMovementSystem() {
   const bodiesToTest = [];
 
   return {
-    update(ecsAPI, deltaTime) {
+    // Movement logic runs in fixed timestep for physics stability
+    fixedUpdate(ecsAPI, fixedDeltaTime) {
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.PHYSICS_BODY,
         ComponentTypes.INPUT,
@@ -183,6 +184,11 @@ export function createMovementSystem() {
           physicsComponent.body.velocity.y
         );
       });
+    },
+
+    // Empty update method - all movement logic happens in fixedUpdate
+    update(ecsAPI, deltaTime) {
+      // Movement is handled in fixedUpdate for physics stability
     },
   };
 }

@@ -236,6 +236,12 @@ export class SceneManager {
     this.loadedScene = null;
   }
 
+  fixedUpdate(fixedDeltaTime) {
+    if (this.activeScript && this.activeScript.onFixedUpdate) {
+      this.activeScript.onFixedUpdate(fixedDeltaTime);
+    }
+  }
+
   update(deltaTime) {
     if (this.activeScript && this.activeScript.onUpdate) {
       this.activeScript.onUpdate(deltaTime);
