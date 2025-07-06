@@ -4,6 +4,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { rooms } from "./rooms/room-definitions.js";
 import { ScriptingAPI } from "./ScriptingApi.js";
 import { loadGameScript } from "./ScriptLoader.js";
+import { ComponentTypes, createMeshComponent, createCollidableComponent } from "./components.js";
 
 export class SceneManager {
   constructor(scene, physicsWorld, ecsAPI, networkSystem) {
@@ -93,6 +94,11 @@ export class SceneManager {
           if (child.isMesh) {
             child.castShadow = true;
             child.receiveShadow = true;
+
+            // Create an entity for this mesh and tag it as collidable
+            const meshEntity = this.ecsAPI.createEntity();
+            this.ecsAPI.addComponent(meshEntity, ComponentTypes.MESH, createMeshComponent(child));
+            this.ecsAPI.addComponent(meshEntity, ComponentTypes.COLLIDABLE, createCollidableComponent());
 
             // Create trimesh collision for each mesh
             if (child.geometry && roomData.enablePhysics !== false) {

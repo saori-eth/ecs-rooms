@@ -10,6 +10,7 @@ export const ComponentTypes = {
   VRM: 1 << 8,
   ANIMATION: 1 << 9,
   CAMERA_TARGET: 1 << 10,
+  COLLIDABLE: 1 << 11,
 };
 
 export function createPositionComponent(x = 0, y = 0, z = 0) {
@@ -73,5 +74,9 @@ export function createAnimationComponent(data) {
 }
 
 export function createCameraTargetComponent() {
+  return {};
+}
+
+export function createCollidableComponent() {
   return {};
 }
