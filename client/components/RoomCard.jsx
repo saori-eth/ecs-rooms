@@ -2,11 +2,6 @@ import React from "react";
 import "./RoomCard.css";
 
 export const RoomCard = ({ room, isSelected, onClick }) => {
-  const getPlayerCount = () => {
-    // This could be connected to real player count data later
-    return Math.floor(Math.random() * 20);
-  };
-
   return (
     <div
       className={`room-card ${isSelected ? "selected" : ""}`}
@@ -54,7 +49,7 @@ export const RoomCard = ({ room, isSelected, onClick }) => {
                 strokeLinejoin="round"
               />
             </svg>
-            <span>{getPlayerCount()}</span>
+            <span>{room.playerCount || 0}</span>
           </div>
         </div>
       </div>

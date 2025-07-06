@@ -18,6 +18,13 @@ const PORT = process.env.PORT || 8080;
 const app = express();
 const distPath = path.join(__dirname, "..", "dist");
 
+// Enable CORS for development
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 app.use(express.static(distPath));
 
 // Health check endpoint for Fly.io
@@ -43,6 +50,21 @@ app.get("/health", (req, res) => {
     loadPercentage,
     availableSlots: Math.max(0, totalCapacity - totalPlayers),
   });
+});
+
+// API endpoint for room information
+app.get("/api/rooms", (req, res) => {
+  const rooms = getRooms();
+  const roomData = [];
+  
+  rooms.forEach((room, roomId) => {
+    roomData.push({
+      id: room.roomType,
+      playerCount: room.players.size
+    });
+  });
+  
+  res.json(roomData);
 });
 
 // Metrics endpoint for autoscaling
