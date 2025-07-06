@@ -9,6 +9,10 @@ export function createMovementSystem() {
   const moveVector = new THREE.Vector3();
   const rotatedVector = new THREE.Vector3();
   const euler = new THREE.Euler();
+  
+  // For raycasting ground check
+  const rayFrom = new CANNON.Vec3();
+  const rayTo = new CANNON.Vec3();
 
   return {
     update(ecsAPI, deltaTime) {
@@ -31,6 +35,76 @@ export function createMovementSystem() {
 
         const moveSpeed = player.speed;
         const { x, z } = input.moveVector;
+        
+        // Get physics world from ecsAPI
+        const physicsWorld = ecsAPI.physicsWorld;
+        if (!physicsWorld) return;
+        
+        // Ground check using raycast
+        let isGrounded = false;
+        const bodyPosition = physicsComponent.body.position;
+        rayFrom.set(bodyPosition.x, bodyPosition.y, bodyPosition.z);
+        rayTo.set(bodyPosition.x, bodyPosition.y - 1.1, bodyPosition.z); // Slightly more than half player height
+        
+        // First, let's try a different approach - cast ray from below the player's feet
+        const ray = new CANNON.Ray(rayFrom, rayTo);
+        const rayResult = new CANNON.RaycastResult();
+        
+        // Store all bodies except the player's
+        const bodiesToTest = [];
+        physicsWorld.bodies.forEach(body => {
+          if (body !== physicsComponent.body) {
+            bodiesToTest.push(body);
+          }
+        });
+        
+        // Manually test intersection with each body except the player's
+        let closestHit = null;
+        let closestDistance = Infinity;
+        
+        bodiesToTest.forEach(body => {
+          const result = new CANNON.RaycastResult();
+          ray.intersectBody(body, result);
+          
+          if (result.hasHit && result.distance < closestDistance) {
+            closestDistance = result.distance;
+            closestHit = result;
+          }
+        });
+        
+        if (closestHit) {
+          rayResult.body = closestHit.body;
+          rayResult.distance = closestHit.distance;
+          rayResult.hasHit = true;
+          rayResult.hitPointWorld.copy(closestHit.hitPointWorld);
+        }
+        
+        isGrounded = rayResult.hasHit;
+        
+        // Debug logging for jump
+        if (ecsAPI.inputState && ecsAPI.inputState.jump) {
+          console.log("Jump attempt:", {
+            isGrounded,
+            hasHit: rayResult.hasHit,
+            rayFrom: { x: rayFrom.x, y: rayFrom.y, z: rayFrom.z },
+            rayTo: { x: rayTo.x, y: rayTo.y, z: rayTo.z },
+            bodyPosition: { x: bodyPosition.x, y: bodyPosition.y, z: bodyPosition.z },
+            currentVelocityY: physicsComponent.body.velocity.y,
+            hitPoint: rayResult.hasHit ? { x: rayResult.hitPointWorld.x, y: rayResult.hitPointWorld.y, z: rayResult.hitPointWorld.z } : null,
+            hitBody: rayResult.body ? rayResult.body.id : null,
+            distance: rayResult.distance
+          });
+        }
+        
+        // Handle jump
+        if (isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
+          console.log("Jump executed!");
+          physicsComponent.body.velocity.y = 5; // Jump velocity
+          ecsAPI.inputState.jump = false; // Reset jump flag
+        } else if (!isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
+          console.log("Jump denied - not grounded");
+          ecsAPI.inputState.jump = false; // Reset jump flag even when not grounded
+        }
         
         // Get camera yaw from ecsAPI
         const cameraYaw = ecsAPI.cameraYaw || 0;

@@ -28,6 +28,12 @@ function GameUI({ roomInfo, gameManager, onExit }) {
     }
   };
 
+  const handleMobileJump = () => {
+    if (gameManager && gameManager.mobileJumpCallback) {
+      gameManager.mobileJumpCallback();
+    }
+  };
+
   const handleCanvasClick = () => {
     if (!isMobile) {
       const canvas = document.querySelector('#canvas-container canvas');
@@ -73,7 +79,7 @@ function GameUI({ roomInfo, gameManager, onExit }) {
           Exit
         </button>
       </div>
-      {isMobile && <MobileControls onMove={handleMobileMove} />}
+      {isMobile && <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />}
       <Chat gameManager={gameManager} />
     </div>
   );

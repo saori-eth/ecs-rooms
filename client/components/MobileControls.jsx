@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import "./MobileControls.css";
 
-function MobileControls({ onMove }) {
+function MobileControls({ onMove, onJump }) {
   const joystickRef = useRef(null);
   const knobRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -108,6 +108,15 @@ function MobileControls({ onMove }) {
           <div ref={knobRef} className="joystick-knob"></div>
         </div>
       </div>
+      <button 
+        className="jump-button"
+        onTouchStart={(e) => {
+          e.preventDefault();
+          if (onJump) onJump();
+        }}
+      >
+        Jump
+      </button>
     </div>
   );
 }

@@ -111,6 +111,7 @@ export function createInputSystem() {
     wheelDelta: 0,
     touchDelta: { x: 0, y: 0 },
     pinchDelta: 0,
+    jump: false,
   };
 
   const moveVector = { x: 0, y: 0, z: 0 };
@@ -118,6 +119,11 @@ export function createInputSystem() {
   // Mobile input handler
   const handleMobileInput = (moveVector) => {
     inputState.mobileMove = moveVector;
+  };
+
+  // Mobile jump handler
+  const handleMobileJump = () => {
+    inputState.jump = true;
   };
 
   return {
@@ -133,6 +139,7 @@ export function createInputSystem() {
 
       // Store reference for mobile input callback
       this.handleMobileInput = handleMobileInput;
+      this.handleMobileJump = handleMobileJump;
 
       // Store inputState reference on ecsAPI for access by other systems
       ecsAPI.inputState = inputState;
@@ -154,6 +161,14 @@ export function createInputSystem() {
         this.p_pressed = true;
       } else if (!inputState.keys.p) {
         this.p_pressed = false;
+      }
+
+      // Handle jump with spacebar
+      if (inputState.keys[' '] && !this.space_pressed) {
+        inputState.jump = true;
+        this.space_pressed = true;
+      } else if (!inputState.keys[' ']) {
+        this.space_pressed = false;
       }
 
       const entities = ecsAPI.getEntitiesWithComponents(

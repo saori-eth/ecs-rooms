@@ -30,6 +30,7 @@ export class ECSManager {
 
     // Set up mobile input callback
     this.mobileInputCallback = null;
+    this.mobileJumpCallback = null;
 
     // Chat message handler placeholder
     this.onChatMessage = null;
@@ -224,6 +225,13 @@ export class ECSManager {
     this.mobileInputCallback = (moveVector) => {
       if (this.inputSystem.handleMobileInput) {
         this.inputSystem.handleMobileInput(moveVector);
+      }
+    };
+
+    // Set up mobile jump callback
+    this.mobileJumpCallback = () => {
+      if (this.inputSystem.handleMobileJump) {
+        this.inputSystem.handleMobileJump();
       }
     };
 

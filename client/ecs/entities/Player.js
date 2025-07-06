@@ -146,9 +146,9 @@ export async function createPlayer(
     const height = 1.0; // Height between top and bottom sphere centers
     const sphereShape = new CANNON.Sphere(radius);
 
-    // Create material with low friction to reduce bouncing
+    // Create material with no friction to prevent sticking to walls/ledges
     const playerMaterial = new CANNON.Material("playerMaterial");
-    playerMaterial.friction = 0.1;
+    playerMaterial.friction = 0;
     playerMaterial.restitution = 0.0; // No bouncing
     body.material = playerMaterial;
 
