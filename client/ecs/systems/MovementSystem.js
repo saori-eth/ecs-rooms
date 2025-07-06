@@ -179,7 +179,7 @@ export function createMovementSystem() {
         }
 
         physicsComponent.body.velocity.y = Math.max(
-          -10,
+          -20,
           physicsComponent.body.velocity.y
         );
       });
