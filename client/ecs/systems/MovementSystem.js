@@ -108,6 +108,18 @@ export function createMovementSystem() {
         player.isGrounded = isGrounded;
         player.isOnSlope = isOnSlope;
 
+        // Dynamic friction adjustment based on movement state
+        if (physicsComponent.body.material) {
+          if (isGrounded && x === 0 && z === 0) {
+            // Player is idle on ground - high friction to prevent sliding
+            physicsComponent.body.material.friction = 1.0;
+          } else if (isGrounded && (x !== 0 || z !== 0)) {
+            // Player is moving on ground - very low friction for smooth movement
+            physicsComponent.body.material.friction = 0.0;
+          }
+          // Keep default friction value when in air
+        }
+
         // Handle jump
         if (isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
           physicsComponent.body.velocity.y = 12; // Jump velocity

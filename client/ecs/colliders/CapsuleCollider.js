@@ -27,9 +27,9 @@ export class CapsuleCollider {
     // Rotate 90 degrees around the X-axis so the cylinder's length aligns with the Y-axis
     cylinderQuat.setFromEuler(Math.PI / 2, 0, 0);
 
-    // Create material with no friction to prevent sticking to walls/ledges
+    // Create material with low default friction for smooth movement
     const playerMaterial = new CANNON.Material("playerMaterial");
-    playerMaterial.friction = 0.8;
+    playerMaterial.friction = 0.2;
     playerMaterial.restitution = 0.0; // No bouncing
     body.material = playerMaterial;
 
