@@ -112,6 +112,7 @@ export function createInputSystem() {
     touchDelta: { x: 0, y: 0 },
     pinchDelta: 0,
     jump: false,
+    sprint: false,
   };
 
   const moveVector = { x: 0, y: 0, z: 0 };
@@ -119,6 +120,10 @@ export function createInputSystem() {
   // Mobile input handler
   const handleMobileInput = (moveVector) => {
     inputState.mobileMove = moveVector;
+    // Handle sprint from mobile controls
+    if (moveVector.sprint !== undefined) {
+      inputState.sprint = moveVector.sprint;
+    }
   };
 
   // Mobile jump handler
@@ -170,6 +175,9 @@ export function createInputSystem() {
       } else if (!inputState.keys[' ']) {
         this.space_pressed = false;
       }
+
+      // Handle sprint with shift key
+      inputState.sprint = inputState.keys['shift'] || false;
 
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.INPUT,

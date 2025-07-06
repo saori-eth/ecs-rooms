@@ -61,6 +61,8 @@ function handleMove(client, message) {
           position: message.position,
           rotation: message.rotation,
           isMoving: message.isMoving,
+          isSprinting: message.isSprinting,
+          isGrounded: message.isGrounded,
           timestamp: Date.now(),
         },
         client.id

@@ -201,15 +201,28 @@ export function createNetworkSystem() {
               }
             }
 
-            if (animation && message.isMoving !== undefined) {
-              const actionToPlay = message.isMoving
-                ? animation.actions.walking
-                : animation.actions.idle;
+            if (animation && animation.actions) {
+              let actionToPlay;
+              
+              // Determine which animation to play based on received state
+              if (message.isGrounded === false && animation.actions.jump) {
+                actionToPlay = animation.actions.jump;
+              } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
+                actionToPlay = animation.actions.sprint;
+              } else if (message.isMoving && animation.actions.walking) {
+                actionToPlay = animation.actions.walking;
+              } else if (animation.actions.idle) {
+                actionToPlay = animation.actions.idle;
+              }
+              
               if (actionToPlay !== animation.currentAction) {
                 const lastAction = animation.currentAction;
                 animation.currentAction = actionToPlay;
-                lastAction.fadeOut(0.2);
-                animation.currentAction.reset().fadeIn(0.2).play();
+                
+                // Use faster transition for jump animation
+                const fadeTime = actionToPlay === animation.actions.jump ? 0.1 : 0.2;
+                lastAction.fadeOut(fadeTime);
+                actionToPlay.reset().fadeIn(fadeTime).play();
               }
             }
           }
@@ -397,19 +410,24 @@ export function createNetworkSystem() {
           if (position && input && vrm) {
             const isMoving =
               input.moveVector.x !== 0 || input.moveVector.z !== 0;
-            ws.send(
-              JSON.stringify({
-                type: "move",
-                position: {
-                  x: position.x,
-                  y: position.y,
-                  z: position.z,
-                },
-                rotation: vrm.vrm.scene.quaternion.toArray(),
-                isMoving,
-                timestamp: Date.now(),
-              })
-            );
+            const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
+            const isGrounded = player.isGrounded === true; // Will be false if undefined or false
+            
+            const moveMessage = {
+              type: "move",
+              position: {
+                x: position.x,
+                y: position.y,
+                z: position.z,
+              },
+              rotation: vrm.vrm.scene.quaternion.toArray(),
+              isMoving,
+              isSprinting,
+              isGrounded,
+              timestamp: Date.now(),
+            };
+            
+            ws.send(JSON.stringify(moveMessage));
           }
         }
       });

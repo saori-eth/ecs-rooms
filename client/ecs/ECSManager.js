@@ -190,11 +190,11 @@ export class ECSManager {
 
     // Register systems with the ecsAPI
     this.ecsAPI.registerSystem(this.inputSystem);
-    this.ecsAPI.registerSystem(createMovementSystem());
     this.ecsAPI.registerSystem(this.physicsSystem);
+    this.ecsAPI.registerSystem(createMovementSystem());
     this.ecsAPI.registerSystem(createInterpolationSystem());
-    this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.networkSystem);
+    this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.animationSystem);
 
     // Create and register camera system

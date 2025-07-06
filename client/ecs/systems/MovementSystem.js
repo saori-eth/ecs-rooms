@@ -33,7 +33,11 @@ export function createMovementSystem() {
 
         if (!player.isLocal || !physicsComponent.body) return;
 
-        const moveSpeed = player.speed;
+        // Apply sprint modifier if sprinting
+        const baseSpeed = player.speed;
+        const sprintMultiplier = 1.5; // 50% faster when sprinting
+        const moveSpeed = (ecsAPI.inputState && ecsAPI.inputState.sprint) ? baseSpeed * sprintMultiplier : baseSpeed;
+        
         const { x, z } = input.moveVector;
         
         // Get physics world from ecsAPI

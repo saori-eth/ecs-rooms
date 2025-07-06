@@ -35,6 +35,17 @@
   cursor: pointer;
 }
 
+/* Sprint zone indicator - outer 25% ring */
+.joystick::before {
+  content: '';
+  position: absolute;
+  width: 75%;
+  height: 75%;
+  border: 2px dashed rgba(255, 136, 0, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .joystick-knob {
   position: absolute;
   width: 40px;
@@ -50,6 +61,12 @@
 /* Add visual feedback */
 .joystick:active .joystick-knob {
   box-shadow: 0 4px 30px rgba(0, 255, 136, 0.5), 0 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Sprint visual feedback */
+.joystick-knob.sprinting {
+  background: linear-gradient(135deg, #ff8800 0%, #ff6600 100%);
+  box-shadow: 0 4px 30px rgba(255, 136, 0, 0.6), 0 0 20px rgba(255, 136, 0, 0.4), 0 0 0 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Jump button styling */

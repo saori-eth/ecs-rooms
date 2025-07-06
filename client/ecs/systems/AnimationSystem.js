@@ -20,12 +20,15 @@ export function createAnimationSystem() {
         if (player.isLocal) {
           const isMoving = input.moveVector.x !== 0 || input.moveVector.z !== 0;
           const isGrounded = player.isGrounded !== false; // Default to true if undefined
+          const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
           
           let actionToPlay;
           
           // Determine which animation to play
           if (!isGrounded) {
             actionToPlay = anim.actions.jump;
+          } else if (isMoving && isSprinting) {
+            actionToPlay = anim.actions.sprint;
           } else if (isMoving) {
             actionToPlay = anim.actions.walking;
           } else {
@@ -51,7 +54,14 @@ export function createAnimationSystem() {
           if (anim.currentAction === anim.actions.jump && 
               !anim.actions.jump.isRunning() && 
               isGrounded) {
-            const nextAction = isMoving ? anim.actions.walking : anim.actions.idle;
+            let nextAction;
+            if (isMoving && isSprinting) {
+              nextAction = anim.actions.sprint;
+            } else if (isMoving) {
+              nextAction = anim.actions.walking;
+            } else {
+              nextAction = anim.actions.idle;
+            }
             anim.currentAction = nextAction;
             anim.actions.jump.stop();
             nextAction.reset().fadeIn(0.2).play();
