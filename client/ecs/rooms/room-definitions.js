@@ -12,9 +12,9 @@ export const rooms = {
   midship: {
     name: "Midship",
     sceneModel: "/environments/midship.glb",
-    script: "/rooms/scripts/arena-logic.js",
+    script: "/rooms/scripts/particle-box-scene.js",
     sceneTransform: {
-      position: { x: 0, y: 0, z: 0 },
+      position: { x: 0, y: 5, z: 0 },
       rotation: { x: 0, y: 0, z: 0 },
       scale: { x: 1, y: 1, z: 1 },
     },

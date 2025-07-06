@@ -54,27 +54,28 @@ export class CameraSystem {
       if (position) {
         // Get input from InputSystem
         if (ecsAPI.inputState) {
-          const { mouseDelta, wheelDelta, touchDelta, pinchDelta, isMobile } = ecsAPI.inputState;
-          
+          const { mouseDelta, wheelDelta, touchDelta, pinchDelta, isMobile } =
+            ecsAPI.inputState;
+
           if (isMobile) {
             // Mobile touch controls
             if (touchDelta.x !== 0 || touchDelta.y !== 0) {
               // Touch sensitivity is different from mouse
-              const touchSensitivity = this.mouseSensitivity * 0.5;
+              const touchSensitivity = this.mouseSensitivity * 1;
               this.yaw -= touchDelta.x * touchSensitivity;
               this.pitch += touchDelta.y * touchSensitivity;
-              
+
               // Clamp pitch to prevent camera flipping
               this.pitch = Math.max(
                 this.minPitch,
                 Math.min(this.maxPitch, this.pitch)
               );
-              
+
               // Reset touch delta after using it
               ecsAPI.inputState.touchDelta.x = 0;
               ecsAPI.inputState.touchDelta.y = 0;
             }
-            
+
             // Pinch zoom
             if (pinchDelta !== 0) {
               this.targetDistance += pinchDelta * this.zoomSensitivity * 0.5;
