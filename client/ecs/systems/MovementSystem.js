@@ -85,12 +85,22 @@ export function createMovementSystem() {
         
         isGrounded = rayResult.hasHit;
         
+        // Check if we're on a slope
+        let isOnSlope = false;
+        let slopeNormal = null;
+        if (closestHit && closestHit.hitNormalWorld) {
+          slopeNormal = closestHit.hitNormalWorld;
+          // If the normal's Y component is less than 0.95, we're on a slope (not flat ground)
+          isOnSlope = slopeNormal.y < 0.95 && slopeNormal.y > 0.5;
+        }
+        
         // Store grounded state on the player component
         player.isGrounded = isGrounded;
+        player.isOnSlope = isOnSlope;
         
         // Handle jump
         if (isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
-          physicsComponent.body.velocity.y = 5; // Jump velocity
+          physicsComponent.body.velocity.y = 12; // Jump velocity
           ecsAPI.inputState.jump = false; // Reset jump flag
         } else if (!isGrounded && ecsAPI.inputState && ecsAPI.inputState.jump) {
           ecsAPI.inputState.jump = false; // Reset jump flag even when not grounded
@@ -107,11 +117,28 @@ export function createMovementSystem() {
         rotatedVector.copy(moveVector).applyEuler(euler);
 
         const currentVelocity = physicsComponent.body.velocity;
-        physicsComponent.body.velocity.set(
-          rotatedVector.x * moveSpeed,
-          currentVelocity.y,
-          rotatedVector.z * moveSpeed
-        );
+        
+        // Check if on slope and not moving to prevent sliding
+        if (isGrounded && x === 0 && z === 0) {
+          // Stop completely when not moving on ground
+          physicsComponent.body.velocity.set(
+            0,
+            currentVelocity.y,
+            0
+          );
+        } else {
+          // Normal movement with reduced air control and slope adjustment
+          const airControlFactor = isGrounded ? 1.0 : 0.6;
+          
+          // Don't reduce speed on slopes
+          let effectiveSpeed = moveSpeed;
+          
+          physicsComponent.body.velocity.set(
+            rotatedVector.x * effectiveSpeed * airControlFactor,
+            currentVelocity.y,
+            rotatedVector.z * effectiveSpeed * airControlFactor
+          );
+        }
 
         // Rotate VRM to face movement direction (camera-relative)
         if (vrmComponent && vrmComponent.vrm && (rotatedVector.x !== 0 || rotatedVector.z !== 0)) {

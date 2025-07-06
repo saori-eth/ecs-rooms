@@ -38,7 +38,7 @@ export function createMeshComponent(mesh) {
 }
 
 export function createPlayerComponent(isLocal = false) {
-  return { isLocal, speed: 5 };
+  return { isLocal, speed: 5, slopeSpeed: 3 };
 }
 
 export function createNetworkComponent(id) {

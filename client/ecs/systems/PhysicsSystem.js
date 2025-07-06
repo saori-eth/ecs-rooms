@@ -3,26 +3,31 @@ import { ComponentTypes } from "../components.js";
 
 export function createPhysicsSystem() {
   const world = new CANNON.World({
-    gravity: new CANNON.Vec3(0, -9.82, 0),
+    gravity: new CANNON.Vec3(0, -35, 0),
   });
   world.broadphase = new CANNON.NaiveBroadphase();
-  world.solver.iterations = 10;
+  world.solver.iterations = 20;
 
   // Ground removed - using scene collision instead
   // Player material is created in SceneManager for scene collision
 
   const fixedTimeStep = 1 / 60;
   let accumulator = 0;
+  const maxSubSteps = 3;
 
   return {
     world,
 
     update(ecsWorld, deltaTime) {
-      accumulator += deltaTime;
+      // Cap deltaTime to prevent spiral of death
+      const cappedDeltaTime = Math.min(deltaTime, fixedTimeStep * maxSubSteps);
+      accumulator += cappedDeltaTime;
 
-      while (accumulator >= fixedTimeStep) {
+      let substeps = 0;
+      while (accumulator >= fixedTimeStep && substeps < maxSubSteps) {
         world.step(fixedTimeStep);
         accumulator -= fixedTimeStep;
+        substeps++;
       }
 
       const entities = ecsWorld.getEntitiesWithComponents(

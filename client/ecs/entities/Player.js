@@ -142,7 +142,7 @@ export async function createPlayer(
     const body = new CANNON.Body({
       mass: isLocal ? 1 : 0,
       position: new CANNON.Vec3(position.x, position.y, position.z),
-      linearDamping: 0.9,
+      linearDamping: 0.4,
       angularDamping: 0.999,
       fixedRotation: true, // Prevent capsule from tipping over
     });
@@ -151,6 +151,12 @@ export async function createPlayer(
     const radius = 0.3;
     const height = 1.0; // Height between top and bottom sphere centers
     const sphereShape = new CANNON.Sphere(radius);
+
+    // NEW: create cylinder for the middle section to form a capsule
+    const cylinderShape = new CANNON.Cylinder(radius, radius, height, 8);
+    const cylinderQuat = new CANNON.Quaternion();
+    // Rotate 90 degrees around the X-axis so the cylinder's length aligns with the Y-axis
+    cylinderQuat.setFromEuler(Math.PI / 2, 0, 0);
 
     // Create material with no friction to prevent sticking to walls/ledges
     const playerMaterial = new CANNON.Material("playerMaterial");
@@ -161,8 +167,8 @@ export async function createPlayer(
     // Add spheres to create capsule shape
     // Bottom sphere
     body.addShape(sphereShape, new CANNON.Vec3(0, -height / 2, 0));
-    // Middle sphere
-    body.addShape(sphereShape, new CANNON.Vec3(0, 0, 0));
+    // MIDDLE CYLINDER (replaces previous middle sphere)
+    body.addShape(cylinderShape, new CANNON.Vec3(0, 0, 0), cylinderQuat);
     // Top sphere
     body.addShape(sphereShape, new CANNON.Vec3(0, height / 2, 0));
 
