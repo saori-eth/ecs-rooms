@@ -3,8 +3,40 @@ import { ComponentTypes } from "../components.js";
 
 export class CameraSystem {
   constructor() {
-    this.offset = new THREE.Vector3(0, 2.5, 2.5);
     this.raycaster = new THREE.Raycaster();
+
+    // Camera rotation state
+    this.yaw = 0;
+    this.pitch = 0.2; // Start with a slight downward angle
+    this.distance = 4;
+    this.targetDistance = 4;
+    this.minDistance = 1.5;
+    this.maxDistance = 8;
+    this.minPitch = -Math.PI / 3; // -60 degrees
+    this.maxPitch = Math.PI / 3; // 60 degrees
+    this.mouseSensitivity = 0.002;
+    this.zoomSensitivity = 0.001;
+
+    // Target height offset (fallback when head bone not available)
+    this.targetHeightOffset = 1.2;
+
+    // Smoothing
+    this.smoothing = 0.1;
+    this.currentYaw = 0;
+    this.currentPitch = 0.2;
+
+    // Euler and vector helpers
+    this.euler = new THREE.Euler(0, 0, 0, "YXZ");
+    this.spherical = new THREE.Spherical();
+
+    // Reusable THREE objects to avoid allocations in game loop
+    this.cameraOffset = new THREE.Vector3();
+    this.targetPosition = new THREE.Vector3();
+    this.headWorldPos = new THREE.Vector3();
+    this.desiredPosition = new THREE.Vector3();
+    this.cameraDirection = new THREE.Vector3();
+    this.pullbackVector = new THREE.Vector3();
+    this.finalCameraPosition = new THREE.Vector3();
   }
 
   update(ecsAPI, dt, camera) {
@@ -17,21 +49,86 @@ export class CameraSystem {
     if (targets.length > 0) {
       const targetId = targets[0];
       const position = ecsAPI.getComponent(targetId, ComponentTypes.POSITION);
+      const vrmComponent = ecsAPI.getComponent(targetId, ComponentTypes.VRM);
 
       if (position) {
-        // Calculate desired camera position
-        const desiredPosition = new THREE.Vector3(
-          position.x + this.offset.x,
-          position.y + this.offset.y,
-          position.z + this.offset.z
+        // Get mouse input from InputSystem
+        if (ecsAPI.inputState && document.pointerLockElement) {
+          const { mouseDelta, wheelDelta } = ecsAPI.inputState;
+
+          // Update camera rotation based on mouse movement
+          this.yaw -= mouseDelta.x * this.mouseSensitivity;
+          this.pitch += mouseDelta.y * this.mouseSensitivity; // Changed from -= to += to fix inversion
+
+          // Clamp pitch to prevent camera flipping
+          this.pitch = Math.max(
+            this.minPitch,
+            Math.min(this.maxPitch, this.pitch)
+          );
+
+          // Update zoom based on wheel input
+          if (wheelDelta !== 0) {
+            this.targetDistance += wheelDelta * this.zoomSensitivity;
+            this.targetDistance = Math.max(
+              this.minDistance,
+              Math.min(this.maxDistance, this.targetDistance)
+            );
+            ecsAPI.inputState.wheelDelta = 0;
+          }
+
+          // Reset mouse delta after using it
+          ecsAPI.inputState.mouseDelta.x = 0;
+          ecsAPI.inputState.mouseDelta.y = 0;
+        }
+
+        // Smooth camera rotation and zoom
+        this.currentYaw += (this.yaw - this.currentYaw) * this.smoothing;
+        this.currentPitch += (this.pitch - this.currentPitch) * this.smoothing;
+        this.distance += (this.targetDistance - this.distance) * this.smoothing;
+
+        // Calculate camera offset using spherical coordinates
+        this.spherical.set(
+          this.distance,
+          Math.PI / 2 - this.currentPitch,
+          this.currentYaw
         );
+        this.cameraOffset.setFromSpherical(this.spherical);
 
-        // Set up ray from player to desired camera position
-        const playerPosition = new THREE.Vector3(position.x, position.y, position.z);
-        const direction = new THREE.Vector3().subVectors(desiredPosition, playerPosition).normalize();
-        const distance = playerPosition.distanceTo(desiredPosition);
+        // Get head position if VRM is available
+        if (vrmComponent && vrmComponent.vrm && vrmComponent.vrm.humanoid) {
+          // Get the head bone from VRM
+          const headBone =
+            vrmComponent.vrm.humanoid.getNormalizedBoneNode("head");
+          if (headBone) {
+            // Get world position of head
+            headBone.getWorldPosition(this.headWorldPos);
+            this.targetPosition.copy(this.headWorldPos);
+          } else {
+            // Fallback to chest level if head bone not found
+            this.targetPosition.set(
+              position.x,
+              position.y + this.targetHeightOffset,
+              position.z
+            );
+          }
+        } else {
+          // Fallback to chest level if VRM not available
+          this.targetPosition.set(
+            position.x,
+            position.y + this.targetHeightOffset,
+            position.z
+          );
+        }
 
-        this.raycaster.set(playerPosition, direction);
+        this.desiredPosition.addVectors(this.targetPosition, this.cameraOffset);
+
+        // Set up ray from player to desired camera position for collision detection
+        this.cameraDirection
+          .subVectors(this.desiredPosition, this.targetPosition)
+          .normalize();
+        const distance = this.targetPosition.distanceTo(this.desiredPosition);
+
+        this.raycaster.set(this.targetPosition, this.cameraDirection);
         this.raycaster.far = distance;
 
         // Get all collidable objects
@@ -41,33 +138,44 @@ export class CameraSystem {
         );
 
         const collidableObjects = [];
-        collidableEntities.forEach(entityId => {
-          const meshComponent = ecsAPI.getComponent(entityId, ComponentTypes.MESH);
+        collidableEntities.forEach((entityId) => {
+          const meshComponent = ecsAPI.getComponent(
+            entityId,
+            ComponentTypes.MESH
+          );
           if (meshComponent && meshComponent.mesh) {
             collidableObjects.push(meshComponent.mesh);
           }
         });
 
         // Perform raycast
-        const intersections = this.raycaster.intersectObjects(collidableObjects, true);
+        const intersections = this.raycaster.intersectObjects(
+          collidableObjects,
+          true
+        );
 
-        let finalCameraPosition;
         if (intersections.length > 0) {
           // Camera hits something - place it at the intersection point
           // Pull back slightly to avoid clipping into the object
           const closestIntersection = intersections[0];
           const pullbackDistance = 0.1; // Small distance to prevent clipping
-          finalCameraPosition = closestIntersection.point.clone().sub(
-            direction.clone().multiplyScalar(pullbackDistance)
-          );
+          this.pullbackVector
+            .copy(this.cameraDirection)
+            .multiplyScalar(pullbackDistance);
+          this.finalCameraPosition
+            .copy(closestIntersection.point)
+            .sub(this.pullbackVector);
+          camera.position.copy(this.finalCameraPosition);
         } else {
           // No collision - use the desired position
-          finalCameraPosition = desiredPosition;
+          camera.position.copy(this.desiredPosition);
         }
 
         // Set camera position and look at target
-        camera.position.copy(finalCameraPosition);
-        camera.lookAt(position.x, position.y, position.z);
+        camera.lookAt(this.targetPosition);
+
+        // Store camera yaw for movement system
+        ecsAPI.cameraYaw = this.currentYaw;
       }
     }
   }

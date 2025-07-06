@@ -195,7 +195,10 @@ export class ECSManager {
     this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.networkSystem);
     this.ecsAPI.registerSystem(this.animationSystem);
-    this.ecsAPI.addSystem(new CameraSystem());
+    
+    // Create and register camera system
+    this.cameraSystem = new CameraSystem();
+    this.ecsAPI.addSystem(this.cameraSystem);
 
     // Set global references for debugging
     window.physicsWorld = this.physicsSystem.world;

@@ -11,11 +11,39 @@ export function createInputSystem() {
     inputState.keys[key] = false;
   };
 
+  const handleMouseMove = (e) => {
+    if (document.pointerLockElement) {
+      inputState.mouseDelta.x += e.movementX;
+      inputState.mouseDelta.y += e.movementY;
+    }
+  };
+
+  const handleWheel = (e) => {
+    if (document.pointerLockElement) {
+      e.preventDefault();
+      inputState.wheelDelta += e.deltaY;
+    }
+  };
+
+  const handlePointerLockChange = () => {
+    if (document.pointerLockElement) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("wheel", handleWheel, { passive: false });
+    } else {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("wheel", handleWheel);
+    }
+  };
+
   const inputState = {
     keys: {},
     mobileMove: { x: 0, z: 0 },
     isMobile: false,
+    mouseDelta: { x: 0, y: 0 },
+    wheelDelta: 0,
   };
+
+  const moveVector = { x: 0, y: 0, z: 0 };
 
   // Mobile input handler
   const handleMobileInput = (moveVector) => {
@@ -26,6 +54,7 @@ export function createInputSystem() {
     init(ecsAPI) {
       window.addEventListener("keydown", handleKeyDown);
       window.addEventListener("keyup", handleKeyUp);
+      document.addEventListener("pointerlockchange", handlePointerLockChange);
 
       // Check if mobile
       inputState.isMobile =
@@ -34,6 +63,9 @@ export function createInputSystem() {
 
       // Store reference for mobile input callback
       this.handleMobileInput = handleMobileInput;
+
+      // Store inputState reference on ecsAPI for access by other systems
+      ecsAPI.inputState = inputState;
     },
 
     update(ecsAPI, deltaTime) {
@@ -57,7 +89,9 @@ export function createInputSystem() {
         const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
 
         if (player.isLocal) {
-          let moveVector = { x: 0, y: 0, z: 0 };
+          moveVector.x = 0;
+          moveVector.y = 0;
+          moveVector.z = 0;
 
           if (inputState.isMobile) {
             // Use mobile input
