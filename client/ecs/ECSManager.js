@@ -142,7 +142,7 @@ export class ECSManager {
       this.ecsAPI.renderer = null;
     }
 
-    // Reset GameManager state
+    // Reset ecsManager state
     this.gameStarted = false;
     this.localPlayerId = null;
     this.initialized = false;
@@ -162,7 +162,7 @@ export class ECSManager {
 
   async initialize(container) {
     if (this.initialized) {
-      console.warn("GameManager already initialized");
+      console.warn("ecsManager already initialized");
       return;
     }
 
@@ -196,7 +196,7 @@ export class ECSManager {
     this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.networkSystem);
     this.ecsAPI.registerSystem(this.animationSystem);
-    
+
     // Create and register camera system
     this.cameraSystem = new CameraSystem();
     this.ecsAPI.addSystem(this.cameraSystem);
@@ -216,7 +216,7 @@ export class ECSManager {
     this.ecsAPI.sceneManager = this.sceneManager;
 
     // Pass game manager to network system
-    this.networkSystem.setGameManager(this);
+    this.networkSystem.setecsManager(this);
 
     // Bind the send chat message method
     this.sendChatMessage = this.sendChatMessage.bind(this);

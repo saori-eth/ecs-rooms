@@ -10,7 +10,7 @@ export function createNetworkSystem() {
   let lastUpdateTime = 0;
   const updateRate = 50;
   const remotePlayers = new Map();
-  let gameManager = null;
+  let ecsManager = null;
   let roomId = null;
   let inRoom = false;
 
@@ -88,9 +88,9 @@ export function createNetworkSystem() {
             );
           }
 
-          if (gameManager) {
-            const identity = gameManager.stateCallbacks.getPlayerIdentity();
-            gameManager.startGame(identity);
+          if (ecsManager) {
+            const identity = ecsManager.stateCallbacks.getPlayerIdentity();
+            ecsManager.startGame(identity);
           }
 
           message.players.forEach(async (playerData) => {
@@ -100,8 +100,8 @@ export function createNetworkSystem() {
               false,
               window.physicsWorld,
               playerData.identity,
-              gameManager?.vrmManager,
-              gameManager?.animationManager
+              ecsManager?.vrmManager,
+              ecsManager?.animationManager
             );
             ecsAPI.addComponent(
               remoteEntityId,
@@ -120,8 +120,8 @@ export function createNetworkSystem() {
               false,
               window.physicsWorld,
               message.player.identity,
-              gameManager?.vrmManager,
-              gameManager?.animationManager
+              ecsManager?.vrmManager,
+              ecsManager?.animationManager
             ).then((newEntityId) => {
               ecsAPI.addComponent(
                 newEntityId,
@@ -258,7 +258,7 @@ export function createNetworkSystem() {
         onConnectionStatusChange("Disconnected. Reconnecting...");
       if (onConnectionReady) onConnectionReady(false);
       if (onDisconnect) onDisconnect();
-      if (gameManager) gameManager.stopGame();
+      if (ecsManager) ecsManager.stopGame();
 
       if (heartbeatInterval) {
         clearInterval(heartbeatInterval);
@@ -311,8 +311,8 @@ export function createNetworkSystem() {
       }
     },
 
-    setGameManager(gm) {
-      gameManager = gm;
+    setecsManager(gm) {
+      ecsManager = gm;
     },
 
     joinGame(identity, roomType) {
