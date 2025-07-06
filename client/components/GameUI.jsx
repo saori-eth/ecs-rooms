@@ -79,7 +79,7 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
         </button>
       </div>
       {isMobile && <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />}
-      <Chat gameManager={ecsManager} />
+      <Chat ecsManager={ecsManager} />
     </div>
   );
 }
