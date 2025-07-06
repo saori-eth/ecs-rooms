@@ -3,8 +3,7 @@ import MobileControls from "./MobileControls";
 import Chat from "./Chat";
 import "./GameUI.css";
 
-function GameUI({ roomInfo, gameManager, onExit }) {
-  console.log("GameUI rendered");
+function GameUI({ roomInfo, ecsManager, onExit }) {
   const [isMobile, setIsMobile] = useState(false);
   const [isPointerLocked, setIsPointerLocked] = useState(false);
 
@@ -23,14 +22,14 @@ function GameUI({ roomInfo, gameManager, onExit }) {
   }, []);
 
   const handleMobileMove = (moveVector) => {
-    if (gameManager && gameManager.mobileInputCallback) {
-      gameManager.mobileInputCallback(moveVector);
+    if (ecsManager && ecsManager.mobileInputCallback) {
+      ecsManager.mobileInputCallback(moveVector);
     }
   };
 
   const handleMobileJump = () => {
-    if (gameManager && gameManager.mobileJumpCallback) {
-      gameManager.mobileJumpCallback();
+    if (ecsManager && ecsManager.mobileJumpCallback) {
+      ecsManager.mobileJumpCallback();
     }
   };
 
@@ -80,7 +79,7 @@ function GameUI({ roomInfo, gameManager, onExit }) {
         </button>
       </div>
       {isMobile && <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />}
-      <Chat gameManager={gameManager} />
+      <Chat gameManager={ecsManager} />
     </div>
   );
 }

@@ -123,8 +123,10 @@ function MobileControls({ onMove, onJump }) {
       <button 
         className="jump-button"
         onTouchStart={(e) => {
-          e.preventDefault();
           if (onJump) onJump();
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
         }}
       >
         Jump

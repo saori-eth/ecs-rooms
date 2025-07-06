@@ -223,14 +223,14 @@ export class ECSManager {
 
     // Set up mobile input callback
     this.mobileInputCallback = (moveVector) => {
-      if (this.inputSystem.handleMobileInput) {
+      if (this.inputSystem && this.inputSystem.handleMobileInput) {
         this.inputSystem.handleMobileInput(moveVector);
       }
     };
 
     // Set up mobile jump callback
     this.mobileJumpCallback = () => {
-      if (this.inputSystem.handleMobileJump) {
+      if (this.inputSystem && this.inputSystem.handleMobileJump) {
         this.inputSystem.handleMobileJump();
       }
     };

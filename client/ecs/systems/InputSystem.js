@@ -176,8 +176,10 @@ export function createInputSystem() {
         this.space_pressed = false;
       }
 
-      // Handle sprint with shift key
-      inputState.sprint = inputState.keys['shift'] || false;
+      // Handle sprint - preserve mobile sprint state if on mobile
+      if (!inputState.isMobile) {
+        inputState.sprint = inputState.keys['shift'] || false;
+      }
 
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.INPUT,
