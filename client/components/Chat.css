@@ -50,8 +50,7 @@
   right: 0;
   height: 15vh;
   min-height: 100px;
-  background: rgba(10, 10, 10, 0.8);
-  backdrop-filter: blur(16px);
+  border-radius: 16px;
   -webkit-backdrop-filter: blur(16px);
   display: flex;
   flex-direction: column;

@@ -19,7 +19,7 @@ function MainMenu({
   const [roomType, setRoomType] = useState(
     Object.keys(rooms)[0] || "default-arena"
   );
-  const [activeTab, setActiveTab] = useState("lobby");
+  const [activeTab, setActiveTab] = useState("game");
   const [isAvatarLoading, setIsAvatarLoading] = useState(true);
 
   const canvasRef = useRef(null);
@@ -120,7 +120,7 @@ function MainMenu({
 
       <img src="/images/logo.png" alt="LobbyWS" className="logo" />
 
-      {activeTab === "lobby" && (
+      {activeTab === "game" && (
         <>
           <div className="player-info-container">
             <button
