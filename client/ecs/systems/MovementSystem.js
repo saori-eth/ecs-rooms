@@ -9,6 +9,9 @@ export function createMovementSystem() {
   const moveVector = new THREE.Vector3();
   const rotatedVector = new THREE.Vector3();
   const euler = new THREE.Euler();
+  
+  // Framerate-independent turning rate
+  const turningRate = 9.49; // Converted from 0.15 at 60fps
 
   // For raycasting ground check
   const rayFrom = new CANNON.Vec3();
@@ -201,7 +204,8 @@ export function createMovementSystem() {
               vrmComponent.targetDirection.z
             ) + Math.PI;
           tempQuaternion.setFromAxisAngle(yAxis, angle);
-          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, 0.15);
+          const turningFactor = 1 - Math.exp(-turningRate * deltaTime);
+          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, turningFactor);
         }
       });
     },
