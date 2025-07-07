@@ -1,4 +1,5 @@
 import { ComponentTypes } from "../components.js";
+import GlobalEventManager from "../../src/GlobalEventManager.js";
 
 export function createInputSystem() {
   const handleKeyDown = (e) => {
@@ -27,11 +28,11 @@ export function createInputSystem() {
 
   const handlePointerLockChange = () => {
     if (document.pointerLockElement) {
-      window.addEventListener("mousemove", handleMouseMove);
-      window.addEventListener("wheel", handleWheel, { passive: false });
+      GlobalEventManager.add(window, "mousemove", handleMouseMove);
+      GlobalEventManager.add(window, "wheel", handleWheel, { passive: false });
     } else {
-      window.removeEventListener("mousemove", handleMouseMove);
-      window.removeEventListener("wheel", handleWheel);
+      GlobalEventManager.remove(window, "mousemove", handleMouseMove);
+      GlobalEventManager.remove(window, "wheel", handleWheel);
     }
   };
 
@@ -40,13 +41,12 @@ export function createInputSystem() {
   let touchStartY = 0;
   let lastTouchX = 0;
   let lastTouchY = 0;
-  let initialPinchDistance = 0;
   let cameraTouchId = null;
 
   const handleTouchStart = (e) => {
-    // Find a touch that's not on the joystick area
-    for (let i = 0; i < e.touches.length; i++) {
-      const touch = e.touches[i];
+    // Only process new touches from e.changedTouches
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
       const target = document.elementFromPoint(touch.clientX, touch.clientY);
       
       // Check if this touch is on the joystick area
@@ -55,7 +55,7 @@ export function createInputSystem() {
       }
       
       // This touch is not on joystick, use it for camera
-      if (!cameraTouchId) {
+      if (cameraTouchId === null) {
         cameraTouchId = touch.identifier;
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
@@ -63,13 +63,6 @@ export function createInputSystem() {
         lastTouchY = touch.clientY;
         break;
       }
-    }
-    
-    // Handle pinch zoom with any two touches
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
     }
   };
 
@@ -90,35 +83,16 @@ export function createInputSystem() {
         lastTouchY = cameraTouch.clientY;
       }
     }
-    
-    // Handle pinch zoom with any two touches
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (initialPinchDistance > 0) {
-        const delta = (initialPinchDistance - distance) * 2; // Scale factor
-        inputState.pinchDelta += delta;
-      }
-      
-      initialPinchDistance = distance;
-    }
   };
 
   const handleTouchEnd = (e) => {
     // Check if the camera touch ended
     if (cameraTouchId !== null) {
-      const remainingTouch = Array.from(e.touches).find(t => t.identifier === cameraTouchId);
-      if (!remainingTouch) {
+      const endedTouch = Array.from(e.changedTouches).find(t => t.identifier === cameraTouchId);
+      if (endedTouch) {
         // Camera touch has ended
         cameraTouchId = null;
       }
-    }
-    
-    // Reset pinch distance when less than 2 touches
-    if (e.touches.length < 2) {
-      initialPinchDistance = 0;
     }
   };
 
@@ -129,7 +103,6 @@ export function createInputSystem() {
     mouseDelta: { x: 0, y: 0 },
     wheelDelta: 0,
     touchDelta: { x: 0, y: 0 },
-    pinchDelta: 0,
     jump: false,
     sprint: false,
   };
@@ -152,9 +125,9 @@ export function createInputSystem() {
 
   return {
     init(ecsAPI) {
-      window.addEventListener("keydown", handleKeyDown);
-      window.addEventListener("keyup", handleKeyUp);
-      document.addEventListener("pointerlockchange", handlePointerLockChange);
+      GlobalEventManager.add(window, "keydown", handleKeyDown);
+      GlobalEventManager.add(window, "keyup", handleKeyUp);
+      GlobalEventManager.add(document, "pointerlockchange", handlePointerLockChange);
 
       // Check if mobile
       inputState.isMobile =
@@ -170,9 +143,9 @@ export function createInputSystem() {
       
       // Add touch event listeners for mobile camera control
       if (inputState.isMobile) {
-        document.addEventListener("touchstart", handleTouchStart, { passive: false });
-        document.addEventListener("touchmove", handleTouchMove, { passive: false });
-        document.addEventListener("touchend", handleTouchEnd, { passive: false });
+        GlobalEventManager.add(document, "touchstart", handleTouchStart, { passive: false });
+        GlobalEventManager.add(document, "touchmove", handleTouchMove, { passive: false });
+        GlobalEventManager.add(document, "touchend", handleTouchEnd, { passive: false });
       }
     },
 
@@ -247,6 +220,23 @@ export function createInputSystem() {
     // Expose mobile input handler
     setMobileInputHandler(callback) {
       this.handleMobileInput = callback;
+    },
+
+    shutdown() {
+      GlobalEventManager.remove(window, "keydown", handleKeyDown);
+      GlobalEventManager.remove(window, "keyup", handleKeyUp);
+      GlobalEventManager.remove(document, "pointerlockchange", handlePointerLockChange);
+      
+      // Remove pointer lock related listeners if they exist
+      GlobalEventManager.remove(window, "mousemove", handleMouseMove);
+      GlobalEventManager.remove(window, "wheel", handleWheel);
+      
+      // Remove touch event listeners if mobile
+      if (inputState.isMobile) {
+        GlobalEventManager.remove(document, "touchstart", handleTouchStart);
+        GlobalEventManager.remove(document, "touchmove", handleTouchMove);
+        GlobalEventManager.remove(document, "touchend", handleTouchEnd);
+      }
     },
   };
 }

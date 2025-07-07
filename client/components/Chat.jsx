@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import "./Chat.css";
+import GlobalEventManager from "../src/GlobalEventManager.js";
 
 function Chat({ ecsManager }) {
   const [messages, setMessages] = useState([]);
@@ -27,9 +28,9 @@ function Chat({ ecsManager }) {
     };
 
     checkMobile();
-    window.addEventListener("resize", checkMobile);
+    GlobalEventManager.add(window, "resize", checkMobile);
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => GlobalEventManager.remove(window, "resize", checkMobile);
   }, []);
 
   useEffect(() => {

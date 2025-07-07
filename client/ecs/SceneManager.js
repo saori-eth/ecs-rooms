@@ -202,7 +202,8 @@ export class SceneManager {
           this.ecsAPI,
           this.physicsWorld,
           this.loadedScene,
-          this.networkSystem
+          this.networkSystem,
+          this.threeScene
         );
         this.activeScript = new ScriptClass(scriptingAPI);
         if (this.activeScript.onLoad) {
@@ -221,6 +222,11 @@ export class SceneManager {
   }
 
   unloadCurrentRoom() {
+    // Call destroy on active script if it exists
+    if (this.activeScript && this.activeScript.destroy) {
+      this.activeScript.destroy();
+    }
+
     // Remove visual objects
     this.sceneObjects.forEach((obj) => {
       this.threeScene.remove(obj);

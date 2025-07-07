@@ -24,7 +24,8 @@ export async function createPlayer(
   physicsWorld = null,
   identity = null,
   vrmManager = null,
-  animationManager = null
+  animationManager = null,
+  scene = null
 ) {
   const entityId = ecsAPI.createEntity();
 
@@ -32,7 +33,6 @@ export async function createPlayer(
   const playerGroup = new THREE.Group();
   playerGroup.position.set(position.x, position.y, position.z);
 
-  const scene = window.scene;
   if (scene) scene.add(playerGroup);
 
   // Load VRM model
@@ -53,12 +53,12 @@ export async function createPlayer(
 
   playerGroup.add(vrm.scene);
   // Add name tag
-  if (identity?.name) {
-    // Calculate VRM height based on scale
-    const vrmHeight = 1.0 * 0.7; // VRM is scaled to 0.7
-    const nameplate = createNameplateSprite(identity.name, vrmHeight);
-    playerGroup.add(nameplate);
-  }
+  // if (identity?.name) {
+  //   // Calculate VRM height based on scale
+  //   const vrmHeight = 1.0 * 0.7; // VRM is scaled to 0.7
+  //   const nameplate = createNameplateSprite(identity.name, vrmHeight);
+  //   playerGroup.add(nameplate);
+  // }
 
   ecsAPI.addComponent(
     entityId,

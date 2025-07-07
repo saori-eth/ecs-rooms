@@ -181,15 +181,8 @@ export class ECSApi {
     directionalLight.shadow.camera.bottom = -10;
     this.scene.add(directionalLight);
 
-    // Window resize handler
-    window.addEventListener("resize", () => {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    // Resize handling moved to RenderSystem
 
-    // Set global references for debugging
-    window.scene = this.scene;
   }
 
   start() {
@@ -233,6 +226,13 @@ export class ECSApi {
     if (this.animationFrameId) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
+    }
+    
+    // Call shutdown on all systems that have it
+    for (const system of this.systems) {
+      if (system.shutdown) {
+        system.shutdown();
+      }
     }
   }
 

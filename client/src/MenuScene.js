@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { VRMManager } from "./VRMLoader.js";
 import { AnimationManager } from "./AnimationManager.js";
 import gsap from "gsap";
+import GlobalEventManager from "./GlobalEventManager.js";
 
 // Helper function to dispose of Three.js objects
 function disposeNode(node) {
@@ -48,6 +49,7 @@ export class MenuScene {
     this.isLoadingAvatar = false; // Track loading state
     this.pendingAvatarId = null; // Track pending avatar to load
     this.currentAnimations = []; // Track active GSAP animations
+    this.boundHandleResize = this.handleResize.bind(this); // Store bound function reference
   }
 
   init() {
@@ -87,7 +89,7 @@ export class MenuScene {
     this.createLoadingSpinner();
 
     // Handle window resize
-    window.addEventListener("resize", this.handleResize.bind(this));
+    GlobalEventManager.add(window, "resize", this.boundHandleResize);
 
     // Start animation loop
     this.animate();
@@ -482,7 +484,7 @@ export class MenuScene {
     }
 
     // Remove event listeners
-    window.removeEventListener("resize", this.handleResize.bind(this));
+    GlobalEventManager.remove(window, "resize", this.boundHandleResize);
 
     // Dispose of Three.js objects
     if (this.currentAvatar) {
