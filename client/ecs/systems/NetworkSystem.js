@@ -10,7 +10,7 @@ export function createNetworkSystem() {
   let connected = false;
   let heartbeatInterval = null;
   let lastUpdateTime = 0;
-  const updateRate = 50;
+  const updateRate = 33; // ~30 updates per second for smoother movement
   const remotePlayers = new Map();
   let ecsManager = null;
   let roomId = null;

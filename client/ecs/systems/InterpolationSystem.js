@@ -28,7 +28,7 @@ export function createInterpolationSystem() {
 
         if (!player.isLocal && physicsComponent.body) {
           const now = Date.now();
-          const renderDelay = 50; // Reduced from 100ms for better responsiveness
+          const renderDelay = 30; // Further reduced for localhost testing
           const renderTime = now - renderDelay;
 
           // Handle physics position updates
@@ -62,7 +62,7 @@ export function createInterpolationSystem() {
               physicsComponent.body.position.set(newX, newY, newZ);
             } else if (interpolation.positionBuffer.length === 1) {
               const target = interpolation.positionBuffer[0].position;
-              const speed = 0.1;
+              const speed = 0.15; // Increased from 0.1 for smoother extrapolation
 
               const currentPos = physicsComponent.body.position;
               physicsComponent.body.position.set(
@@ -96,7 +96,7 @@ export function createInterpolationSystem() {
 
         if (!player.isLocal) {
           const now = Date.now();
-          const renderDelay = 50; // Reduced from 100ms for better responsiveness
+          const renderDelay = 30; // Further reduced for localhost testing
           const renderTime = now - renderDelay;
           
           // Debug logging (commented out to reduce spam)
@@ -194,7 +194,7 @@ export function createInterpolationSystem() {
               tempQuaternion1.fromArray(
                 interpolation.rotationBuffer[0].rotation
               );
-              vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion1, 0.1);
+              vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion1, 0.15); // Increased from 0.1
             }
           }
         }
