@@ -11,25 +11,16 @@ export function createPhysicsSystem() {
   // Ground removed - using scene collision instead
   // Player material is created in SceneManager for scene collision
 
-  const fixedTimeStep = 1 / 60;
-  let accumulator = 0;
-  const maxSubSteps = 3;
-
   return {
     world,
 
+    // Fixed timestep update - only steps the physics simulation
+    fixedUpdate(ecsWorld, fixedDeltaTime) {
+      world.step(fixedDeltaTime);
+    },
+
+    // Variable timestep update - syncs physics bodies to ECS positions
     update(ecsWorld, deltaTime) {
-      // Cap deltaTime to prevent spiral of death
-      const cappedDeltaTime = Math.min(deltaTime, fixedTimeStep * maxSubSteps);
-      accumulator += cappedDeltaTime;
-
-      let substeps = 0;
-      while (accumulator >= fixedTimeStep && substeps < maxSubSteps) {
-        world.step(fixedTimeStep);
-        accumulator -= fixedTimeStep;
-        substeps++;
-      }
-
       const entities = ecsWorld.getEntitiesWithComponents(
         ComponentTypes.PHYSICS_BODY,
         ComponentTypes.POSITION

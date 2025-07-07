@@ -19,7 +19,8 @@ export function createMovementSystem() {
   const bodiesToTest = [];
 
   return {
-    update(ecsAPI, deltaTime) {
+    // Movement logic runs in fixed timestep for physics stability
+    fixedUpdate(ecsAPI, fixedDeltaTime) {
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.PHYSICS_BODY,
         ComponentTypes.INPUT,
@@ -166,22 +167,42 @@ export function createMovementSystem() {
           );
         }
 
-        // Rotate VRM to face movement direction (camera-relative)
-        if (
-          vrmComponent &&
-          vrmComponent.vrm &&
-          (rotatedVector.x !== 0 || rotatedVector.z !== 0)
-        ) {
-          const angle = Math.atan2(rotatedVector.x, rotatedVector.z) + Math.PI;
-          // Use reusable quaternion instead of creating new one
-          tempQuaternion.setFromAxisAngle(yAxis, angle);
-          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, 0.15);
+        // Store the target direction for visual rotation in update loop
+        if (vrmComponent) {
+          // Clone the rotatedVector to store it on the component
+          vrmComponent.targetDirection = rotatedVector.clone();
         }
 
         physicsComponent.body.velocity.y = Math.max(
           -17.5,
           physicsComponent.body.velocity.y
         );
+      });
+    },
+
+    // Visual updates run at render framerate
+    update(ecsAPI, deltaTime) {
+      // Handle character rotation visuals
+      const entities = ecsAPI.getEntitiesWithComponents(ComponentTypes.VRM);
+
+      entities.forEach((entityId) => {
+        const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+
+        if (
+          vrmComponent &&
+          vrmComponent.vrm &&
+          vrmComponent.targetDirection &&
+          (vrmComponent.targetDirection.x !== 0 ||
+            vrmComponent.targetDirection.z !== 0)
+        ) {
+          const angle =
+            Math.atan2(
+              vrmComponent.targetDirection.x,
+              vrmComponent.targetDirection.z
+            ) + Math.PI;
+          tempQuaternion.setFromAxisAngle(yAxis, angle);
+          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, 0.15);
+        }
       });
     },
   };

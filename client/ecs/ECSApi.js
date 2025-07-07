@@ -13,6 +13,11 @@ export class ECSApi {
     this.renderer = null;
     this.animationFrameId = null;
     this.stats = null;
+    
+    // Fixed timestep settings
+    this.fixedTimeStep = 1 / 60; // 60 Hz
+    this.maxSubSteps = 3; // Max physics steps per frame
+    this.accumulator = 0;
   }
 
   createEntity() {
@@ -92,6 +97,20 @@ export class ECSApi {
     return this.registerSystem(system);
   }
 
+  fixedUpdate(fixedDeltaTime) {
+    // Update scene manager's fixed update if it exists
+    if (this.sceneManager && this.sceneManager.fixedUpdate) {
+      this.sceneManager.fixedUpdate(fixedDeltaTime);
+    }
+
+    // Call fixedUpdate on all systems that have it
+    for (const system of this.systems) {
+      if (system.fixedUpdate) {
+        system.fixedUpdate(this, fixedDeltaTime);
+      }
+    }
+  }
+
   update(deltaTime, ...args) {
     // Update scene manager if it exists
     if (this.sceneManager) {
@@ -102,6 +121,12 @@ export class ECSApi {
     for (const system of this.systems) {
       system.update(this, deltaTime, ...args);
     }
+    
+    // Update physics debugger if available
+    if (this.updatePhysicsDebugger) {
+      this.updatePhysicsDebugger();
+    }
+    
     if (this.stats) this.stats.end();
   }
 
@@ -179,7 +204,25 @@ export class ECSApi {
       const deltaTime = (time - lastTime) / 1000;
       lastTime = time;
 
-      this.update(deltaTime, this.camera);
+      // Cap deltaTime to prevent spiral of death
+      const cappedDeltaTime = Math.min(deltaTime, 0.1);
+
+      // Fixed timestep accumulator pattern
+      this.accumulator += cappedDeltaTime;
+
+      // Run fixed updates
+      let steps = 0;
+      while (this.accumulator >= this.fixedTimeStep && steps < this.maxSubSteps) {
+        this.fixedUpdate(this.fixedTimeStep);
+        this.accumulator -= this.fixedTimeStep;
+        steps++;
+      }
+
+      // Calculate interpolation factor for smooth rendering
+      const alpha = this.accumulator / this.fixedTimeStep;
+
+      // Run variable timestep update
+      this.update(deltaTime, this.camera, alpha);
       this.renderer.render(this.scene, this.camera);
     };
 
