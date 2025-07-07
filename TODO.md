@@ -42,6 +42,7 @@
 - [x] player should jump higher, fall faster, right now it does alot of floating. it also goes up slopes too quickly and slides down them when standing still files: client/ecs/entities/Player.js, client/ecs/systems/MovementSystem.js, client/ecs/systems/PhysicsSystem.js
 - [ ] mobile joystick controls are simultaneously registering as camera controls, and pinch zoom doesnt work: client/components/MobileControls.jsx, client/ecs/systems/InputSystem.js
 - [ ] if i load the page on desktop, then switch to mobile through dev tools, i see the mobile controls but they dont work. files: client/components/MobileControls.jsx, keyword: 'isMobile'
+- [ ] low framerate, cam controls dont stop moving
 
 ## AI suggestions
 

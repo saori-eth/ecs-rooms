@@ -21,9 +21,10 @@ export class CameraSystem {
     this.targetHeightOffset = 1.2;
 
     // Smoothing
-    this.smoothing = 0.1;
+    this.smoothingRate = 12; // Framerate-independent smoothing rate
     this.currentYaw = 0;
     this.currentPitch = 0.2;
+    this.smoothingThreshold = 0.0001; // Stop smoothing when difference is negligible
 
     // Euler and vector helpers
     this.euler = new THREE.Euler(0, 0, 0, "YXZ");
@@ -104,9 +105,30 @@ export class CameraSystem {
         }
 
         // Smooth camera rotation and zoom
-        this.currentYaw += (this.yaw - this.currentYaw) * this.smoothing;
-        this.currentPitch += (this.pitch - this.currentPitch) * this.smoothing;
-        this.distance += (this.targetDistance - this.distance) * this.smoothing;
+        const smoothingFactor = 1 - Math.exp(-this.smoothingRate * dt);
+        
+        // Apply smoothing with threshold to prevent endless tiny movements
+        const yawDiff = this.yaw - this.currentYaw;
+        const pitchDiff = this.pitch - this.currentPitch;
+        const distanceDiff = this.targetDistance - this.distance;
+        
+        if (Math.abs(yawDiff) > this.smoothingThreshold) {
+          this.currentYaw += yawDiff * smoothingFactor;
+        } else {
+          this.currentYaw = this.yaw;
+        }
+        
+        if (Math.abs(pitchDiff) > this.smoothingThreshold) {
+          this.currentPitch += pitchDiff * smoothingFactor;
+        } else {
+          this.currentPitch = this.pitch;
+        }
+        
+        if (Math.abs(distanceDiff) > this.smoothingThreshold) {
+          this.distance += distanceDiff * smoothingFactor;
+        } else {
+          this.distance = this.targetDistance;
+        }
 
         // Calculate camera offset using spherical coordinates
         this.spherical.set(
