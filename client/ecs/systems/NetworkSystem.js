@@ -18,6 +18,7 @@ export function createNetworkSystem() {
   
   // Track previous movement state to detect state changes
   let wasMovingLastFrame = false;
+  let wasGroundedLastFrame = true;
 
   // Callback functions
   let onConnectionStatusChange = null;
@@ -445,9 +446,11 @@ export function createNetworkSystem() {
             const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
             const isGrounded = player.isGrounded === true; // Will be false if undefined or false
             
-            // Only send update if player is moving OR just stopped moving
+            // Only send update if player is moving OR just stopped moving OR grounded state changed OR in air
             const justStoppedMoving = wasMovingLastFrame && !isMoving;
-            const shouldSendUpdate = isMoving || justStoppedMoving;
+            const groundedStateChanged = wasGroundedLastFrame !== isGrounded;
+            const isInAir = !isGrounded;
+            const shouldSendUpdate = isMoving || justStoppedMoving || groundedStateChanged || isInAir;
             
             if (shouldSendUpdate) {
               const moveMessage = {
@@ -478,6 +481,7 @@ export function createNetworkSystem() {
             
             // Update the movement state for next frame
             wasMovingLastFrame = isMoving;
+            wasGroundedLastFrame = isGrounded;
           }
         }
       });

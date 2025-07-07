@@ -1,43 +1,44 @@
-# fly.toml app configuration file
+# fly.toml app configuration file generated for lobbyws on 2025-07-07T13:00:55-05:00
+#
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "digispace"
-primary_region = "sjc"
+app = 'lobbyws'
+primary_region = 'sjc'
 
 [build]
+
+[env]
+  DEFAULT_AVATAR = 'killua'
+  NODE_ENV = 'production'
+  PORT = '8080'
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 1
-  processes = ["app"]
+  processes = ['app']
 
   [http_service.concurrency]
-    type = "connections"
+    type = 'connections'
     hard_limit = 25
     soft_limit = 20
 
   [[http_service.checks]]
-    grace_period = "30s"
-    interval = "15s"
-    method = "get"
-    path = "/health"
-    protocol = "http"
-    restart_limit = 0
-    timeout = "10s"
+    interval = '15s'
+    timeout = '10s'
+    grace_period = '30s'
+    method = 'get'
+    path = '/health'
+    protocol = 'http'
 
 [[vm]]
-  cpu_kind = "shared"
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 256
 
-[metrics]
+[[metrics]]
   port = 9091
-  path = "/metrics"
-
-[env]
-  PORT = "8080"
-  NODE_ENV = "production"
-  DEFAULT_AVATAR="killua"
+  path = '/metrics'

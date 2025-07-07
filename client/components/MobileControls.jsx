@@ -7,6 +7,7 @@ function MobileControls({ onMove, onJump }) {
   const knobRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [touchId, setTouchId] = useState(null);
+  const lastMoveRef = useRef({ x: 0, z: 0, sprint: false });
 
   useEffect(() => {
     const joystick = joystickRef.current;
@@ -57,11 +58,19 @@ function MobileControls({ onMove, onJump }) {
       knob.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
 
       // Calculate normalized movement vector
-      const moveX = deltaX / maxDistance;
-      const moveY = deltaY / maxDistance;
+      let moveX = deltaX / maxDistance;
+      let moveY = deltaY / maxDistance;
 
       // Check if we're in the sprint zone (outer 25% = distance > 75% of max)
       const normalizedDistance = distance / maxDistance;
+      
+      // Add dead zone (10% of max distance)
+      const deadZone = 0.1;
+      if (normalizedDistance < deadZone) {
+        moveX = 0;
+        moveY = 0;
+      }
+      
       const isSprinting = normalizedDistance > 0.75;
 
       // Add sprint visual feedback
@@ -74,7 +83,14 @@ function MobileControls({ onMove, onJump }) {
       // Convert to game coordinates
       // Joystick up (negative Y) should move forward (negative Z)
       // Joystick down (positive Y) should move backward (positive Z)
-      onMove({ x: moveX, z: moveY, sprint: isSprinting });
+      const moveData = { x: moveX, z: moveY, sprint: isSprinting };
+      
+      // Only send update if values have changed
+      const lastMove = lastMoveRef.current;
+      if (moveData.x !== lastMove.x || moveData.z !== lastMove.z || moveData.sprint !== lastMove.sprint) {
+        onMove(moveData);
+        lastMoveRef.current = moveData;
+      }
     };
 
     const handleEnd = (e) => {
@@ -102,6 +118,7 @@ function MobileControls({ onMove, onJump }) {
 
       // Stop movement and sprint
       onMove({ x: 0, z: 0, sprint: false });
+      lastMoveRef.current = { x: 0, z: 0, sprint: false };
     };
 
     // Touch events
