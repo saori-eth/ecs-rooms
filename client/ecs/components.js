@@ -70,6 +70,9 @@ export function createAnimationComponent(data) {
     clips: data.clips,
     actions: data.actions,
     currentAction: data.currentAction,
+    overrideAction: null,
+    overrideActionName: null,
+    overridePersistOnMove: false,
   };
 }
 

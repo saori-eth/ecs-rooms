@@ -1,5 +1,7 @@
 import * as CANNON from "cannon-es";
+import * as THREE from "three";
 import { ComponentTypes } from "./components.js";
+import { loadAnim } from "../src/retarget.js";
 
 export class ScriptingAPI {
   constructor(ecsAPI, physicsWorld, loadedScene = null, networkSystem = null, scene = null) {
@@ -137,5 +139,160 @@ export class ScriptingAPI {
       };
     }
     return null;
+  }
+
+  // Animation Management
+  async loadAnimation(entityId, animationUrl, animationName) {
+    const vrm = this.ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+    const animation = this.ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
+    
+    if (!vrm || !animation) {
+      console.error("Entity must have VRM and Animation components");
+      return false;
+    }
+
+    try {
+      // Load and retarget the animation
+      const clip = await loadAnim(animationUrl, vrm.vrm);
+      clip.name = animationName;
+      
+      // Cache the clip
+      animation.clips[animationName] = clip;
+      
+      // Create animation action
+      const action = animation.mixer.clipAction(clip);
+      animation.actions[animationName] = action;
+      
+      return true;
+    } catch (error) {
+      console.error("Failed to load animation:", error);
+      return false;
+    }
+  }
+
+  playAnimation(entityId, animationName, loop = true, persistOnMove = false) {
+    const animation = this.ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
+    
+    if (!animation) {
+      console.error("Entity must have Animation component");
+      return false;
+    }
+
+    // Handle stopping override
+    if (animationName === null) {
+      animation.overrideAction = null;
+      animation.overrideActionName = null;
+      animation.overridePersistOnMove = false;
+      return true;
+    }
+
+    // Find the requested action
+    const action = animation.actions[animationName];
+    if (!action) {
+      console.error(`Animation "${animationName}" not found`);
+      return false;
+    }
+
+    // Configure looping
+    action.loop = loop ? THREE.LoopRepeat : THREE.LoopOnce;
+    if (!loop) {
+      action.clampWhenFinished = true;
+    }
+
+    // Set as override
+    animation.overrideAction = action;
+    animation.overrideActionName = animationName;
+    animation.overridePersistOnMove = persistOnMove;
+    
+    return true;
+  }
+
+  // Keyboard Event Management
+  onKeyDown(key, callback) {
+    if (!this.ecsAPI.keyboardListeners) {
+      console.error("Keyboard listeners not initialized. Is InputSystem running?");
+      return false;
+    }
+    
+    const normalizedKey = key.toLowerCase();
+    
+    // Initialize array for this key if it doesn't exist
+    if (!this.ecsAPI.keyboardListeners.keydown[normalizedKey]) {
+      this.ecsAPI.keyboardListeners.keydown[normalizedKey] = [];
+    }
+    
+    // Add the callback
+    this.ecsAPI.keyboardListeners.keydown[normalizedKey].push(callback);
+    return true;
+  }
+
+  onKeyUp(key, callback) {
+    if (!this.ecsAPI.keyboardListeners) {
+      console.error("Keyboard listeners not initialized. Is InputSystem running?");
+      return false;
+    }
+    
+    const normalizedKey = key.toLowerCase();
+    
+    // Initialize array for this key if it doesn't exist
+    if (!this.ecsAPI.keyboardListeners.keyup[normalizedKey]) {
+      this.ecsAPI.keyboardListeners.keyup[normalizedKey] = [];
+    }
+    
+    // Add the callback
+    this.ecsAPI.keyboardListeners.keyup[normalizedKey].push(callback);
+    return true;
+  }
+
+  removeKeyDownListener(key, callback) {
+    if (!this.ecsAPI.keyboardListeners || !this.ecsAPI.keyboardListeners.keydown) {
+      return false;
+    }
+    
+    const normalizedKey = key.toLowerCase();
+    const listeners = this.ecsAPI.keyboardListeners.keydown[normalizedKey];
+    
+    if (!listeners) {
+      return false;
+    }
+    
+    const index = listeners.indexOf(callback);
+    if (index !== -1) {
+      listeners.splice(index, 1);
+      
+      // Clean up empty arrays
+      if (listeners.length === 0) {
+        delete this.ecsAPI.keyboardListeners.keydown[normalizedKey];
+      }
+      return true;
+    }
+    
+    return false;
+  }
+
+  removeKeyUpListener(key, callback) {
+    if (!this.ecsAPI.keyboardListeners || !this.ecsAPI.keyboardListeners.keyup) {
+      return false;
+    }
+    
+    const normalizedKey = key.toLowerCase();
+    const listeners = this.ecsAPI.keyboardListeners.keyup[normalizedKey];
+    
+    if (!listeners) {
+      return false;
+    }
+    
+    const index = listeners.indexOf(callback);
+    if (index !== -1) {
+      listeners.splice(index, 1);
+      
+      // Clean up empty arrays
+      if (listeners.length === 0) {
+        delete this.ecsAPI.keyboardListeners.keyup[normalizedKey];
+      }
+      return true;
+    }
+    
+    return false;
   }
 }

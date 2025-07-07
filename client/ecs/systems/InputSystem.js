@@ -2,14 +2,40 @@ import { ComponentTypes } from "../components.js";
 import GlobalEventManager from "../../src/GlobalEventManager.js";
 
 export function createInputSystem() {
+  let ecsAPIRef = null; // Store reference to ecsAPI
+  
   const handleKeyDown = (e) => {
     const key = e.key.toLowerCase();
     inputState.keys[key] = true;
+    
+    // Dispatch to registered listeners
+    if (ecsAPIRef && ecsAPIRef.keyboardListeners && ecsAPIRef.keyboardListeners.keydown[key]) {
+      const listeners = ecsAPIRef.keyboardListeners.keydown[key];
+      listeners.forEach(callback => {
+        try {
+          callback(e);
+        } catch (error) {
+          console.error(`Error in keydown listener for key "${key}":`, error);
+        }
+      });
+    }
   };
 
   const handleKeyUp = (e) => {
     const key = e.key.toLowerCase();
     inputState.keys[key] = false;
+    
+    // Dispatch to registered listeners
+    if (ecsAPIRef && ecsAPIRef.keyboardListeners && ecsAPIRef.keyboardListeners.keyup[key]) {
+      const listeners = ecsAPIRef.keyboardListeners.keyup[key];
+      listeners.forEach(callback => {
+        try {
+          callback(e);
+        } catch (error) {
+          console.error(`Error in keyup listener for key "${key}":`, error);
+        }
+      });
+    }
   };
 
   const handleMouseMove = (e) => {
@@ -125,6 +151,9 @@ export function createInputSystem() {
 
   return {
     init(ecsAPI) {
+      // Store reference to ecsAPI for event handlers
+      ecsAPIRef = ecsAPI;
+      
       GlobalEventManager.add(window, "keydown", handleKeyDown);
       GlobalEventManager.add(window, "keyup", handleKeyUp);
       GlobalEventManager.add(document, "pointerlockchange", handlePointerLockChange);
@@ -140,6 +169,12 @@ export function createInputSystem() {
 
       // Store inputState reference on ecsAPI for access by other systems
       ecsAPI.inputState = inputState;
+      
+      // Initialize keyboard event listener registry
+      ecsAPI.keyboardListeners = {
+        keydown: {},
+        keyup: {}
+      };
       
       // Add touch event listeners for mobile camera control
       if (inputState.isMobile) {
@@ -237,6 +272,12 @@ export function createInputSystem() {
         GlobalEventManager.remove(document, "touchmove", handleTouchMove);
         GlobalEventManager.remove(document, "touchend", handleTouchEnd);
       }
+      
+      // Clear the keyboard listener registry
+      if (ecsAPIRef && ecsAPIRef.keyboardListeners) {
+        delete ecsAPIRef.keyboardListeners;
+      }
+      ecsAPIRef = null;
     },
   };
 }

@@ -22,17 +22,28 @@ export function createAnimationSystem() {
           const isGrounded = player.isGrounded !== false; // Default to true if undefined
           const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
           
+          // Cancel override animation if player starts moving (unless it's marked as persistent)
+          if (anim.overrideAction && isMoving && !anim.overridePersistOnMove) {
+            anim.overrideAction = null;
+            anim.overrideActionName = null;
+          }
+          
           let actionToPlay;
           
-          // Determine which animation to play
-          if (!isGrounded) {
-            actionToPlay = anim.actions.jump;
-          } else if (isMoving && isSprinting) {
-            actionToPlay = anim.actions.sprint;
-          } else if (isMoving) {
-            actionToPlay = anim.actions.walking;
+          // Check for override animation first
+          if (anim.overrideAction) {
+            actionToPlay = anim.overrideAction;
           } else {
-            actionToPlay = anim.actions.idle;
+            // Determine which animation to play based on movement
+            if (!isGrounded) {
+              actionToPlay = anim.actions.jump;
+            } else if (isMoving && isSprinting) {
+              actionToPlay = anim.actions.sprint;
+            } else if (isMoving) {
+              actionToPlay = anim.actions.walking;
+            } else {
+              actionToPlay = anim.actions.idle;
+            }
           }
 
           // Handle animation transitions
@@ -53,7 +64,8 @@ export function createAnimationSystem() {
           // If jump animation finished and player is grounded, transition back
           if (anim.currentAction === anim.actions.jump && 
               !anim.actions.jump.isRunning() && 
-              isGrounded) {
+              isGrounded &&
+              !anim.overrideAction) { // Don't transition if override is active
             let nextAction;
             if (isMoving && isSprinting) {
               nextAction = anim.actions.sprint;

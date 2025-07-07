@@ -208,15 +208,20 @@ export function createNetworkSystem() {
             if (animation && animation.actions) {
               let actionToPlay;
               
-              // Determine which animation to play based on received state
-              if (message.isGrounded === false && animation.actions.jump) {
-                actionToPlay = animation.actions.jump;
-              } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
-                actionToPlay = animation.actions.sprint;
-              } else if (message.isMoving && animation.actions.walking) {
-                actionToPlay = animation.actions.walking;
-              } else if (animation.actions.idle) {
-                actionToPlay = animation.actions.idle;
+              // Check for override animation first
+              if (message.overrideActionName && animation.actions[message.overrideActionName]) {
+                actionToPlay = animation.actions[message.overrideActionName];
+              } else {
+                // Determine which animation to play based on received state
+                if (message.isGrounded === false && animation.actions.jump) {
+                  actionToPlay = animation.actions.jump;
+                } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
+                  actionToPlay = animation.actions.sprint;
+                } else if (message.isMoving && animation.actions.walking) {
+                  actionToPlay = animation.actions.walking;
+                } else if (animation.actions.idle) {
+                  actionToPlay = animation.actions.idle;
+                }
               }
               
               if (actionToPlay !== animation.currentAction) {
@@ -419,6 +424,7 @@ export function createNetworkSystem() {
           );
           const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
           const vrm = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+          const animation = ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
 
           if (position && input && vrm) {
             const isMoving =
@@ -439,6 +445,11 @@ export function createNetworkSystem() {
               isGrounded,
               timestamp: Date.now(),
             };
+            
+            // Add override animation name if present
+            if (animation && animation.overrideActionName) {
+              moveMessage.overrideActionName = animation.overrideActionName;
+            }
             
             ws.send(JSON.stringify(moveMessage));
           }
