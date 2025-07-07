@@ -54,7 +54,7 @@ export class CameraSystem {
       if (position) {
         // Get input from InputSystem
         if (ecsAPI.inputState) {
-          const { mouseDelta, wheelDelta, touchDelta, pinchDelta, isMobile } =
+          const { mouseDelta, wheelDelta, touchDelta, isMobile } =
             ecsAPI.inputState;
 
           if (isMobile) {
@@ -74,16 +74,6 @@ export class CameraSystem {
               // Reset touch delta after using it
               ecsAPI.inputState.touchDelta.x = 0;
               ecsAPI.inputState.touchDelta.y = 0;
-            }
-
-            // Pinch zoom
-            if (pinchDelta !== 0) {
-              this.targetDistance += pinchDelta * this.zoomSensitivity * 0.5;
-              this.targetDistance = Math.max(
-                this.minDistance,
-                Math.min(this.maxDistance, this.targetDistance)
-              );
-              ecsAPI.inputState.pinchDelta = 0;
             }
           } else if (document.pointerLockElement) {
             // Desktop mouse controls

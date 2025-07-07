@@ -40,7 +40,6 @@ export function createInputSystem() {
   let touchStartY = 0;
   let lastTouchX = 0;
   let lastTouchY = 0;
-  let initialPinchDistance = 0;
   let cameraTouchId = null;
 
   const handleTouchStart = (e) => {
@@ -64,13 +63,6 @@ export function createInputSystem() {
         break;
       }
     }
-    
-    // Handle pinch zoom with any two touches
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
-    }
   };
 
   const handleTouchMove = (e) => {
@@ -90,20 +82,6 @@ export function createInputSystem() {
         lastTouchY = cameraTouch.clientY;
       }
     }
-    
-    // Handle pinch zoom with any two touches
-    if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (initialPinchDistance > 0) {
-        const delta = (initialPinchDistance - distance) * 2; // Scale factor
-        inputState.pinchDelta += delta;
-      }
-      
-      initialPinchDistance = distance;
-    }
   };
 
   const handleTouchEnd = (e) => {
@@ -115,11 +93,6 @@ export function createInputSystem() {
         cameraTouchId = null;
       }
     }
-    
-    // Reset pinch distance when less than 2 touches
-    if (e.touches.length < 2) {
-      initialPinchDistance = 0;
-    }
   };
 
   const inputState = {
@@ -129,7 +102,6 @@ export function createInputSystem() {
     mouseDelta: { x: 0, y: 0 },
     wheelDelta: 0,
     touchDelta: { x: 0, y: 0 },
-    pinchDelta: 0,
     jump: false,
     sprint: false,
   };
