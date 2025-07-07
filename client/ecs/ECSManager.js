@@ -72,7 +72,8 @@ export class ECSManager {
         this.physicsSystem.world,
         playerIdentity,
         this.vrmManager,
-        this.animationManager
+        this.animationManager,
+        this.scene
       );
       this.gameStarted = true;
       if (this.stateCallbacks) {
@@ -207,8 +208,8 @@ export class ECSManager {
     }
 
     // Network system already created in constructor
-    // Update its ecsAPI reference
-    this.networkSystem.init(this.ecsAPI);
+    // Update its ecsAPI reference and scene
+    this.networkSystem.init(this.ecsAPI, this.scene);
 
     this.inputSystem = createInputSystem();
     this.animationSystem = createAnimationSystem();
@@ -226,8 +227,6 @@ export class ECSManager {
     this.cameraSystem = new CameraSystem();
     this.ecsAPI.addSystem(this.cameraSystem);
 
-    // Set global references for debugging
-    window.physicsWorld = this.physicsSystem.world;
 
     // Add update method to ECSApi for physics debugger
     this.ecsAPI.updatePhysicsDebugger = () => {
@@ -244,6 +243,9 @@ export class ECSManager {
       this.ecsAPI,
       this.networkSystem
     );
+    // Pass scene and physics world references to networkSystem
+    this.networkSystem.setScene(this.scene);
+    this.networkSystem.setPhysicsWorld(this.physicsSystem.world);
 
     // Set sceneManager reference in ecsAPI for update calls
     this.ecsAPI.sceneManager = this.sceneManager;

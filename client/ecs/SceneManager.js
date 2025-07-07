@@ -202,7 +202,8 @@ export class SceneManager {
           this.ecsAPI,
           this.physicsWorld,
           this.loadedScene,
-          this.networkSystem
+          this.networkSystem,
+          this.threeScene
         );
         this.activeScript = new ScriptClass(scriptingAPI);
         if (this.activeScript.onLoad) {

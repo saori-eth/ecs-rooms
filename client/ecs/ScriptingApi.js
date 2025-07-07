@@ -2,11 +2,12 @@ import * as CANNON from "cannon-es";
 import { ComponentTypes } from "./components.js";
 
 export class ScriptingAPI {
-  constructor(ecsAPI, physicsWorld, loadedScene = null, networkSystem = null) {
+  constructor(ecsAPI, physicsWorld, loadedScene = null, networkSystem = null, scene = null) {
     this.ecsAPI = ecsAPI;
     this.physicsWorld = physicsWorld;
     this.loadedScene = loadedScene;
     this.networkSystem = networkSystem;
+    this.scene = scene;
     this.gameObjects = new Map(); // Track game objects by ID
   }
 
@@ -106,7 +107,7 @@ export class ScriptingAPI {
 
   // Visual Helpers
   getThreeScene() {
-    return window.scene; // Reference to the main Three.js scene
+    return this.scene; // Reference to the main Three.js scene
   }
 
   // Player State Helpers

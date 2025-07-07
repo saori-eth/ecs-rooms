@@ -188,8 +188,6 @@ export class ECSApi {
       this.renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Set global references for debugging
-    window.scene = this.scene;
   }
 
   start() {

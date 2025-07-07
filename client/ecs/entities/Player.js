@@ -24,7 +24,8 @@ export async function createPlayer(
   physicsWorld = null,
   identity = null,
   vrmManager = null,
-  animationManager = null
+  animationManager = null,
+  scene = null
 ) {
   const entityId = ecsAPI.createEntity();
 
@@ -32,7 +33,6 @@ export async function createPlayer(
   const playerGroup = new THREE.Group();
   playerGroup.position.set(position.x, position.y, position.z);
 
-  const scene = window.scene;
   if (scene) scene.add(playerGroup);
 
   // Load VRM model

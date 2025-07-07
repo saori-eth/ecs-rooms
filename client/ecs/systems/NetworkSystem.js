@@ -5,6 +5,8 @@ export function createNetworkSystem() {
   let ws = null;
   let localPlayerId = null;
   let ecsAPI = null;
+  let scene = null;
+  let physicsWorld = null;
   let connected = false;
   let heartbeatInterval = null;
   let lastUpdateTime = 0;
@@ -98,10 +100,11 @@ export function createNetworkSystem() {
               ecsAPI,
               playerData.position,
               false,
-              window.physicsWorld,
+              physicsWorld,
               playerData.identity,
               ecsManager?.vrmManager,
-              ecsManager?.animationManager
+              ecsManager?.animationManager,
+              scene
             );
             ecsAPI.addComponent(
               remoteEntityId,
@@ -118,10 +121,11 @@ export function createNetworkSystem() {
               ecsAPI,
               message.player.position,
               false,
-              window.physicsWorld,
+              physicsWorld,
               message.player.identity,
               ecsManager?.vrmManager,
-              ecsManager?.animationManager
+              ecsManager?.animationManager,
+              scene
             ).then((newEntityId) => {
               ecsAPI.addComponent(
                 newEntityId,
@@ -144,15 +148,15 @@ export function createNetworkSystem() {
               leavingEntityId,
               ComponentTypes.MESH
             );
-            if (meshComponent && meshComponent.mesh) {
-              window.scene.remove(meshComponent.mesh);
+            if (meshComponent && meshComponent.mesh && scene) {
+              scene.remove(meshComponent.mesh);
             }
             const physicsComponent = ecsAPI.getComponent(
               leavingEntityId,
               ComponentTypes.PHYSICS_BODY
             );
             if (physicsComponent && physicsComponent.body) {
-              window.physicsWorld.removeBody(physicsComponent.body);
+              physicsWorld.removeBody(physicsComponent.body);
             }
             ecsAPI.destroyEntity(leavingEntityId);
             remotePlayers.delete(message.id);
@@ -283,15 +287,15 @@ export function createNetworkSystem() {
           entityId,
           ComponentTypes.MESH
         );
-        if (meshComponent && meshComponent.mesh) {
-          window.scene.remove(meshComponent.mesh);
+        if (meshComponent && meshComponent.mesh && scene) {
+          scene.remove(meshComponent.mesh);
         }
         const physicsComponent = ecsAPI.getComponent(
           entityId,
           ComponentTypes.PHYSICS_BODY
         );
-        if (physicsComponent && physicsComponent.body) {
-          window.physicsWorld.removeBody(physicsComponent.body);
+        if (physicsComponent && physicsComponent.body && physicsWorld) {
+          physicsWorld.removeBody(physicsComponent.body);
         }
         ecsAPI.destroyEntity(entityId);
       });
@@ -311,8 +315,9 @@ export function createNetworkSystem() {
   };
 
   const networkSystem = {
-    init(w) {
+    init(w, s) {
       ecsAPI = w;
+      scene = s;
       if (!ws) {
         connect();
       }
@@ -326,6 +331,14 @@ export function createNetworkSystem() {
 
     setecsManager(gm) {
       ecsManager = gm;
+    },
+
+    setScene(s) {
+      scene = s;
+    },
+
+    setPhysicsWorld(pw) {
+      physicsWorld = pw;
     },
 
     joinGame(identity, roomType) {
