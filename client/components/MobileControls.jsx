@@ -20,9 +20,10 @@ function MobileControls({ onMove, onJump }) {
     const handleStart = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const touch = e.touches ? e.touches[0] : e;
+      // Use changedTouches to get the new touch that just started
+      const touch = e.changedTouches ? e.changedTouches[0] : e;
       setIsDragging(true);
-      if (e.touches) {
+      if (e.changedTouches) {
         setTouchId(touch.identifier);
       }
     };
