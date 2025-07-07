@@ -8,21 +8,6 @@ export const availableAvatars = [
     path: "/avatars/killua.vrm",
   },
   {
-    id: "asuka",
-    name: "Asuka",
-    path: "/avatars/asuka.vrm",
-  },
-  {
-    id: "kagura",
-    name: "Kagura",
-    path: "/avatars/kagura.vrm",
-  },
-  {
-    id: "luffy",
-    name: "Luffy",
-    path: "/avatars/luffy.vrm",
-  },
-  {
     id: "yuji_itadori",
     name: "Yuji Itadori",
     path: "/avatars/yuji_itadori.vrm",

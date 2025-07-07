@@ -6,6 +6,9 @@ import { Inventory } from "./Inventory.jsx";
 import { RoomSelector } from "./RoomSelector.jsx";
 import { rooms } from "../ecs/rooms/room-definitions.js";
 
+// Set to true to enable maintenance mode
+const maintenanceMode = true;
+
 function MainMenu({
   playerIdentity,
   connectionStatus,
@@ -19,7 +22,7 @@ function MainMenu({
   const [roomType, setRoomType] = useState(
     Object.keys(rooms)[0] || "default-arena"
   );
-  const [activeTab, setActiveTab] = useState("lobby");
+  const [activeTab, setActiveTab] = useState("game");
   const [isAvatarLoading, setIsAvatarLoading] = useState(true);
 
   const canvasRef = useRef(null);
@@ -120,24 +123,28 @@ function MainMenu({
 
       <img src="/images/logo.png" alt="LobbyWS" className="logo" />
 
-      {activeTab === "lobby" && (
+      {activeTab === "game" && (
         <>
           <div className="player-info-container">
             <button
               className="play-button"
-              disabled={!playEnabled}
+              disabled={!playEnabled || maintenanceMode}
               onClick={handlePlay}
             >
-              <span className="play-button-text">PLAY</span>
-              <svg
-                className="play-button-icon"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <path d="M5 3L19 12L5 21V3Z" fill="currentColor" />
-              </svg>
+              <span className="play-button-text">
+                {maintenanceMode ? "MAINTENANCE" : "PLAY"}
+              </span>
+              {!maintenanceMode && (
+                <svg
+                  className="play-button-icon"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                >
+                  <path d="M5 3L19 12L5 21V3Z" fill="currentColor" />
+                </svg>
+              )}
             </button>
           </div>
 

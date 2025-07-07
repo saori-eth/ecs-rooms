@@ -129,9 +129,23 @@ export class CollectibleGame {
 }
 ```
 
+## API Reference
+
+### Core APIs
+- [Entity Management](./api/entities.md) - Creating and managing entities
+- [Physics](./api/physics.md) - Physics bodies and collision detection
+- [Networking](./api/networking.md) - Multiplayer events and synchronization
+- [Visual](./api/visual.md) - 3D objects and visual effects
+
+### New Features
+- [Animation API](./api/animation.md) - Custom animations and emotes
+- [Input API](./api/input.md) - Keyboard event handling
+
 ## Best Practices
 1. Always check if you're the host before spawning objects
 2. Sync important state changes via network events
 3. Clean up entities and physics bodies on destroy
 4. Use object pooling for frequently spawned items
 5. Handle player disconnections gracefully
+6. Remove event listeners when scripts are destroyed
+7. Test multiplayer features with multiple clients

@@ -18,6 +18,7 @@
 
 .logo {
   position: absolute;
+  transform: scale(0.8);
   top: 24px;
   left: 32px;
   max-width: 120px;
@@ -219,6 +220,7 @@
 /* Tablet adjustments */
 @media (max-width: 1024px) {
   .logo {
+    transform: scale(0.8);
     top: 10px;
     left: 24px;
     max-width: 100px;
@@ -247,6 +249,7 @@
 /* Mobile adjustments */
 @media (max-width: 768px) {
   .logo {
+    transform: scale(0.8);
     top: 16px;
     left: 16px;
     max-width: 100px;
