@@ -10,7 +10,7 @@ export function createNetworkSystem() {
   let connected = false;
   let heartbeatInterval = null;
   let lastUpdateTime = 0;
-  const updateRate = 33; // ~30 updates per second for smoother movement
+  const updateRate = 20; // 50Hz for clean 3x multiple with 66ms render delay
   const remotePlayers = new Map();
   let ecsManager = null;
   let roomId = null;
@@ -19,6 +19,7 @@ export function createNetworkSystem() {
   // Track previous movement state to detect state changes
   let wasMovingLastFrame = false;
   let wasGroundedLastFrame = true;
+  let stopPacketsSent = 0;
 
   // Callback functions
   let onConnectionStatusChange = null;
@@ -450,7 +451,11 @@ export function createNetworkSystem() {
             const justStoppedMoving = wasMovingLastFrame && !isMoving;
             const groundedStateChanged = wasGroundedLastFrame !== isGrounded;
             const isInAir = !isGrounded;
-            const shouldSendUpdate = isMoving || justStoppedMoving || groundedStateChanged || isInAir;
+            
+            // Send extra stop packets to ensure final position is received
+            const sendingExtraStopPacket = !isMoving && !isInAir && stopPacketsSent < 2;
+            
+            const shouldSendUpdate = isMoving || justStoppedMoving || groundedStateChanged || isInAir || sendingExtraStopPacket;
             
             if (shouldSendUpdate) {
               const moveMessage = {
@@ -477,11 +482,21 @@ export function createNetworkSystem() {
               // });
               
               ws.send(JSON.stringify(moveMessage));
+              
+              // Track stop packets
+              if (sendingExtraStopPacket) {
+                stopPacketsSent++;
+              }
             }
             
             // Update the movement state for next frame
             wasMovingLastFrame = isMoving;
             wasGroundedLastFrame = isGrounded;
+            
+            // Reset stop packet counter when moving
+            if (isMoving) {
+              stopPacketsSent = 0;
+            }
           }
         }
       });

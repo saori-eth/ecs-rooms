@@ -28,7 +28,7 @@ export function createInterpolationSystem() {
 
         if (!player.isLocal && physicsComponent.body) {
           const now = Date.now();
-          const renderDelay = 30; // Further reduced for localhost testing
+          const renderDelay = 66; // Raised for better stability
           const renderTime = now - renderDelay;
 
           // Handle physics position updates
@@ -62,7 +62,7 @@ export function createInterpolationSystem() {
               physicsComponent.body.position.set(newX, newY, newZ);
             } else if (interpolation.positionBuffer.length === 1) {
               const target = interpolation.positionBuffer[0].position;
-              const speed = 0.15; // Increased from 0.1 for smoother extrapolation
+              const speed = 1.0; // Instant stop when receiving final position
 
               const currentPos = physicsComponent.body.position;
               physicsComponent.body.position.set(
@@ -96,7 +96,7 @@ export function createInterpolationSystem() {
 
         if (!player.isLocal) {
           const now = Date.now();
-          const renderDelay = 30; // Further reduced for localhost testing
+          const renderDelay = 66; // Raised for better stability
           const renderTime = now - renderDelay;
           
           // Debug logging (commented out to reduce spam)
@@ -116,7 +116,7 @@ export function createInterpolationSystem() {
           // Handle position buffer management (no physics updates here)
           if (interpolation.positionBuffer.length > 0) {
             // Remove entries older than 1 second to prevent stale data
-            const maxAge = 1000; // 1 second
+            const maxAge = 400; // 400ms to discard stale data faster
             while (
               interpolation.positionBuffer.length > 0 &&
               interpolation.positionBuffer[0].timestamp < now - maxAge
@@ -145,7 +145,7 @@ export function createInterpolationSystem() {
           // Handle rotation interpolation
           if (vrmComponent && interpolation.rotationBuffer.length > 0) {
             // Remove entries older than 1 second to prevent stale data
-            const maxAge = 1000; // 1 second
+            const maxAge = 400; // 400ms to discard stale data faster
             while (
               interpolation.rotationBuffer.length > 0 &&
               interpolation.rotationBuffer[0].timestamp < now - maxAge
@@ -194,7 +194,7 @@ export function createInterpolationSystem() {
               tempQuaternion1.fromArray(
                 interpolation.rotationBuffer[0].rotation
               );
-              vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion1, 0.15); // Increased from 0.1
+              vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion1, 1.0); // Instant rotation stop
             }
           }
         }
