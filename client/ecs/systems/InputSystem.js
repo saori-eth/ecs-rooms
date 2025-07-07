@@ -44,9 +44,9 @@ export function createInputSystem() {
   let cameraTouchId = null;
 
   const handleTouchStart = (e) => {
-    // Find a touch that's not on the joystick area
-    for (let i = 0; i < e.touches.length; i++) {
-      const touch = e.touches[i];
+    // Only process new touches from e.changedTouches
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const touch = e.changedTouches[i];
       const target = document.elementFromPoint(touch.clientX, touch.clientY);
       
       // Check if this touch is on the joystick area
@@ -55,7 +55,7 @@ export function createInputSystem() {
       }
       
       // This touch is not on joystick, use it for camera
-      if (!cameraTouchId) {
+      if (cameraTouchId === null) {
         cameraTouchId = touch.identifier;
         touchStartX = touch.clientX;
         touchStartY = touch.clientY;
@@ -88,8 +88,8 @@ export function createInputSystem() {
   const handleTouchEnd = (e) => {
     // Check if the camera touch ended
     if (cameraTouchId !== null) {
-      const remainingTouch = Array.from(e.touches).find(t => t.identifier === cameraTouchId);
-      if (!remainingTouch) {
+      const endedTouch = Array.from(e.changedTouches).find(t => t.identifier === cameraTouchId);
+      if (endedTouch) {
         // Camera touch has ended
         cameraTouchId = null;
       }

@@ -36,7 +36,7 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
 
   const handleCanvasClick = () => {
     if (!isMobile) {
-      const canvas = document.querySelector('#canvas-container canvas');
+      const canvas = document.querySelector("#canvas-container canvas");
       if (canvas && canvas.requestPointerLock) {
         canvas.requestPointerLock();
       }
@@ -45,28 +45,48 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
 
   useEffect(() => {
     // Add click listener to the React root since it's above the canvas
-    const reactRoot = document.getElementById('react-root');
+    const reactRoot = document.getElementById("react-root");
     if (!isMobile && reactRoot) {
-      GlobalEventManager.add(reactRoot, 'click', handleCanvasClick);
-      
+      GlobalEventManager.add(reactRoot, "click", handleCanvasClick);
+
       // Listen for pointer lock changes
       const handlePointerLockChange = () => {
         setIsPointerLocked(!!document.pointerLockElement);
       };
-      
-      GlobalEventManager.add(document, 'pointerlockchange', handlePointerLockChange);
-      
+
+      GlobalEventManager.add(
+        document,
+        "pointerlockchange",
+        handlePointerLockChange
+      );
+
       return () => {
-        GlobalEventManager.remove(reactRoot, 'click', handleCanvasClick);
-        GlobalEventManager.remove(document, 'pointerlockchange', handlePointerLockChange);
+        GlobalEventManager.remove(reactRoot, "click", handleCanvasClick);
+        GlobalEventManager.remove(
+          document,
+          "pointerlockchange",
+          handlePointerLockChange
+        );
       };
     }
   }, [isMobile]);
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}>
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        top: 0,
+        left: 0,
+      }}
+    >
       <div className="info">
-        {isMobile ? "Joystick: move • Touch: rotate camera • Pinch: zoom" : isPointerLocked ? "ESC to release mouse. WASD to move, mouse to look" : "Click to capture mouse. Use WASD to move, mouse to look"}
+        {isMobile
+          ? "Joystick: move • Touch: rotate camera"
+          : isPointerLocked
+          ? "ESC to release mouse. WASD to move, mouse to look"
+          : "Click to capture mouse. Use WASD to move, mouse to look"}
       </div>
       <div className="room-info">
         <div>
@@ -79,7 +99,9 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
           Exit
         </button>
       </div>
-      {isMobile && <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />}
+      {isMobile && (
+        <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />
+      )}
       <Chat ecsManager={ecsManager} />
     </div>
   );
