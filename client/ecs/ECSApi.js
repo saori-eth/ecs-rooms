@@ -121,6 +121,12 @@ export class ECSApi {
     for (const system of this.systems) {
       system.update(this, deltaTime, ...args);
     }
+    
+    // Update physics debugger if available
+    if (this.updatePhysicsDebugger) {
+      this.updatePhysicsDebugger();
+    }
+    
     if (this.stats) this.stats.end();
   }
 

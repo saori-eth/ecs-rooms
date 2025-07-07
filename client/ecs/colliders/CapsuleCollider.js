@@ -25,11 +25,8 @@ export class CapsuleCollider {
       this.radius,
       this.radius,
       this.height,
-      8
+      16  // Increased resolution from 8 to 16
     );
-    const cylinderQuat = new CANNON.Quaternion();
-    // Rotate 90 degrees around the X-axis so the cylinder's length aligns with the Y-axis
-    cylinderQuat.setFromEuler(Math.PI / 2, 0, 0);
 
     // Create material with low default friction for smooth movement
     const playerMaterial = new CANNON.Material("playerMaterial");
@@ -40,8 +37,8 @@ export class CapsuleCollider {
     // Add shapes to create capsule shape
     // Bottom sphere
     body.addShape(sphereShape, new CANNON.Vec3(0, -this.height / 2, 0));
-    // Middle cylinder
-    body.addShape(cylinderShape, new CANNON.Vec3(0, 0, 0), cylinderQuat);
+    // Middle cylinder (no rotation needed - Cannon cylinders are vertical by default)
+    body.addShape(cylinderShape, new CANNON.Vec3(0, 0, 0));
     // Top sphere
     body.addShape(sphereShape, new CANNON.Vec3(0, this.height / 2, 0));
 

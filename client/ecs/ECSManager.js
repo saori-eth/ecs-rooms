@@ -11,6 +11,7 @@ import { SceneManager } from "./SceneManager.js";
 import { CameraSystem } from "./systems/CameraSystem.js";
 import { VRMManager } from "../src/VRMLoader.js";
 import { AnimationManager } from "../src/AnimationManager.js";
+import CannonDebugger from "cannon-es-debugger";
 
 // Game manager to bridge React and Three.js
 export class ECSManager {
@@ -27,6 +28,7 @@ export class ECSManager {
     this.initialized = false;
     this.vrmManager = null;
     this.animationManager = null;
+    this.physicsDebugger = null;
 
     // Set up mobile input callback
     this.mobileInputCallback = null;
@@ -181,6 +183,16 @@ export class ECSManager {
     this.physicsSystem = createPhysicsSystem();
     this.ecsAPI.physicsWorld = this.physicsSystem.world;
 
+    // Create physics debugger with lower resolution for better performance
+    this.physicsDebugger = new CannonDebugger(
+      this.scene,
+      this.physicsSystem.world,
+      {
+        color: 0x0000ff,
+        scale: 1.0,
+      }
+    );
+
     // Network system already created in constructor
     // Update its ecsAPI reference
     this.networkSystem.init(this.ecsAPI);
@@ -203,6 +215,14 @@ export class ECSManager {
 
     // Set global references for debugging
     window.physicsWorld = this.physicsSystem.world;
+
+    // Add update method to ECSApi for physics debugger
+    this.ecsAPI.updatePhysicsDebugger = () => {
+      if (this.physicsDebugger) {
+        // Comment/uncomment the line below to enable/disable physics debugging
+        // this.physicsDebugger.update();
+      }
+    };
 
     // Create scene manager
     this.sceneManager = new SceneManager(
