@@ -7,17 +7,15 @@ export function createInterpolationSystem() {
   const tempQuaternion2 = new THREE.Quaternion();
 
   return {
-    update(ecsAPI, deltaTime) {
+    fixedUpdate(ecsAPI, fixedDeltaTime) {
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.INTERPOLATION,
         ComponentTypes.PLAYER,
-        ComponentTypes.PHYSICS_BODY,
-        ComponentTypes.VRM
+        ComponentTypes.PHYSICS_BODY
       );
 
       entities.forEach((entityId) => {
-        const position = ecsAPI.getComponent(entityId, ComponentTypes.POSITION);
         const interpolation = ecsAPI.getComponent(
           entityId,
           ComponentTypes.INTERPOLATION
@@ -27,22 +25,14 @@ export function createInterpolationSystem() {
           entityId,
           ComponentTypes.PHYSICS_BODY
         );
-        const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
 
-        if (!player.isLocal) {
+        if (!player.isLocal && physicsComponent.body) {
           const now = Date.now();
           const renderDelay = 100;
           const renderTime = now - renderDelay;
 
-          // Handle position interpolation
+          // Handle physics position updates
           if (interpolation.positionBuffer.length > 0) {
-            while (
-              interpolation.positionBuffer.length > 2 &&
-              interpolation.positionBuffer[1].timestamp <= renderTime
-            ) {
-              interpolation.positionBuffer.shift();
-            }
-
             if (
               interpolation.positionBuffer.length >= 2 &&
               interpolation.positionBuffer[0].timestamp <= renderTime &&
@@ -59,21 +49,53 @@ export function createInterpolationSystem() {
               const newY = p0.y + (p1.y - p0.y) * alpha;
               const newZ = p0.z + (p1.z - p0.z) * alpha;
 
-              if (physicsComponent.body) {
-                physicsComponent.body.position.set(newX, newY, newZ);
-              }
+              physicsComponent.body.position.set(newX, newY, newZ);
             } else if (interpolation.positionBuffer.length === 1) {
               const target = interpolation.positionBuffer[0].position;
               const speed = 0.1;
 
-              if (physicsComponent.body) {
-                const currentPos = physicsComponent.body.position;
-                physicsComponent.body.position.set(
-                  currentPos.x + (target.x - currentPos.x) * speed,
-                  currentPos.y + (target.y - currentPos.y) * speed,
-                  currentPos.z + (target.z - currentPos.z) * speed
-                );
-              }
+              const currentPos = physicsComponent.body.position;
+              physicsComponent.body.position.set(
+                currentPos.x + (target.x - currentPos.x) * speed,
+                currentPos.y + (target.y - currentPos.y) * speed,
+                currentPos.z + (target.z - currentPos.z) * speed
+              );
+            }
+          }
+        }
+      });
+    },
+
+    update(ecsAPI, deltaTime) {
+      const entities = ecsAPI.getEntitiesWithComponents(
+        ComponentTypes.POSITION,
+        ComponentTypes.INTERPOLATION,
+        ComponentTypes.PLAYER,
+        ComponentTypes.PHYSICS_BODY,
+        ComponentTypes.VRM
+      );
+
+      entities.forEach((entityId) => {
+        const position = ecsAPI.getComponent(entityId, ComponentTypes.POSITION);
+        const interpolation = ecsAPI.getComponent(
+          entityId,
+          ComponentTypes.INTERPOLATION
+        );
+        const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
+        const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+
+        if (!player.isLocal) {
+          const now = Date.now();
+          const renderDelay = 100;
+          const renderTime = now - renderDelay;
+
+          // Handle position buffer management (no physics updates here)
+          if (interpolation.positionBuffer.length > 0) {
+            while (
+              interpolation.positionBuffer.length > 2 &&
+              interpolation.positionBuffer[1].timestamp <= renderTime
+            ) {
+              interpolation.positionBuffer.shift();
             }
           }
 
