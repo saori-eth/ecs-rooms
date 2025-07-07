@@ -63,7 +63,7 @@ function handleMove(client, message) {
           isMoving: message.isMoving,
           isSprinting: message.isSprinting,
           isGrounded: message.isGrounded,
-          timestamp: Date.now(),
+          timestamp: message.timestamp, // Use client's timestamp
         },
         client.id
       );

@@ -28,11 +28,21 @@ export function createInterpolationSystem() {
 
         if (!player.isLocal && physicsComponent.body) {
           const now = Date.now();
-          const renderDelay = 100;
+          const renderDelay = 50; // Reduced from 100ms for better responsiveness
           const renderTime = now - renderDelay;
 
           // Handle physics position updates
           if (interpolation.positionBuffer.length > 0) {
+            // Debug logging for physics interpolation (commented out to reduce spam)
+            // console.log(`[InterpolationSystem.fixedUpdate] Physics interpolation:`, {
+            //   bufferLength: interpolation.positionBuffer.length,
+            //   renderTime,
+            //   buffer0Time: interpolation.positionBuffer[0]?.timestamp,
+            //   buffer1Time: interpolation.positionBuffer[1]?.timestamp,
+            //   willInterpolate: interpolation.positionBuffer.length >= 2 && 
+            //     interpolation.positionBuffer[0].timestamp <= renderTime && 
+            //     renderTime <= interpolation.positionBuffer[1].timestamp
+            // });
             if (
               interpolation.positionBuffer.length >= 2 &&
               interpolation.positionBuffer[0].timestamp <= renderTime &&
@@ -86,14 +96,47 @@ export function createInterpolationSystem() {
 
         if (!player.isLocal) {
           const now = Date.now();
-          const renderDelay = 100;
+          const renderDelay = 50; // Reduced from 100ms for better responsiveness
           const renderTime = now - renderDelay;
+          
+          // Debug logging (commented out to reduce spam)
+          // if (interpolation.positionBuffer.length > 0) {
+          //   console.log(`[InterpolationSystem] Buffer state for player:`, {
+          //     now,
+          //     renderTime,
+          //     renderDelay,
+          //     bufferLength: interpolation.positionBuffer.length,
+          //     oldestTimestamp: interpolation.positionBuffer[0]?.timestamp,
+          //     newestTimestamp: interpolation.positionBuffer[interpolation.positionBuffer.length - 1]?.timestamp,
+          //     timeDiff: interpolation.positionBuffer.length > 1 ? 
+          //       interpolation.positionBuffer[interpolation.positionBuffer.length - 1].timestamp - interpolation.positionBuffer[0].timestamp : 0
+          //   });
+          // }
 
           // Handle position buffer management (no physics updates here)
           if (interpolation.positionBuffer.length > 0) {
+            // Remove entries older than 1 second to prevent stale data
+            const maxAge = 1000; // 1 second
+            while (
+              interpolation.positionBuffer.length > 0 &&
+              interpolation.positionBuffer[0].timestamp < now - maxAge
+            ) {
+              interpolation.positionBuffer.shift();
+            }
+            
+            // Normal buffer management
             while (
               interpolation.positionBuffer.length > 2 &&
               interpolation.positionBuffer[1].timestamp <= renderTime
+            ) {
+              interpolation.positionBuffer.shift();
+            }
+            
+            // If buffer has exactly 2 entries and renderTime is past the newer entry,
+            // remove the older entry to trigger extrapolation to final position
+            if (
+              interpolation.positionBuffer.length === 2 &&
+              interpolation.positionBuffer[1].timestamp < renderTime
             ) {
               interpolation.positionBuffer.shift();
             }
@@ -101,9 +144,28 @@ export function createInterpolationSystem() {
 
           // Handle rotation interpolation
           if (vrmComponent && interpolation.rotationBuffer.length > 0) {
+            // Remove entries older than 1 second to prevent stale data
+            const maxAge = 1000; // 1 second
+            while (
+              interpolation.rotationBuffer.length > 0 &&
+              interpolation.rotationBuffer[0].timestamp < now - maxAge
+            ) {
+              interpolation.rotationBuffer.shift();
+            }
+            
+            // Normal buffer management
             while (
               interpolation.rotationBuffer.length > 2 &&
               interpolation.rotationBuffer[1].timestamp <= renderTime
+            ) {
+              interpolation.rotationBuffer.shift();
+            }
+            
+            // If buffer has exactly 2 entries and renderTime is past the newer entry,
+            // remove the older entry to trigger extrapolation to final rotation
+            if (
+              interpolation.rotationBuffer.length === 2 &&
+              interpolation.rotationBuffer[1].timestamp < renderTime
             ) {
               interpolation.rotationBuffer.shift();
             }

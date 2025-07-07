@@ -15,6 +15,9 @@ export function createNetworkSystem() {
   let ecsManager = null;
   let roomId = null;
   let inRoom = false;
+  
+  // Track previous movement state to detect state changes
+  let wasMovingLastFrame = false;
 
   // Callback functions
   let onConnectionStatusChange = null;
@@ -178,6 +181,22 @@ export function createNetworkSystem() {
               movingEntityId,
               ComponentTypes.ANIMATION
             );
+
+            // Debug logging
+            const receiveTimestamp = Date.now();
+            const latency = receiveTimestamp - message.timestamp;
+            
+            // Check if this is actually high latency or a timestamp issue
+            if (latency > 100) {
+              console.warn(`[NetworkSystem] HIGH LATENCY DETECTED:`, {
+                playerId: message.id,
+                messageTimestamp: message.timestamp,
+                receiveTimestamp,
+                calculatedLatency: latency,
+                isMoving: message.isMoving,
+                bufferSize: interpolation ? interpolation.positionBuffer.length : 'N/A'
+              });
+            }
 
             if (interpolation) {
               // Push position data to position buffer
@@ -426,21 +445,39 @@ export function createNetworkSystem() {
             const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
             const isGrounded = player.isGrounded === true; // Will be false if undefined or false
             
-            const moveMessage = {
-              type: "move",
-              position: {
-                x: position.x,
-                y: position.y,
-                z: position.z,
-              },
-              rotation: vrm.vrm.scene.quaternion.toArray(),
-              isMoving,
-              isSprinting,
-              isGrounded,
-              timestamp: Date.now(),
-            };
+            // Only send update if player is moving OR just stopped moving
+            const justStoppedMoving = wasMovingLastFrame && !isMoving;
+            const shouldSendUpdate = isMoving || justStoppedMoving;
             
-            ws.send(JSON.stringify(moveMessage));
+            if (shouldSendUpdate) {
+              const moveMessage = {
+                type: "move",
+                position: {
+                  x: position.x,
+                  y: position.y,
+                  z: position.z,
+                },
+                rotation: vrm.vrm.scene.quaternion.toArray(),
+                isMoving,
+                isSprinting,
+                isGrounded,
+                timestamp: Date.now(),
+              };
+              
+              // Debug logging (commented out to reduce spam)
+              // console.log(`[NetworkSystem] Sending move update:`, {
+              //   timestamp: moveMessage.timestamp,
+              //   isMoving,
+              //   justStoppedMoving,
+              //   position: moveMessage.position,
+              //   timeSinceLastUpdate: now - lastUpdateTime
+              // });
+              
+              ws.send(JSON.stringify(moveMessage));
+            }
+            
+            // Update the movement state for next frame
+            wasMovingLastFrame = isMoving;
           }
         }
       });
