@@ -61,7 +61,7 @@ export class CameraSystem {
             // Mobile touch controls
             if (touchDelta.x !== 0 || touchDelta.y !== 0) {
               // Touch sensitivity is different from mouse
-              const touchSensitivity = this.mouseSensitivity * 2;
+              const touchSensitivity = this.mouseSensitivity * 5;
               this.yaw -= touchDelta.x * touchSensitivity;
               this.pitch += touchDelta.y * touchSensitivity;
 
