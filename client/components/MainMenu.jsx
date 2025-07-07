@@ -118,7 +118,7 @@ function MainMenu({
         />
       </div>
 
-      <img src="/images/logo.png" alt="Digispace" className="logo" />
+      <img src="/images/logo.png" alt="LobbyWS" className="logo" />
 
       {activeTab === "lobby" && (
         <>

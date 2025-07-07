@@ -1,7 +1,7 @@
 {
-  "name": "digispace",
+  "name": "lobbyws",
   "version": "1.0.0",
-  "description": "Digispace - Multiplayer 3D virtual world",
+  "description": "LobbyWS - Multiplayer 3D virtual world",
   "type": "module",
   "scripts": {
     "dev": "concurrently \"npm run client\" \"npm run server\"",
