@@ -11,7 +11,16 @@ import { SceneManager } from "./SceneManager.js";
 import { CameraSystem } from "./systems/CameraSystem.js";
 import { VRMManager } from "../src/VRMLoader.js";
 import { AnimationManager } from "../src/AnimationManager.js";
-import CannonDebugger from "cannon-es-debugger";
+
+// Dynamic import for development-only dependency
+let CannonDebugger = null;
+if (import.meta.env.DEV) {
+  try {
+    CannonDebugger = (await import("cannon-es-debugger")).default;
+  } catch (e) {
+    console.warn("cannon-es-debugger not available");
+  }
+}
 
 // Game manager to bridge React and Three.js
 export class ECSManager {
@@ -183,15 +192,19 @@ export class ECSManager {
     this.physicsSystem = createPhysicsSystem();
     this.ecsAPI.physicsWorld = this.physicsSystem.world;
 
-    // Create physics debugger with lower resolution for better performance
-    this.physicsDebugger = new CannonDebugger(
-      this.scene,
-      this.physicsSystem.world,
-      {
-        color: 0x0000ff,
-        scale: 1.0,
-      }
-    );
+    // Create physics debugger only in development mode
+    if (CannonDebugger) {
+      this.physicsDebugger = new CannonDebugger(
+        this.scene,
+        this.physicsSystem.world,
+        {
+          color: 0x0000ff,
+          scale: 1.0,
+        }
+      );
+    } else {
+      this.physicsDebugger = null;
+    }
 
     // Network system already created in constructor
     // Update its ecsAPI reference
