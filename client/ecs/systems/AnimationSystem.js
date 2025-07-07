@@ -17,6 +17,8 @@ export function createAnimationSystem() {
         const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
         const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
 
+        // Only handle animation logic for local player
+        // Remote players' animations are controlled by NetworkSystem
         if (player.isLocal) {
           const isMoving = input.moveVector.x !== 0 || input.moveVector.z !== 0;
           const isGrounded = player.isGrounded !== false; // Default to true if undefined

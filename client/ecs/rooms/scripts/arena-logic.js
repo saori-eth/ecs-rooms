@@ -24,8 +24,8 @@ export class ArenaLogic {
       try {
         // Load the sit animation if not already loaded
         if (!this.sitAnimationLoaded) {
-          // Path relative to the client folder (served by vite)
-          const animationUrl = "/ecs/rooms/assets/animations/sit.fbx";
+          // Path to the animation in the public folder
+          const animationUrl = "/rooms/assets/animations/sit.fbx";
           const loaded = await this.api.loadAnimation(
             localPlayer.entityId,
             animationUrl,
@@ -33,7 +33,6 @@ export class ArenaLogic {
           );
           if (loaded) {
             this.sitAnimationLoaded = true;
-            console.log("[ArenaLogic] Sit animation loaded from rooms/assets");
           }
         }
 
@@ -71,6 +70,7 @@ export class ArenaLogic {
 
   onPlayerJoin(playerId) {
     // Called when a new player joins the room.
+    console.log(`[ArenaLogic] Player ${playerId} joined`);
   }
 
   onPlayerLeave(playerId) {

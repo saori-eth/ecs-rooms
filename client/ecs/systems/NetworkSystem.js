@@ -15,6 +15,7 @@ export function createNetworkSystem() {
   let ecsManager = null;
   let roomId = null;
   let inRoom = false;
+  let lastSentOverrideAnimation = {}; // Track last sent animation per player
 
   // Callback functions
   let onConnectionStatusChange = null;
@@ -207,15 +208,98 @@ export function createNetworkSystem() {
 
             if (animation && animation.actions) {
               let actionToPlay;
-              
+
               // Check for override animation first
-              if (message.overrideActionName && animation.actions[message.overrideActionName]) {
-                actionToPlay = animation.actions[message.overrideActionName];
-              } else {
+              if (message.hasOwnProperty("overrideActionName")) {
+                if (message.overrideActionName === null) {
+                  // Clear any override animation
+                  animation.overrideAction = null;
+                  animation.overrideActionName = null;
+                  actionToPlay = null;
+                } else if (message.overrideActionName) {
+                  // Store the override state on the remote player
+                  animation.overrideActionName = message.overrideActionName;
+                  // Check if we have this animation loaded
+                  if (animation.actions[message.overrideActionName]) {
+                    actionToPlay =
+                      animation.actions[message.overrideActionName];
+                    animation.overrideAction = actionToPlay; // Store the override action
+                  } else {
+                    // Animation not loaded for remote player - try to load it
+
+                    // Store a loading flag to prevent multiple loads
+                    if (!animation._loadingAnimations) {
+                      animation._loadingAnimations = {};
+                    }
+
+                    if (
+                      !animation._loadingAnimations[message.overrideActionName]
+                    ) {
+                      animation._loadingAnimations[
+                        message.overrideActionName
+                      ] = true;
+
+                      // Load the animation asynchronously
+                      const vrm = ecsAPI.getComponent(
+                        movingEntityId,
+                        ComponentTypes.VRM
+                      );
+                      if (vrm && vrm.vrm) {
+                        // Dynamic import of loadAnim
+                        import("../../src/retarget.js").then(({ loadAnim }) => {
+                          // Try common animation paths
+                          const animationUrl = `/rooms/assets/animations/${message.overrideActionName}.fbx`;
+
+                          loadAnim(animationUrl, vrm.vrm)
+                            .then((clip) => {
+                              clip.name = message.overrideActionName;
+                              animation.clips[message.overrideActionName] =
+                                clip;
+                              const action = animation.mixer.clipAction(clip);
+                              animation.actions[message.overrideActionName] =
+                                action;
+
+                              // If this is still the current override, set it
+                              if (
+                                animation.overrideActionName ===
+                                message.overrideActionName
+                              ) {
+                                animation.overrideAction = action;
+                              }
+
+                              delete animation._loadingAnimations[
+                                message.overrideActionName
+                              ];
+                            })
+                            .catch((error) => {
+                              console.error(
+                                `[NetworkSystem] Failed to load animation "${message.overrideActionName}":`,
+                                error
+                              );
+                              delete animation._loadingAnimations[
+                                message.overrideActionName
+                              ];
+                            });
+                        });
+                      }
+                    }
+                  }
+                }
+              } else if (animation.overrideAction) {
+                // No new override message, but we have a stored override - keep playing it
+                actionToPlay = animation.overrideAction;
+              }
+
+              // If no override or override not available, use movement-based animation
+              if (!actionToPlay) {
                 // Determine which animation to play based on received state
                 if (message.isGrounded === false && animation.actions.jump) {
                   actionToPlay = animation.actions.jump;
-                } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
+                } else if (
+                  message.isMoving &&
+                  message.isSprinting &&
+                  animation.actions.sprint
+                ) {
                   actionToPlay = animation.actions.sprint;
                 } else if (message.isMoving && animation.actions.walking) {
                   actionToPlay = animation.actions.walking;
@@ -223,13 +307,14 @@ export function createNetworkSystem() {
                   actionToPlay = animation.actions.idle;
                 }
               }
-              
-              if (actionToPlay !== animation.currentAction) {
+
+              if (actionToPlay && actionToPlay !== animation.currentAction) {
                 const lastAction = animation.currentAction;
                 animation.currentAction = actionToPlay;
-                
+
                 // Use faster transition for jump animation
-                const fadeTime = actionToPlay === animation.actions.jump ? 0.1 : 0.2;
+                const fadeTime =
+                  actionToPlay === animation.actions.jump ? 0.1 : 0.2;
                 lastAction.fadeOut(fadeTime);
                 actionToPlay.reset().fadeIn(fadeTime).play();
               }
@@ -424,14 +509,17 @@ export function createNetworkSystem() {
           );
           const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
           const vrm = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
-          const animation = ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
+          const animation = ecsAPI.getComponent(
+            entityId,
+            ComponentTypes.ANIMATION
+          );
 
           if (position && input && vrm) {
             const isMoving =
               input.moveVector.x !== 0 || input.moveVector.z !== 0;
             const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
             const isGrounded = player.isGrounded === true; // Will be false if undefined or false
-            
+
             const moveMessage = {
               type: "move",
               position: {
@@ -445,12 +533,20 @@ export function createNetworkSystem() {
               isGrounded,
               timestamp: Date.now(),
             };
-            
-            // Add override animation name if present
-            if (animation && animation.overrideActionName) {
-              moveMessage.overrideActionName = animation.overrideActionName;
+
+            // Only send override animation if it changed
+            const currentOverride = animation?.overrideActionName || null;
+            const lastOverride = lastSentOverrideAnimation[entityId] || null;
+
+            if (currentOverride !== lastOverride) {
+              if (currentOverride) {
+                moveMessage.overrideActionName = currentOverride;
+              } else {
+                moveMessage.overrideActionName = null; // Explicitly send null to stop animation
+              }
+              lastSentOverrideAnimation[entityId] = currentOverride;
             }
-            
+
             ws.send(JSON.stringify(moveMessage));
           }
         }

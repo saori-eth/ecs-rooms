@@ -54,19 +54,23 @@ function handleMove(client, message) {
     const room = getRoom(client.roomId);
 
     if (room) {
-      room.broadcast(
-        {
-          type: "playerMoved",
-          id: client.id,
-          position: message.position,
-          rotation: message.rotation,
-          isMoving: message.isMoving,
-          isSprinting: message.isSprinting,
-          isGrounded: message.isGrounded,
-          timestamp: Date.now(),
-        },
-        client.id
-      );
+      const moveData = {
+        type: "playerMoved",
+        id: client.id,
+        position: message.position,
+        rotation: message.rotation,
+        isMoving: message.isMoving,
+        isSprinting: message.isSprinting,
+        isGrounded: message.isGrounded,
+        timestamp: Date.now(),
+      };
+      
+      // Forward override animation if present (including null to stop)
+      if (message.hasOwnProperty('overrideActionName')) {
+        moveData.overrideActionName = message.overrideActionName;
+      }
+      
+      room.broadcast(moveData, client.id);
     }
   }
 }
