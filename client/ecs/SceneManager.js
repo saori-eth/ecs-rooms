@@ -222,6 +222,11 @@ export class SceneManager {
   }
 
   unloadCurrentRoom() {
+    // Call destroy on active script if it exists
+    if (this.activeScript && this.activeScript.destroy) {
+      this.activeScript.destroy();
+    }
+
     // Remove visual objects
     this.sceneObjects.forEach((obj) => {
       this.threeScene.remove(obj);

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import "./MobileControls.css";
+import GlobalEventManager from "../src/GlobalEventManager.js";
 
 function MobileControls({ onMove, onJump }) {
   const joystickRef = useRef(null);
@@ -102,25 +103,25 @@ function MobileControls({ onMove, onJump }) {
     };
 
     // Touch events
-    joystick.addEventListener("touchstart", handleStart, { passive: false });
-    document.addEventListener("touchmove", handleMove, { passive: false });
-    document.addEventListener("touchend", handleEnd, { passive: false });
-    document.addEventListener("touchcancel", handleEnd, { passive: false });
+    GlobalEventManager.add(joystick, "touchstart", handleStart, { passive: false });
+    GlobalEventManager.add(document, "touchmove", handleMove, { passive: false });
+    GlobalEventManager.add(document, "touchend", handleEnd, { passive: false });
+    GlobalEventManager.add(document, "touchcancel", handleEnd, { passive: false });
 
     // Mouse events for testing on desktop
-    joystick.addEventListener("mousedown", handleStart);
-    document.addEventListener("mousemove", handleMove);
-    document.addEventListener("mouseup", handleEnd);
+    GlobalEventManager.add(joystick, "mousedown", handleStart);
+    GlobalEventManager.add(document, "mousemove", handleMove);
+    GlobalEventManager.add(document, "mouseup", handleEnd);
 
     return () => {
-      joystick.removeEventListener("touchstart", handleStart);
-      document.removeEventListener("touchmove", handleMove);
-      document.removeEventListener("touchend", handleEnd);
-      document.removeEventListener("touchcancel", handleEnd);
+      GlobalEventManager.remove(joystick, "touchstart", handleStart);
+      GlobalEventManager.remove(document, "touchmove", handleMove);
+      GlobalEventManager.remove(document, "touchend", handleEnd);
+      GlobalEventManager.remove(document, "touchcancel", handleEnd);
 
-      joystick.removeEventListener("mousedown", handleStart);
-      document.removeEventListener("mousemove", handleMove);
-      document.removeEventListener("mouseup", handleEnd);
+      GlobalEventManager.remove(joystick, "mousedown", handleStart);
+      GlobalEventManager.remove(document, "mousemove", handleMove);
+      GlobalEventManager.remove(document, "mouseup", handleEnd);
     };
   }, [isDragging, touchId, onMove]);
 

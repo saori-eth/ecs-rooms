@@ -1,7 +1,22 @@
 import { ComponentTypes } from "../components.js";
+import GlobalEventManager from "../../src/GlobalEventManager.js";
 
 export function createRenderSystem(scene) {
+  let ecsAPIRef = null;
+
+  const handleResize = () => {
+    if (ecsAPIRef && ecsAPIRef.camera && ecsAPIRef.renderer) {
+      ecsAPIRef.camera.aspect = window.innerWidth / window.innerHeight;
+      ecsAPIRef.camera.updateProjectionMatrix();
+      ecsAPIRef.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+  };
+
   return {
+    init(ecsAPI) {
+      ecsAPIRef = ecsAPI;
+      GlobalEventManager.add(window, "resize", handleResize);
+    },
     update(ecsAPI, deltaTime) {
       // First, update all VRM models
       const vrmEntities = ecsAPI.getEntitiesWithComponents(ComponentTypes.VRM);
@@ -37,6 +52,10 @@ export function createRenderSystem(scene) {
           }
         }
       });
+    },
+
+    shutdown() {
+      GlobalEventManager.remove(window, "resize", handleResize);
     },
   };
 }

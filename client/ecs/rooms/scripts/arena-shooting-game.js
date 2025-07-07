@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import * as CANNON from "cannon-es";
 import { ComponentTypes } from "../../../ecs/components.js";
+import GlobalEventManager from "../../../src/GlobalEventManager.js";
 
 export class ArenaShootingGame {
   constructor(scriptingAPI) {
@@ -29,6 +30,9 @@ export class ArenaShootingGame {
 
     // Debug mode
     this.debugMode = true; // Set to false to hide debug visuals
+    
+    // Store bound function references for cleanup
+    this.boundHandleShoot = this.handleShoot.bind(this);
   }
 
   onLoad() {
@@ -40,8 +44,8 @@ export class ArenaShootingGame {
     }
 
     // Listen for shooting input
-    window.addEventListener("click", this.handleShoot.bind(this));
-    window.addEventListener("touchstart", this.handleShoot.bind(this));
+    GlobalEventManager.add(window, "click", this.boundHandleShoot);
+    GlobalEventManager.add(window, "touchstart", this.boundHandleShoot);
 
     // Add debug helpers
     if (this.debugMode) {
@@ -457,5 +461,26 @@ export class ArenaShootingGame {
 
   onPlayerLeave(playerId) {
     this.scores.delete(playerId);
+  }
+
+  destroy() {
+    // Remove event listeners
+    GlobalEventManager.remove(window, "click", this.boundHandleShoot);
+    GlobalEventManager.remove(window, "touchstart", this.boundHandleShoot);
+    
+    // Clean up all enemies
+    this.enemies.forEach((enemy, id) => {
+      this.removeEnemy(id);
+    });
+    
+    // Clean up all projectiles
+    this.projectiles.forEach((projectile, id) => {
+      this.removeProjectile(id);
+    });
+    
+    // Clear maps
+    this.enemies.clear();
+    this.projectiles.clear();
+    this.scores.clear();
   }
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import MobileControls from "./MobileControls";
 import Chat from "./Chat";
 import "./GameUI.css";
+import GlobalEventManager from "../src/GlobalEventManager.js";
 
 function GameUI({ roomInfo, ecsManager, onExit }) {
   const [isMobile, setIsMobile] = useState(false);
@@ -16,9 +17,9 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
     };
 
     checkMobile();
-    window.addEventListener("resize", checkMobile);
+    GlobalEventManager.add(window, "resize", checkMobile);
 
-    return () => window.removeEventListener("resize", checkMobile);
+    return () => GlobalEventManager.remove(window, "resize", checkMobile);
   }, []);
 
   const handleMobileMove = (moveVector) => {
@@ -46,18 +47,18 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
     // Add click listener to the React root since it's above the canvas
     const reactRoot = document.getElementById('react-root');
     if (!isMobile && reactRoot) {
-      reactRoot.addEventListener('click', handleCanvasClick);
+      GlobalEventManager.add(reactRoot, 'click', handleCanvasClick);
       
       // Listen for pointer lock changes
       const handlePointerLockChange = () => {
         setIsPointerLocked(!!document.pointerLockElement);
       };
       
-      document.addEventListener('pointerlockchange', handlePointerLockChange);
+      GlobalEventManager.add(document, 'pointerlockchange', handlePointerLockChange);
       
       return () => {
-        reactRoot.removeEventListener('click', handleCanvasClick);
-        document.removeEventListener('pointerlockchange', handlePointerLockChange);
+        GlobalEventManager.remove(reactRoot, 'click', handleCanvasClick);
+        GlobalEventManager.remove(document, 'pointerlockchange', handlePointerLockChange);
       };
     }
   }, [isMobile]);
