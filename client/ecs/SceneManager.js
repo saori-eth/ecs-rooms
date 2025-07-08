@@ -19,8 +19,8 @@ export class SceneManager {
     this.physicsBodies = [];
   }
 
-  async loadRoom(roomType) {
-    if (this.activeRoom === roomType) {
+  async loadRoom(roomType, forceReload = false) {
+    if (this.activeRoom === roomType && !forceReload) {
       return;
     }
 
@@ -196,8 +196,11 @@ export class SceneManager {
     // Load and instantiate script
     if (roomData.script) {
       try {
-        const scriptModule = await loadGameScript(roomData.script);
+        console.log(`[SceneManager] Loading script: ${roomData.script}`);
+        const scriptModule = await loadGameScript(roomData.script, forceReload);
+        console.log(`[SceneManager] Script module loaded:`, scriptModule);
         const ScriptClass = Object.values(scriptModule)[0];
+        console.log(`[SceneManager] Script class:`, ScriptClass);
         const scriptingAPI = new ScriptingAPI(
           this.ecsAPI,
           this.physicsWorld,
@@ -206,6 +209,7 @@ export class SceneManager {
           this.threeScene
         );
         this.activeScript = new ScriptClass(scriptingAPI);
+        console.log(`[SceneManager] Script instance created:`, this.activeScript);
         if (this.activeScript.onLoad) {
           this.activeScript.onLoad();
         }
@@ -272,5 +276,29 @@ export class SceneManager {
     this.unloadCurrentRoom();
     this.activeRoom = null;
     this.activeScript = null;
+  }
+
+  async reloadActiveScript() {
+    // Check if there is an active room to reload
+    if (!this.activeRoom) {
+      console.log("[SceneManager] No active room to reload");
+      return;
+    }
+
+    // Store the current room identifier
+    const currentRoom = this.activeRoom;
+    console.log(`[SceneManager] Starting reload for room: ${currentRoom}`);
+    console.log(`[SceneManager] Current script instance:`, this.activeScript);
+
+    // Unload the current room and script
+    console.log(`[SceneManager] Unloading current room...`);
+    this.unloadCurrentRoom();
+
+    // Reload the room with the latest script, forcing a reload
+    console.log(`[SceneManager] Reloading room: ${currentRoom}`);
+    await this.loadRoom(currentRoom, true);
+    
+    console.log(`[SceneManager] Reload complete for room: ${currentRoom}`);
+    console.log(`[SceneManager] New script instance:`, this.activeScript);
   }
 }

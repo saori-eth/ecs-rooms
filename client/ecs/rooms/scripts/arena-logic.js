@@ -1,3 +1,10 @@
+// Handle HMR for this module
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    console.log('[ArenaLogic] Module updated via HMR - use Reload Script button to apply changes');
+  });
+}
+
 export class ArenaLogic {
   constructor(scriptingAPI) {
     this.api = scriptingAPI;

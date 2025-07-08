@@ -3,6 +3,15 @@ import * as CANNON from "cannon-es";
 import { ComponentTypes } from "../../../ecs/components.js";
 import GlobalEventManager from "../../../src/GlobalEventManager.js";
 
+// Handle HMR for this module
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    console.log(
+      "[ArenaShootingGame] Module updated via HMR - use Reload Script button to apply changes"
+    );
+  });
+}
+
 export class ArenaShootingGame {
   constructor(scriptingAPI) {
     this.api = scriptingAPI;
@@ -18,9 +27,9 @@ export class ArenaShootingGame {
 
     // Materials
     this.enemyMaterial = new THREE.MeshStandardMaterial({
-      color: 0xff0000,
-      emissive: 0xff0000,
-      emissiveIntensity: 0.3,
+      color: 0x000000,
+      emissive: 0x000000,
+      emissiveIntensity: 0.75,
     });
     this.projectileMaterial = new THREE.MeshStandardMaterial({
       color: 0x00ff00,
@@ -28,9 +37,6 @@ export class ArenaShootingGame {
       emissiveIntensity: 0.5,
     });
 
-    // Debug mode
-    this.debugMode = true; // Set to false to hide debug visuals
-    
     // Store bound function references for cleanup
     this.boundHandleShoot = this.handleShoot.bind(this);
   }
@@ -46,17 +52,6 @@ export class ArenaShootingGame {
     // Listen for shooting input
     GlobalEventManager.add(window, "click", this.boundHandleShoot);
     GlobalEventManager.add(window, "touchstart", this.boundHandleShoot);
-
-    // Add debug helpers
-    if (this.debugMode) {
-      // Add coordinate helpers
-      const axesHelper = new THREE.AxesHelper(5);
-      this.api.getThreeScene().add(axesHelper);
-
-      // Add grid
-      const gridHelper = new THREE.GridHelper(10, 10);
-      this.api.getThreeScene().add(gridHelper);
-    }
   }
 
   onUpdate(deltaTime) {
@@ -467,17 +462,17 @@ export class ArenaShootingGame {
     // Remove event listeners
     GlobalEventManager.remove(window, "click", this.boundHandleShoot);
     GlobalEventManager.remove(window, "touchstart", this.boundHandleShoot);
-    
+
     // Clean up all enemies
     this.enemies.forEach((enemy, id) => {
       this.removeEnemy(id);
     });
-    
+
     // Clean up all projectiles
     this.projectiles.forEach((projectile, id) => {
       this.removeProjectile(id);
     });
-    
+
     // Clear maps
     this.enemies.clear();
     this.projectiles.clear();
