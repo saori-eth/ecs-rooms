@@ -12,6 +12,7 @@ export function findOrCreateRoom(roomType) {
 
   const newRoom = new Room(`room-${nextRoomId++}`, roomType);
   rooms.set(newRoom.id, newRoom);
+  console.log(`Created new room: ${newRoom.id}`);
   return newRoom;
 }
 
@@ -21,6 +22,7 @@ export function getRoom(roomId) {
 
 export function deleteRoom(roomId) {
   rooms.delete(roomId);
+  console.log(`Deleted room: ${roomId}`);
 }
 
 export function getRooms() {

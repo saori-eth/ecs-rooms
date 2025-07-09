@@ -13,6 +13,7 @@ export class Room {
   addPlayer(client) {
     this.players.set(client.id, client);
     client.roomId = this.id;
+    console.log(`Added player to room: ${this.id}`);
 
     if (this.players.size >= MAX_PLAYERS_PER_ROOM) {
       this.state = "full";
@@ -22,6 +23,7 @@ export class Room {
   removePlayer(clientId) {
     this.players.delete(clientId);
     this.state = "waiting";
+    console.log(`Removed player from room: ${this.id}`);
 
     if (this.players.size === 0) {
       return true;

@@ -7,7 +7,7 @@ import { RoomSelector } from "./RoomSelector.jsx";
 import { rooms } from "../ecs/rooms/room-definitions.js";
 
 // Set to true to enable maintenance mode
-const maintenanceMode = true;
+const maintenanceMode = false;
 
 function MainMenu({
   playerIdentity,
