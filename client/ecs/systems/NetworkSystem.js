@@ -183,6 +183,9 @@ export function createNetworkSystem() {
             );
 
             if (interpolation) {
+              // Use local timestamp for interpolation
+              const localTs = Date.now();
+              
               // Push position data to position buffer
               interpolation.positionBuffer.push({
                 position: {
@@ -190,13 +193,13 @@ export function createNetworkSystem() {
                   y: message.position.y,
                   z: message.position.z,
                 },
-                timestamp: message.timestamp,
+                timestamp: localTs,
               });
 
               // Push rotation data to rotation buffer
               interpolation.rotationBuffer.push({
                 rotation: message.rotation,
-                timestamp: message.timestamp,
+                timestamp: localTs,
               });
 
               // Maintain buffer sizes
