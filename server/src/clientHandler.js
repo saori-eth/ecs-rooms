@@ -1,5 +1,6 @@
 import { findOrCreateRoom, getRoom, deleteRoom } from "./roomManager.js";
 import { MAX_PLAYERS_PER_ROOM } from "./Room.js";
+import { pack, unpack } from "./encoding.js";
 
 let nextClientId = 1;
 
@@ -7,7 +8,7 @@ function handleJoinGame(client, room) {
   room.addPlayer(client);
 
   client.ws.send(
-    JSON.stringify({
+    pack({
       type: "joinedRoom",
       roomId: room.id,
       roomType: room.roomType,
@@ -36,7 +37,7 @@ function handleJoinGame(client, room) {
   });
 
   client.ws.send(
-    JSON.stringify({
+    pack({
       type: "roomUpdate",
       playerCount: room.players.size,
       maxPlayers: MAX_PLAYERS_PER_ROOM,
@@ -73,7 +74,7 @@ function handleMove(client, message) {
 
 function handleHeartbeat(client) {
   client.lastHeartbeat = Date.now();
-  client.ws.send(JSON.stringify({ type: "heartbeatAck" }));
+  client.ws.send(pack({ type: "heartbeatAck" }));
 }
 
 function handleChatMessage(client, message) {
@@ -123,7 +124,7 @@ export function handleConnection(ws) {
     identity: null,
   };
   ws.send(
-    JSON.stringify({
+    pack({
       type: "connected",
       id: clientId,
     })
@@ -131,7 +132,7 @@ export function handleConnection(ws) {
 
   ws.on("message", (data) => {
     try {
-      const message = JSON.parse(data.toString());
+      const message = unpack(data);
 
       switch (message.type) {
         case "joinGame":

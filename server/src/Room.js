@@ -1,4 +1,5 @@
 import { WebSocket } from "ws";
+import { pack } from "./encoding.js";
 
 export const MAX_PLAYERS_PER_ROOM = 4;
 
@@ -34,7 +35,7 @@ export class Room {
   broadcast(message, excludeId = null) {
     this.players.forEach((client) => {
       if (client.id !== excludeId && client.ws.readyState === WebSocket.OPEN) {
-        client.ws.send(JSON.stringify(message));
+        client.ws.send(pack(message));
       }
     });
   }
@@ -42,7 +43,7 @@ export class Room {
   broadcastToAll(message) {
     this.players.forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN) {
-        client.ws.send(JSON.stringify(message));
+        client.ws.send(pack(message));
       }
     });
   }

@@ -109,7 +109,10 @@ app.get("*", (req, res) => {
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-wss.on("connection", handleConnection);
+wss.on("connection", (ws) => {
+  ws.binaryType = 'arraybuffer';
+  handleConnection(ws);
+});
 
 server.listen(PORT, () => {});
 
