@@ -1,5 +1,6 @@
 import { ComponentTypes, createInterpolationComponent } from "../components.js";
 import { createPlayer } from "../entities/Player.js";
+import { pack, unpack } from "../../encoding.js";
 
 export function createNetworkSystem() {
   let ws = null;
@@ -46,6 +47,8 @@ export function createNetworkSystem() {
     const wsUrl = `${protocol}//${host}`;
     ws = new WebSocket(wsUrl);
 
+    ws.binaryType = "arraybuffer";
+    
     ws.onopen = () => {
       console.log("Connected to server");
       connected = true;
@@ -55,13 +58,13 @@ export function createNetworkSystem() {
 
       heartbeatInterval = setInterval(() => {
         if (connected) {
-          ws.send(JSON.stringify({ type: "heartbeat" }));
+          ws.send(pack({ type: "heartbeat" }));
         }
       }, 10000);
     };
 
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
+      const message = unpack(event.data);
 
       switch (message.type) {
         case "connected":
@@ -344,7 +347,7 @@ export function createNetworkSystem() {
     joinGame(identity, roomType) {
       if (connected && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(
-          JSON.stringify({
+          pack({
             type: "joinGame",
             identity: identity,
             roomType: roomType,
@@ -359,7 +362,7 @@ export function createNetworkSystem() {
           type: "chatMessage",
           text: text,
         };
-        ws.send(JSON.stringify(message));
+        ws.send(pack(message));
       } else {
         console.error(
           "[NetworkSystem] Cannot send chat message - not connected or not in room"
@@ -374,7 +377,7 @@ export function createNetworkSystem() {
           eventType: eventType,
           data: data,
         };
-        ws.send(JSON.stringify(message));
+        ws.send(pack(message));
       } else {
         console.error(
           "[NetworkSystem] Cannot send game event - not connected or not in room"
@@ -440,7 +443,7 @@ export function createNetworkSystem() {
               timestamp: Date.now(),
             };
             
-            ws.send(JSON.stringify(moveMessage));
+            ws.send(pack(moveMessage));
           }
         }
       });
