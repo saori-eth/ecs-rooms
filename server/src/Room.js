@@ -1,5 +1,6 @@
 import { WebSocket } from "ws";
 import { pack } from "./encoding.js";
+import { msgDiscord } from "../discord.js";
 
 export const MAX_PLAYERS_PER_ROOM = 4;
 
@@ -14,7 +15,16 @@ export class Room {
   addPlayer(client) {
     this.players.set(client.id, client);
     client.roomId = this.id;
-    console.log(`Added player to room: ${this.id}`);
+    // message should have room id, client id, room type
+    const msg = {
+      roomId: this.id,
+      clientId: client.id,
+    };
+    console.log(msg);
+    msgDiscord(msg, {
+      title: `Player joined ${this.roomType}`,
+      color: 0x57f287,
+    });
 
     if (this.players.size >= MAX_PLAYERS_PER_ROOM) {
       this.state = "full";
@@ -24,7 +34,15 @@ export class Room {
   removePlayer(clientId) {
     this.players.delete(clientId);
     this.state = "waiting";
-    console.log(`Removed player from room: ${this.id}`);
+    const msg = {
+      roomId: this.id,
+      clientId: clientId,
+    };
+    console.log(msg);
+    msgDiscord(msg, {
+      title: `Player left ${this.roomType}`,
+      color: 0xed4245,
+    });
 
     if (this.players.size === 0) {
       return true;
@@ -39,7 +57,7 @@ export class Room {
       }
     });
   }
-  
+
   broadcastToAll(message) {
     this.players.forEach((client) => {
       if (client.ws.readyState === WebSocket.OPEN) {
