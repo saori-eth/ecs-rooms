@@ -1,4 +1,5 @@
 import { Room, MAX_PLAYERS_PER_ROOM } from "./Room.js";
+import { msgDiscord } from "../discord.js";
 
 const rooms = new Map();
 let nextRoomId = 1;
@@ -12,7 +13,12 @@ export function findOrCreateRoom(roomType) {
 
   const newRoom = new Room(`room-${nextRoomId++}`, roomType);
   rooms.set(newRoom.id, newRoom);
-  console.log(`Created new room: ${newRoom.id}`);
+  const msg = {
+    roomId: newRoom.id,
+    roomType: newRoom.roomType,
+  };
+  console.log(msg);
+  msgDiscord(msg, { title: "Created new room", color: 0x57f287 });
   return newRoom;
 }
 
@@ -22,7 +28,12 @@ export function getRoom(roomId) {
 
 export function deleteRoom(roomId) {
   rooms.delete(roomId);
-  console.log(`Deleted room: ${roomId}`);
+  const msg = {
+    roomId: roomId,
+    roomType: "deleted",
+  };
+  console.log(msg);
+  msgDiscord(msg, { title: "Deleted room", color: 0xed4245 });
 }
 
 export function getRooms() {
