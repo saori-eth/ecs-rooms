@@ -1,6 +1,7 @@
 import { findOrCreateRoom, getRoom, deleteRoom } from "./roomManager.js";
 import { MAX_PLAYERS_PER_ROOM } from "./Room.js";
 import { pack, unpack } from "./encoding.js";
+import { msgDiscord } from "../discord.js";
 
 let nextClientId = 1;
 
@@ -90,6 +91,20 @@ function handleChatMessage(client, message) {
 
       // Send to all players in the room including the sender
       room.broadcastToAll(chatMessage);
+
+      // Send chat message to Discord
+      try {
+      msgDiscord(
+        {
+          roomId: room.id,
+          author: chatMessage.author,
+          text: chatMessage.text,
+        },
+        { title: `Chat message in ${room.roomType}` , color: 0xfee75c }
+      );
+      } catch (error) {
+        console.error("Error sending chat message to Discord:", error);
+      }
     }
   }
 }

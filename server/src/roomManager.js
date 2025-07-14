@@ -18,7 +18,11 @@ export function findOrCreateRoom(roomType) {
     roomType: newRoom.roomType,
   };
   console.log(msg);
-  msgDiscord(msg, { title: "Created new room", color: 0x57f287 });
+  try {
+    msgDiscord(msg, { title: "Created new room", color: 0x57f287 });
+  } catch (error) {
+    console.error("Error sending created new room message to Discord:", error);
+  }
   return newRoom;
 }
 
@@ -33,7 +37,11 @@ export function deleteRoom(roomId) {
     roomType: "deleted",
   };
   console.log(msg);
-  msgDiscord(msg, { title: "Deleted room", color: 0xed4245 });
+  try {
+    msgDiscord(msg, { title: "Deleted room", color: 0xed4245 });
+  } catch (error) {
+    console.error("Error sending deleted room message to Discord:", error);
+  }
 }
 
 export function getRooms() {

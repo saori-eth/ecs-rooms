@@ -21,10 +21,14 @@ export class Room {
       clientId: client.id,
     };
     console.log(msg);
+    try { 
     msgDiscord(msg, {
       title: `Player joined ${this.roomType}`,
-      color: 0x57f287,
-    });
+        color: 0x57f287,
+      });
+    } catch (error) {
+      console.error("Error sending player joined message to Discord:", error);
+    }
 
     if (this.players.size >= MAX_PLAYERS_PER_ROOM) {
       this.state = "full";
@@ -39,11 +43,14 @@ export class Room {
       clientId: clientId,
     };
     console.log(msg);
+    try {
     msgDiscord(msg, {
       title: `Player left ${this.roomType}`,
       color: 0xed4245,
     });
-
+    } catch (error) {
+      console.error("Error sending player left message to Discord:", error);
+    }
     if (this.players.size === 0) {
       return true;
     }
