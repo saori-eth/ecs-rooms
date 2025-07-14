@@ -2,14 +2,14 @@
 
 ## General
 
-- [ ] get name
-- [ ] start company
+- [x] get name
+- [x] start company
 
 ## Features
 
 - [ ] third person cam
-- [ ] better falling speed
-- [ ] jump
+- [x] better falling speed
+- [x] jump
 - [ ] oauth
 - [ ] stripe
 - [ ] avatar marketplace
@@ -58,3 +58,16 @@ Fix: create materials once, avoid tweaking shader-defines/uniform counts inside 
 
 Frequent drawImage / fillText
 Those are 2-D canvas calls; if you’re drawing HUD text each frame, cache to an off-screen canvas or use a bitmap font in WebGL.
+
+
+## IERCAN
+
+https://coda.io/d/_d4DpRlhYgW3/ECS-world-recap_su_C9IrS
+
+- [ ] optimize packets
+- [ ] uWebSockets server
+- [ ] reduce first load impact (probably cloudflare)
+- [ ] gzip compression static assets
+- [ ] broadcast game state in fixed timestep
+- [ ] zod schema input validation
+- [ ] typescript
