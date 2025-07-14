@@ -1,5 +1,4 @@
-const WEBHOOK_URL =
-  "https://discord.com/api/webhooks/1392702624159236226/1e62bMZRxVYwYm-LeC1Sp4X-NtZ0WEfSM7UVeC3Uvr32GuSv_-2uNbI8ltX-TG-HamiQ";
+const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
 
 /**
  * Send a message to Discord via webhook.
@@ -19,6 +18,11 @@ const WEBHOOK_URL =
  * @param {number}        [options.color]         Embed color (integer) if `embed` is true.
  */
 export const msgDiscord = (message, options = {}) => {
+  if (!WEBHOOK_URL) {
+    // console.log("DISCORD_WEBHOOK_URL not set, skipping message.");
+    return;
+  }
+
   let payload;
 
   // Handle object input: could be pre-built payload OR a key/value map.
