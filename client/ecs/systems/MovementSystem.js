@@ -170,10 +170,9 @@ export function createMovementSystem() {
           );
         }
 
-        // Store the target direction for visual rotation in update loop
+        // Store the camera yaw for visual rotation in update loop
         if (vrmComponent) {
-          // Clone the rotatedVector to store it on the component
-          vrmComponent.targetDirection = rotatedVector.clone();
+          vrmComponent.targetYaw = cameraYaw;
         }
 
         physicsComponent.body.velocity.y = Math.max(
@@ -194,15 +193,9 @@ export function createMovementSystem() {
         if (
           vrmComponent &&
           vrmComponent.vrm &&
-          vrmComponent.targetDirection &&
-          (vrmComponent.targetDirection.x !== 0 ||
-            vrmComponent.targetDirection.z !== 0)
+          typeof vrmComponent.targetYaw === "number"
         ) {
-          const angle =
-            Math.atan2(
-              vrmComponent.targetDirection.x,
-              vrmComponent.targetDirection.z
-            ) + Math.PI;
+          const angle = vrmComponent.targetYaw;
           tempQuaternion.setFromAxisAngle(yAxis, angle);
           const turningFactor = 1 - Math.exp(-turningRate * deltaTime);
           vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, turningFactor);
