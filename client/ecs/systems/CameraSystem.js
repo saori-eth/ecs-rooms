@@ -21,6 +21,16 @@ export class CameraSystem {
 
   currentYaw = 0;
 
+  // Smoothed values
+  smoothedYaw = 0;
+  smoothedPitch = 0;
+  smoothedDistance = 4;
+
+  // Smoothing factors (0-1, higher = more responsive)
+  yawSmoothingFactor = 0.15;
+  pitchSmoothingFactor = 0.15;
+  zoomSmoothingFactor = 0.1;
+
   constructor() {
     this.camQuat = new THREE.Quaternion();
     this.targetPos = new THREE.Vector3();
@@ -61,6 +71,7 @@ export class CameraSystem {
     if (isMobile && !this.mobileApplied) {
       this.distance = 2.5;
       this.targetDistance = 2.5;
+      this.smoothedDistance = 2.5;
       this.mobileApplied = true;
     }
 
@@ -106,8 +117,21 @@ export class CameraSystem {
       mouseDelta.y = 0;
     }
 
+    // Apply frame-rate independent smoothing
+    const smoothingDt = Math.min(dt, 0.1); // Cap dt to avoid large jumps
+    
+    // Calculate interpolation factors based on dt
+    const yawLerpFactor = 1 - Math.pow(1 - this.yawSmoothingFactor, smoothingDt * 60);
+    const pitchLerpFactor = 1 - Math.pow(1 - this.pitchSmoothingFactor, smoothingDt * 60);
+    const zoomLerpFactor = 1 - Math.pow(1 - this.zoomSmoothingFactor, smoothingDt * 60);
+    
+    // Smooth the values
+    this.smoothedYaw = THREE.MathUtils.lerp(this.smoothedYaw, this.yaw, yawLerpFactor);
+    this.smoothedPitch = THREE.MathUtils.lerp(this.smoothedPitch, this.pitch, pitchLerpFactor);
+    this.smoothedDistance = THREE.MathUtils.lerp(this.smoothedDistance, this.distance, zoomLerpFactor);
+
     // Store yaw for other systems
-    this.currentYaw = this.yaw;
+    this.currentYaw = this.smoothedYaw;
     ecsAPI.cameraYaw = this.currentYaw;
 
     // Calculate camera position
@@ -120,10 +144,10 @@ export class CameraSystem {
 
     this.targetPos.y += this.heightOffset;
 
-    this.camEuler.set(this.pitch, this.yaw, 0, "YXZ");
+    this.camEuler.set(this.smoothedPitch, this.smoothedYaw, 0, "YXZ");
     this.camQuat.setFromEuler(this.camEuler);
 
-    this.localOffset.set(this.rightOffset, 0, +this.distance);
+    this.localOffset.set(this.rightOffset, 0, +this.smoothedDistance);
     this.localOffset.applyQuaternion(this.camQuat);
 
     this.desiredPosition.copy(this.targetPos).add(this.localOffset);
