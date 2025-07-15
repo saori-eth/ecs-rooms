@@ -11,16 +11,46 @@ export function createPhysicsSystem() {
   // Ground removed - using scene collision instead
   // Player material is created in SceneManager for scene collision
 
+  // Store previous physics states for interpolation
+  const previousStates = new Map();
+
   return {
     world,
 
     // Fixed timestep update - only steps the physics simulation
     fixedUpdate(ecsWorld, fixedDeltaTime) {
+      // Store previous positions before physics step
+      const entities = ecsWorld.getEntitiesWithComponents(
+        ComponentTypes.PHYSICS_BODY,
+        ComponentTypes.POSITION,
+        ComponentTypes.PLAYER
+      );
+
+      entities.forEach((entityId) => {
+        const physicsComponent = ecsWorld.getComponent(
+          entityId,
+          ComponentTypes.PHYSICS_BODY
+        );
+        const player = ecsWorld.getComponent(entityId, ComponentTypes.PLAYER);
+
+        // Only store state for local player
+        if (physicsComponent.body && player && player.isLocal) {
+          previousStates.set(entityId, {
+            x: physicsComponent.body.position.x,
+            y: physicsComponent.body.position.y,
+            z: physicsComponent.body.position.z,
+            vx: physicsComponent.body.velocity.x,
+            vy: physicsComponent.body.velocity.y,
+            vz: physicsComponent.body.velocity.z,
+          });
+        }
+      });
+
       world.step(fixedDeltaTime);
     },
 
-    // Variable timestep update - syncs physics bodies to ECS positions
-    update(ecsWorld, deltaTime) {
+    // Variable timestep update - interpolates physics bodies to ECS positions
+    update(ecsWorld, deltaTime, camera, alpha = 1) {
       const entities = ecsWorld.getEntitiesWithComponents(
         ComponentTypes.PHYSICS_BODY,
         ComponentTypes.POSITION
@@ -35,11 +65,24 @@ export function createPhysicsSystem() {
           entityId,
           ComponentTypes.POSITION
         );
+        const player = ecsWorld.getComponent(entityId, ComponentTypes.PLAYER);
 
         if (physicsComponent.body) {
-          position.x = physicsComponent.body.position.x;
-          position.y = physicsComponent.body.position.y;
-          position.z = physicsComponent.body.position.z;
+          // Check if this is a local player and we have previous state
+          if (player && player.isLocal && previousStates.has(entityId)) {
+            const prevState = previousStates.get(entityId);
+            const currentBody = physicsComponent.body;
+            
+            // Interpolate between previous and current physics positions
+            position.x = prevState.x + (currentBody.position.x - prevState.x) * alpha;
+            position.y = prevState.y + (currentBody.position.y - prevState.y) * alpha;
+            position.z = prevState.z + (currentBody.position.z - prevState.z) * alpha;
+          } else {
+            // For non-local entities or when no previous state, use current position
+            position.x = physicsComponent.body.position.x;
+            position.y = physicsComponent.body.position.y;
+            position.z = physicsComponent.body.position.z;
+          }
         }
       });
     },
