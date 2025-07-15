@@ -16,7 +16,7 @@ export class CameraSystem {
   mouseSensitivity = 0.002;
   pitchSensitivity = 0.0015;
   zoomSensitivity = 0.001;
-  rightOffset = 0.7;
+  rightOffset = 0.6;
   heightOffset = 0.1;
 
   currentYaw = 0;
@@ -27,9 +27,9 @@ export class CameraSystem {
   smoothedDistance = 4;
 
   // Smoothing factors (0-1, higher = more responsive)
-  yawSmoothingFactor = 0.15;
-  pitchSmoothingFactor = 0.15;
-  zoomSmoothingFactor = 0.1;
+  yawSmoothingFactor = 0.25;
+  pitchSmoothingFactor = 0.25;
+  zoomSmoothingFactor = 0.15;
 
   constructor() {
     this.camQuat = new THREE.Quaternion();
