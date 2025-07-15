@@ -8,7 +8,9 @@ import { createInterpolationSystem } from "./systems/InterpolationSystem.js";
 import { createPhysicsSystem } from "./systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./systems/AnimationSystem.js";
 import { SceneManager } from "./SceneManager.js";
-import { CameraSystem } from "./systems/CameraSystem.js";
+import { TPSCameraSystem } from "./systems/TPSCameraSystem.js";
+import { BasicCameraSystem } from "./systems/BasicCameraSystem.js";
+import { rooms } from "./rooms/room-definitions.js";
 import { VRMManager } from "../src/VRMLoader.js";
 import { AnimationManager } from "../src/AnimationManager.js";
 
@@ -21,6 +23,12 @@ if (import.meta.env.DEV) {
     console.warn("cannon-es-debugger not available");
   }
 }
+
+// Camera system mapping
+const CAMERA_SYSTEMS = {
+  basic: BasicCameraSystem,
+  tps: TPSCameraSystem
+};
 
 // Game manager to bridge React and Three.js
 export class ECSManager {
@@ -38,6 +46,7 @@ export class ECSManager {
     this.vrmManager = null;
     this.animationManager = null;
     this.physicsDebugger = null;
+    this.cameraSystem = null;
 
     // Set up mobile input callback
     this.mobileInputCallback = null;
@@ -223,10 +232,7 @@ export class ECSManager {
     this.ecsAPI.registerSystem(createRenderSystem(this.scene));
     this.ecsAPI.registerSystem(this.animationSystem);
 
-    // Create and register camera system
-    this.cameraSystem = new CameraSystem();
-    this.ecsAPI.addSystem(this.cameraSystem);
-
+    // Camera system will be created dynamically based on room config
 
     // Add update method to ECSApi for physics debugger
     this.ecsAPI.updatePhysicsDebugger = () => {
@@ -305,7 +311,26 @@ export class ECSManager {
 
     this.networkSystem.onJoinedRoom = (roomData) => {
       if (roomData.roomType) {
+        // Load the room
         this.sceneManager.loadRoom(roomData.roomType);
+        
+        // Remove existing camera system if any
+        if (this.cameraSystem) {
+          this.ecsAPI.removeSystem(this.cameraSystem);
+          this.cameraSystem = null;
+        }
+        
+        // Get room definition and instantiate camera
+        const roomDef = rooms[roomData.roomType];
+        if (roomDef && roomDef.camera) {
+          const CameraClass = CAMERA_SYSTEMS[roomDef.camera];
+          if (CameraClass) {
+            this.cameraSystem = new CameraClass();
+            this.ecsAPI.addSystem(this.cameraSystem);
+          } else {
+            console.warn(`Unknown camera type: ${roomDef.camera}`);
+          }
+        }
       } else {
         console.warn("[main] No roomType in roomData");
       }

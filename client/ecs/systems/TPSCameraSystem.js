@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { ComponentTypes } from "../components.js";
 
-export class CameraSystem {
+export class TPSCameraSystem {
   raycaster = new THREE.Raycaster();
 
   // Camera rotation state

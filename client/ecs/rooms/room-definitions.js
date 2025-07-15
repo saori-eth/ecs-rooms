@@ -1,6 +1,7 @@
 export const rooms = {
   "arena-empty": {
     name: "Empty",
+    camera: "basic",
     sceneModel: "/environments/arena.glb",
     script: "/rooms/scripts/arena-logic.js",
     sceneTransform: {
@@ -11,6 +12,7 @@ export const rooms = {
   },
   midship: {
     name: "Midship",
+    camera: "tps",
     sceneModel: "/environments/midship.glb",
     script: "/rooms/scripts/particle-box-scene.js",
     sceneTransform: {
@@ -21,6 +23,7 @@ export const rooms = {
   },
   "particle-box": {
     name: "Particle Box",
+    camera: "basic",
     sceneModel: "/environments/arena.glb", // Using arena as the box environment
     script: "/rooms/scripts/particle-box-scene.js",
     sceneTransform: {
