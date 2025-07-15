@@ -67,7 +67,7 @@ export class CameraSystem {
     if (isMobile) {
       // Touch controls
       if (touchDelta.x || touchDelta.y) {
-        const touchSensitivity = this.mouseSensitivity * 5;
+        const touchSensitivity = this.mouseSensitivity * 3;
         this.yaw -= touchDelta.x * touchSensitivity;
         this.pitch = THREE.MathUtils.clamp(
           this.pitch -
