@@ -9,7 +9,7 @@ export function createMovementSystem() {
   const moveVector = new THREE.Vector3();
   const rotatedVector = new THREE.Vector3();
   const euler = new THREE.Euler();
-  
+
   // Framerate-independent turning rate
   const turningRate = 9.49; // Converted from 0.15 at 60fps
 
@@ -172,7 +172,29 @@ export function createMovementSystem() {
 
         // Store the camera yaw for visual rotation in update loop
         if (vrmComponent) {
-          vrmComponent.targetYaw = cameraYaw;
+          const isMoving = x !== 0 || z !== 0;
+
+          if (isMoving) {
+            let strafeAngle = 0;
+            const strafeDirection = -Math.sign(x); // 1 for left, -1 for right
+            const isStrafing = x !== 0;
+            const isMovingForwardOrBackward = z !== 0;
+            const isMovingBackward = z > 0;
+
+            if (isStrafing && isMovingForwardOrBackward) {
+              const angle = Math.PI / 4; // 45 degrees
+              if (isMovingBackward) {
+                // When moving backward, invert the strafe angle
+                strafeAngle = -strafeDirection * angle;
+              } else {
+                strafeAngle = strafeDirection * angle;
+              }
+            }
+            vrmComponent.targetYaw = cameraYaw + strafeAngle;
+          } else {
+            // Player is idle, face the camera direction
+            vrmComponent.targetYaw = cameraYaw;
+          }
         }
 
         physicsComponent.body.velocity.y = Math.max(
@@ -198,7 +220,10 @@ export function createMovementSystem() {
           const angle = vrmComponent.targetYaw;
           tempQuaternion.setFromAxisAngle(yAxis, angle);
           const turningFactor = 1 - Math.exp(-turningRate * deltaTime);
-          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, turningFactor);
+          vrmComponent.vrm.scene.quaternion.slerp(
+            tempQuaternion,
+            turningFactor
+          );
         }
       });
     },
