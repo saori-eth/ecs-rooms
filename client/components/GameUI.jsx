@@ -102,6 +102,14 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
       {isMobile && (
         <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />
       )}
+      {!isMobile && isPointerLocked && (
+        <div className="reticle">
+          <div className="reticle-rect reticle-up"></div>
+          <div className="reticle-rect reticle-down"></div>
+          <div className="reticle-rect reticle-left"></div>
+          <div className="reticle-rect reticle-right"></div>
+        </div>
+      )}
       <Chat ecsManager={ecsManager} />
     </div>
   );

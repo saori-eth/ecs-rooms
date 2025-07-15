@@ -16,28 +16,6 @@ export class CameraSystem {
     this.maxPitch = Math.PI / 3; // 60 degrees
     this.mouseSensitivity = 0.002;
     this.zoomSensitivity = 0.001;
-
-    // Target height offset (fallback when head bone not available)
-    this.targetHeightOffset = 1.2;
-
-    // Smoothing
-    this.smoothingRate = 12; // Framerate-independent smoothing rate
-    this.currentYaw = 0;
-    this.currentPitch = 0.2;
-    this.smoothingThreshold = 0.0001; // Stop smoothing when difference is negligible
-
-    // Euler and vector helpers
-    this.euler = new THREE.Euler(0, 0, 0, "YXZ");
-    this.spherical = new THREE.Spherical();
-
-    // Reusable THREE objects to avoid allocations in game loop
-    this.cameraOffset = new THREE.Vector3();
-    this.targetPosition = new THREE.Vector3();
-    this.headWorldPos = new THREE.Vector3();
-    this.desiredPosition = new THREE.Vector3();
-    this.cameraDirection = new THREE.Vector3();
-    this.pullbackVector = new THREE.Vector3();
-    this.finalCameraPosition = new THREE.Vector3();
   }
 
   update(ecsAPI, dt, camera) {
@@ -102,6 +80,15 @@ export class CameraSystem {
             ecsAPI.inputState.mouseDelta.x = 0;
             ecsAPI.inputState.mouseDelta.y = 0;
           }
+        }
+
+        // Get get transforms of player
+        if (vrmComponent && vrmComponent.vrm && vrmComponent.vrm.humanoid) {
+          // world position = vrmComponent.vrm.scene.getWorldPosition(vec3)
+          // local position = vrmComponent.vrm.scene.position
+          // world quaternion = vrmComponent.vrm.scene.getWorldQuaternion(quat)
+          // local quaternion = vrmComponent.vrm.scene.quaternion
+          // head bone = vrmComponent.vrm.humanoid.getNormalizedBoneNode("head")
         }
 
         // Store camera yaw for movement system
