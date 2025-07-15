@@ -98,6 +98,7 @@ export class ECSApi {
   }
 
   removeSystem(system) {
+    console.log('removing system', system);
     const index = this.systems.indexOf(system);
     if (index !== -1) {
       this.systems.splice(index, 1);

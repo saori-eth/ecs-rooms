@@ -120,6 +120,11 @@ export class ECSManager {
     this.networkSystem.sendChatMessage(text);
   }
 
+  shouldShowReticle() {
+    // Check if current camera system wants to show reticle
+    return this.cameraSystem && this.cameraSystem.showReticle;
+  }
+
   reset() {
     // Stop the game and clean up player
     this.stopGame();
@@ -316,6 +321,7 @@ export class ECSManager {
         
         // Remove existing camera system if any
         if (this.cameraSystem) {
+          console.log("Removing existing camera system");
           this.ecsAPI.removeSystem(this.cameraSystem);
           this.cameraSystem = null;
         }

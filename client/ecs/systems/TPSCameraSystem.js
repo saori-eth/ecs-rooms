@@ -3,6 +3,9 @@ import { ComponentTypes } from "../components.js";
 
 export class TPSCameraSystem {
   raycaster = new THREE.Raycaster();
+  
+  // UI preferences
+  showReticle = true; // TPS camera needs a reticle for aiming
 
   // Camera rotation state
   yaw = 0;
