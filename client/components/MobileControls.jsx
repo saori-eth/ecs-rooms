@@ -105,10 +105,16 @@ function MobileControls({ onMove, onJump }) {
     };
 
     // Touch events
-    GlobalEventManager.add(joystick, "touchstart", handleStart, { passive: false });
-    GlobalEventManager.add(document, "touchmove", handleMove, { passive: false });
+    GlobalEventManager.add(joystick, "touchstart", handleStart, {
+      passive: false,
+    });
+    GlobalEventManager.add(document, "touchmove", handleMove, {
+      passive: false,
+    });
     GlobalEventManager.add(document, "touchend", handleEnd, { passive: false });
-    GlobalEventManager.add(document, "touchcancel", handleEnd, { passive: false });
+    GlobalEventManager.add(document, "touchcancel", handleEnd, {
+      passive: false,
+    });
 
     // Mouse events for testing on desktop
     GlobalEventManager.add(joystick, "mousedown", handleStart);
@@ -143,7 +149,21 @@ function MobileControls({ onMove, onJump }) {
           e.preventDefault();
         }}
       >
-        Jump
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7 14l5-5 5 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     </div>
   );
