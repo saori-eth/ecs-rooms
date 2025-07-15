@@ -67,18 +67,21 @@ export function createPhysicsSystem() {
         );
         const player = ecsWorld.getComponent(entityId, ComponentTypes.PLAYER);
 
-        if (physicsComponent.body) {
-          // Check if this is a local player and we have previous state
-          if (player && player.isLocal && previousStates.has(entityId)) {
+        if (physicsComponent.body && player && player.isLocal) {
+          // Check if we have previous state for the local player
+          if (previousStates.has(entityId)) {
             const prevState = previousStates.get(entityId);
             const currentBody = physicsComponent.body;
-            
+
             // Interpolate between previous and current physics positions
-            position.x = prevState.x + (currentBody.position.x - prevState.x) * alpha;
-            position.y = prevState.y + (currentBody.position.y - prevState.y) * alpha;
-            position.z = prevState.z + (currentBody.position.z - prevState.z) * alpha;
+            position.x =
+              prevState.x + (currentBody.position.x - prevState.x) * alpha;
+            position.y =
+              prevState.y + (currentBody.position.y - prevState.y) * alpha;
+            position.z =
+              prevState.z + (currentBody.position.z - prevState.z) * alpha;
           } else {
-            // For non-local entities or when no previous state, use current position
+            // For local player when no previous state, use current position
             position.x = physicsComponent.body.position.x;
             position.y = physicsComponent.body.position.y;
             position.z = physicsComponent.body.position.z;

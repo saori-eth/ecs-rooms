@@ -5,6 +5,7 @@ export function createInterpolationSystem() {
   // Create reusable objects to avoid allocation in update loop
   const tempQuaternion1 = new THREE.Quaternion();
   const tempQuaternion2 = new THREE.Quaternion();
+  const previousStates = new Map();
 
   return {
     fixedUpdate(ecsAPI, fixedDeltaTime) {
@@ -27,6 +28,13 @@ export function createInterpolationSystem() {
         );
 
         if (!player.isLocal && physicsComponent.body) {
+          // Store previous state for interpolation
+          previousStates.set(entityId, {
+            x: physicsComponent.body.position.x,
+            y: physicsComponent.body.position.y,
+            z: physicsComponent.body.position.z,
+          });
+
           const now = Date.now();
           const renderDelay = 100;
           const renderTime = now - renderDelay;
@@ -66,7 +74,7 @@ export function createInterpolationSystem() {
       });
     },
 
-    update(ecsAPI, deltaTime) {
+    update(ecsAPI, deltaTime, camera, alpha = 1) {
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.INTERPOLATION,
@@ -83,8 +91,30 @@ export function createInterpolationSystem() {
         );
         const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
         const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+        const physicsComponent = ecsAPI.getComponent(
+          entityId,
+          ComponentTypes.PHYSICS_BODY
+        );
 
         if (!player.isLocal) {
+          // Interpolate position for remote players
+          if (physicsComponent.body && previousStates.has(entityId)) {
+            const prevState = previousStates.get(entityId);
+            const currentBody = physicsComponent.body;
+
+            position.x =
+              prevState.x + (currentBody.position.x - prevState.x) * alpha;
+            position.y =
+              prevState.y + (currentBody.position.y - prevState.y) * alpha;
+            position.z =
+              prevState.z + (currentBody.position.z - prevState.z) * alpha;
+          } else if (physicsComponent.body) {
+            // Fallback for when there's no previous state
+            position.x = physicsComponent.body.position.x;
+            position.y = physicsComponent.body.position.y;
+            position.z = physicsComponent.body.position.z;
+          }
+
           const now = Date.now();
           const renderDelay = 100;
           const renderTime = now - renderDelay;
