@@ -2,20 +2,29 @@ import * as THREE from "three";
 import { ComponentTypes } from "../components.js";
 
 export class CameraSystem {
-  constructor() {
-    this.raycaster = new THREE.Raycaster();
+  raycaster = new THREE.Raycaster();
 
-    // Camera rotation state
-    this.yaw = 0;
-    this.pitch = 0.2; // Start with a slight downward angle
-    this.distance = 4;
-    this.targetDistance = 4;
-    this.minDistance = 1.5;
-    this.maxDistance = 8;
-    this.minPitch = -Math.PI / 3; // -60 degrees
-    this.maxPitch = Math.PI / 3; // 60 degrees
-    this.mouseSensitivity = 0.002;
-    this.zoomSensitivity = 0.001;
+  // Camera rotation state
+  yaw = 0;
+  pitch = 0; // Slight downward angle
+  distance = 4;
+  targetDistance = 4;
+  minDistance = 1.5;
+  maxDistance = 8;
+  minPitch = -Math.PI / 3; // -60°
+  maxPitch = Math.PI / 3; // 60°
+  mouseSensitivity = 0.002;
+  zoomSensitivity = 0.001;
+  rightOffset = 0.8;
+  heightOffset = 0.2;
+
+  currentYaw = 0;
+
+  constructor() {
+    this.camQuat = new THREE.Quaternion();
+    this.targetPos = new THREE.Vector3();
+    this.localOffset = new THREE.Vector3();
+    this.camEuler = new THREE.Euler();
   }
 
   update(ecsAPI, dt, camera) {
@@ -25,76 +34,71 @@ export class CameraSystem {
       ComponentTypes.CAMERA_TARGET,
       ComponentTypes.POSITION
     );
-    if (targets.length > 0) {
-      const targetId = targets[0];
-      const position = ecsAPI.getComponent(targetId, ComponentTypes.POSITION);
-      const vrmComponent = ecsAPI.getComponent(targetId, ComponentTypes.VRM);
+    if (!targets.length) return;
 
-      if (position) {
-        // Get input from InputSystem
-        if (ecsAPI.inputState) {
-          const { mouseDelta, wheelDelta, touchDelta, isMobile } =
-            ecsAPI.inputState;
+    const targetId = targets[0];
+    const position = ecsAPI.getComponent(targetId, ComponentTypes.POSITION);
+    const vrmComponent = ecsAPI.getComponent(targetId, ComponentTypes.VRM);
+    if (!position) return;
 
-          if (isMobile) {
-            // Mobile touch controls
-            if (touchDelta.x !== 0 || touchDelta.y !== 0) {
-              // Touch sensitivity is different from mouse
-              const touchSensitivity = this.mouseSensitivity * 5;
-              this.yaw -= touchDelta.x * touchSensitivity;
-              this.pitch += touchDelta.y * touchSensitivity;
+    // Input handling
+    const {
+      mouseDelta = {},
+      wheelDelta = 0,
+      touchDelta = {},
+      isMobile,
+    } = ecsAPI.inputState ?? {};
 
-              // Clamp pitch to prevent camera flipping
-              this.pitch = Math.max(
-                this.minPitch,
-                Math.min(this.maxPitch, this.pitch)
-              );
+    if (isMobile) {
+      // Touch controls
+      if (touchDelta.x || touchDelta.y) {
+        const touchSensitivity = this.mouseSensitivity * 5;
+        this.yaw -= touchDelta.x * touchSensitivity;
 
-              // Reset touch delta after using it
-              ecsAPI.inputState.touchDelta.x = 0;
-              ecsAPI.inputState.touchDelta.y = 0;
-            }
-          } else if (document.pointerLockElement) {
-            // Desktop mouse controls
-            // Update camera rotation based on mouse movement
-            this.yaw -= mouseDelta.x * this.mouseSensitivity;
-            this.pitch += mouseDelta.y * this.mouseSensitivity; // Changed from -= to += to fix inversion
-
-            // Clamp pitch to prevent camera flipping
-            this.pitch = Math.max(
-              this.minPitch,
-              Math.min(this.maxPitch, this.pitch)
-            );
-
-            // Update zoom based on wheel input
-            if (wheelDelta !== 0) {
-              this.targetDistance += wheelDelta * this.zoomSensitivity;
-              this.targetDistance = Math.max(
-                this.minDistance,
-                Math.min(this.maxDistance, this.targetDistance)
-              );
-              ecsAPI.inputState.wheelDelta = 0;
-            }
-
-            // Reset mouse delta after using it
-            ecsAPI.inputState.mouseDelta.x = 0;
-            ecsAPI.inputState.mouseDelta.y = 0;
-          }
-        }
-
-        // Get get transforms of player
-        if (vrmComponent && vrmComponent.vrm && vrmComponent.vrm.humanoid) {
-          // world position = vrmComponent.vrm.scene.getWorldPosition(vec3)
-          // local position = vrmComponent.vrm.scene.position
-          // world quaternion = vrmComponent.vrm.scene.getWorldQuaternion(quat)
-          // local quaternion = vrmComponent.vrm.scene.quaternion
-          // head bone = vrmComponent.vrm.humanoid.getNormalizedBoneNode("head")
-        }
-
-        // Store camera yaw for movement system
-        this.currentYaw = this.yaw;
-        ecsAPI.cameraYaw = this.currentYaw;
+        // Reset touch delta
+        touchDelta.x = 0;
+        touchDelta.y = 0;
       }
+    } else if (document.pointerLockElement) {
+      // Mouse controls
+      this.yaw -= (mouseDelta.x ?? 0) * this.mouseSensitivity;
+
+      if (wheelDelta) {
+        this.targetDistance = THREE.MathUtils.clamp(
+          this.targetDistance + wheelDelta * this.zoomSensitivity,
+          this.minDistance,
+          this.maxDistance
+        );
+        this.distance = this.targetDistance;
+        ecsAPI.inputState.wheelDelta = 0;
+      }
+
+      // Reset mouse delta
+      mouseDelta.x = 0;
+      mouseDelta.y = 0;
     }
+
+    // Store yaw for other systems
+    this.currentYaw = this.yaw;
+    ecsAPI.cameraYaw = this.currentYaw;
+
+    // Calculate camera position
+    this.targetPos.copy(position);
+
+    if (vrmComponent?.vrm?.humanoid) {
+      const head = vrmComponent.vrm.humanoid.getNormalizedBoneNode("head");
+      head?.getWorldPosition(this.targetPos);
+    }
+
+    this.targetPos.y += this.heightOffset;
+
+    this.camEuler.set(this.pitch, this.yaw, 0, "YXZ");
+    this.camQuat.setFromEuler(this.camEuler);
+
+    this.localOffset.set(this.rightOffset, 0, +this.distance);
+    this.localOffset.applyQuaternion(this.camQuat);
+
+    camera.position.copy(this.targetPos).add(this.localOffset);
+    camera.quaternion.copy(this.camQuat);
   }
 }
