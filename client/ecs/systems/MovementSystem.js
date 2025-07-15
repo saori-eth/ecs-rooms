@@ -176,20 +176,25 @@ export function createMovementSystem() {
 
           if (isMoving) {
             let strafeAngle = 0;
-            const strafeDirection = -Math.sign(x); // 1 for left, -1 for right
-            const isStrafing = x !== 0;
-            const isMovingForwardOrBackward = z !== 0;
-            const isMovingBackward = z > 0;
+            const maxStrafeAngle = Math.PI / 4; // 45 degrees
 
-            if (isStrafing && isMovingForwardOrBackward) {
-              const angle = Math.PI / 4; // 45 degrees
-              if (isMovingBackward) {
-                // When moving backward, invert the strafe angle
-                strafeAngle = -strafeDirection * angle;
-              } else {
-                strafeAngle = strafeDirection * angle;
-              }
+            // Calculate a normalized strength for forward/backward movement.
+            // This ensures the turn angle scales with joystick input.
+            const turnInfluence = Math.min(1, Math.abs(z));
+
+            // Calculate a base angle directly from the sideways input.
+            // A negative 'x' (left) should result in a positive (left) turn angle,
+            // so we invert the sign of 'x'.
+            let angle = -x * maxStrafeAngle * turnInfluence;
+
+            const isMovingBackward = z > 0;
+            if (isMovingBackward) {
+              // When moving backward, invert the strafe angle for "over the shoulder" look
+              strafeAngle = -angle;
+            } else {
+              strafeAngle = angle;
             }
+
             vrmComponent.targetYaw = cameraYaw + strafeAngle;
           } else {
             // Player is idle, face the camera direction

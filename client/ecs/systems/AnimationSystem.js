@@ -31,15 +31,29 @@ export function createAnimationSystem() {
             // Determine movement direction relative to camera
             const moveX = input.moveVector.x;
             const moveZ = input.moveVector.z;
+            const absMoveX = Math.abs(moveX);
+            const absMoveZ = Math.abs(moveZ);
 
-            // Determine primary movement direction
+            // Threshold to determine if movement is primarily straight or diagonal
+            const diagonalThreshold = 0.4;
+
             let direction = "forward";
-            if (Math.abs(moveZ) >= Math.abs(moveX)) {
-              // Primarily forward/backward movement
+
+            if (absMoveZ > absMoveX) {
+              // Primarily forward or backward
               direction = moveZ > 0 ? "backwards" : "forward";
+              if (absMoveX > diagonalThreshold) {
+                direction += moveX > 0 ? "_right" : "_left";
+              }
             } else {
-              // Primarily left/right movement
-              direction = moveX > 0 ? "right" : "left";
+              // Primarily left or right
+              const horizontalDir = moveX > 0 ? "right" : "left";
+              if (absMoveZ > diagonalThreshold) {
+                const verticalDir = moveZ > 0 ? "backwards" : "forward";
+                direction = verticalDir + "_" + horizontalDir;
+              } else {
+                direction = horizontalDir;
+              }
             }
 
             // Choose animation based on direction and sprint state
@@ -59,6 +73,30 @@ export function createAnimationSystem() {
               actionToPlay = isSprinting
                 ? anim.actions.right_sprint || anim.actions.sprint
                 : anim.actions.right_walk || anim.actions.walking;
+            } else if (direction === "forward_left") {
+              actionToPlay = isSprinting
+                ? anim.actions.left_strafe_sprint || anim.actions.sprint
+                : anim.actions.left_strafe_walk || anim.actions.walking;
+            } else if (direction === "forward_right") {
+              actionToPlay = isSprinting
+                ? anim.actions.right_strafe_sprint || anim.actions.sprint
+                : anim.actions.right_strafe_walk || anim.actions.walking;
+            } else if (direction === "backwards_left") {
+              actionToPlay = isSprinting
+                ? anim.actions.backwards_left_strafe_sprint ||
+                  anim.actions.backwards_sprint ||
+                  anim.actions.sprint
+                : anim.actions.backwards_left_strafe_walk ||
+                  anim.actions.backwards_walk ||
+                  anim.actions.walking;
+            } else if (direction === "backwards_right") {
+              actionToPlay = isSprinting
+                ? anim.actions.backwards_right_strafe_sprint ||
+                  anim.actions.backwards_sprint ||
+                  anim.actions.sprint
+                : anim.actions.backwards_right_strafe_walk ||
+                  anim.actions.backwards_walk ||
+                  anim.actions.walking;
             }
           } else {
             actionToPlay = anim.actions.idle;
@@ -90,12 +128,24 @@ export function createAnimationSystem() {
               // Determine movement direction for landing transition
               const moveX = input.moveVector.x;
               const moveZ = input.moveVector.z;
+              const absMoveX = Math.abs(moveX);
+              const absMoveZ = Math.abs(moveZ);
+              const diagonalThreshold = 0.4;
 
               let direction = "forward";
-              if (Math.abs(moveZ) >= Math.abs(moveX)) {
+              if (absMoveZ > absMoveX) {
                 direction = moveZ > 0 ? "backwards" : "forward";
+                if (absMoveX > diagonalThreshold) {
+                  direction += moveX > 0 ? "_right" : "_left";
+                }
               } else {
-                direction = moveX > 0 ? "right" : "left";
+                const horizontalDir = moveX > 0 ? "right" : "left";
+                if (absMoveZ > diagonalThreshold) {
+                  const verticalDir = moveZ > 0 ? "backwards" : "forward";
+                  direction = verticalDir + "_" + horizontalDir;
+                } else {
+                  direction = horizontalDir;
+                }
               }
 
               if (direction === "forward") {
@@ -114,6 +164,30 @@ export function createAnimationSystem() {
                 nextAction = isSprinting
                   ? anim.actions.right_sprint || anim.actions.sprint
                   : anim.actions.right_walk || anim.actions.walking;
+              } else if (direction === "forward_left") {
+                nextAction = isSprinting
+                  ? anim.actions.left_strafe_sprint || anim.actions.sprint
+                  : anim.actions.left_strafe_walk || anim.actions.walking;
+              } else if (direction === "forward_right") {
+                nextAction = isSprinting
+                  ? anim.actions.right_strafe_sprint || anim.actions.sprint
+                  : anim.actions.right_strafe_walk || anim.actions.walking;
+              } else if (direction === "backwards_left") {
+                nextAction = isSprinting
+                  ? anim.actions.backwards_left_strafe_sprint ||
+                    anim.actions.backwards_sprint ||
+                    anim.actions.sprint
+                  : anim.actions.backwards_left_strafe_walk ||
+                    anim.actions.backwards_walk ||
+                    anim.actions.walking;
+              } else if (direction === "backwards_right") {
+                nextAction = isSprinting
+                  ? anim.actions.backwards_right_strafe_sprint ||
+                    anim.actions.backwards_sprint ||
+                    anim.actions.sprint
+                  : anim.actions.backwards_right_strafe_walk ||
+                    anim.actions.backwards_walk ||
+                    anim.actions.walking;
               }
             } else {
               nextAction = anim.actions.idle;
