@@ -185,7 +185,7 @@ export function createNetworkSystem() {
             if (interpolation) {
               // Use local timestamp for interpolation
               const localTs = Date.now();
-              
+
               // Push position data to position buffer
               interpolation.positionBuffer.push({
                 position: {
@@ -211,27 +211,18 @@ export function createNetworkSystem() {
               }
             }
 
-            if (animation && animation.actions) {
-              let actionToPlay;
-              
-              // Determine which animation to play based on received state
-              if (message.isGrounded === false && animation.actions.jump) {
-                actionToPlay = animation.actions.jump;
-              } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
-                actionToPlay = animation.actions.sprint;
-              } else if (message.isMoving && animation.actions.walking) {
-                actionToPlay = animation.actions.walking;
-              } else if (animation.actions.idle) {
-                actionToPlay = animation.actions.idle;
-              }
-              
-              if (actionToPlay !== animation.currentAction) {
+            if (animation && animation.actions && message.animationName) {
+              const actionToPlay = animation.actions[message.animationName];
+
+              if (actionToPlay && actionToPlay !== animation.currentAction) {
                 const lastAction = animation.currentAction;
                 animation.currentAction = actionToPlay;
-                
-                // Use faster transition for jump animation
-                const fadeTime = actionToPlay === animation.actions.jump ? 0.1 : 0.2;
-                lastAction.fadeOut(fadeTime);
+
+                // Use faster transition for jump animation to match local player
+                const fadeTime = message.animationName === "jump" ? 0.1 : 0.2;
+                if (lastAction) {
+                  lastAction.fadeOut(fadeTime);
+                }
                 actionToPlay.reset().fadeIn(fadeTime).play();
               }
             }
@@ -425,13 +416,21 @@ export function createNetworkSystem() {
           );
           const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
           const vrm = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+          const anim = ecsAPI.getComponent(entityId, ComponentTypes.ANIMATION);
 
-          if (position && input && vrm) {
-            const isMoving =
-              input.moveVector.x !== 0 || input.moveVector.z !== 0;
-            const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
-            const isGrounded = player.isGrounded === true; // Will be false if undefined or false
-            
+          if (position && input && vrm && anim) {
+            const isGrounded = player.isGrounded === true;
+
+            let animationName = "idle";
+            if (anim.currentAction) {
+              for (const [name, action] of Object.entries(anim.actions)) {
+                if (action === anim.currentAction) {
+                  animationName = name;
+                  break;
+                }
+              }
+            }
+
             const moveMessage = {
               type: "move",
               position: {
@@ -440,12 +439,11 @@ export function createNetworkSystem() {
                 z: position.z,
               },
               rotation: vrm.vrm.scene.quaternion.toArray(),
-              isMoving,
-              isSprinting,
+              animationName,
               isGrounded,
               timestamp: Date.now(),
             };
-            
+
             ws.send(pack(moveMessage));
           }
         }
