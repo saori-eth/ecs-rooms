@@ -14,9 +14,10 @@ export class CameraSystem {
   minPitch = -Math.PI / 3; // -60°
   maxPitch = Math.PI / 3; // 60°
   mouseSensitivity = 0.002;
+  pitchSensitivity = 0.0015;
   zoomSensitivity = 0.001;
-  rightOffset = 0.8;
-  heightOffset = 0.2;
+  rightOffset = 0.7;
+  heightOffset = 0.1;
 
   currentYaw = 0;
 
@@ -26,6 +27,13 @@ export class CameraSystem {
     this.localOffset = new THREE.Vector3();
     this.camEuler = new THREE.Euler();
     this.mobileApplied = false;
+
+    // Collision detection helper objects
+    this.desiredPosition = new THREE.Vector3();
+    this.cameraDirection = new THREE.Vector3();
+    this.pullbackVector = new THREE.Vector3();
+    this.finalCameraPosition = new THREE.Vector3();
+    this.pullbackDistance = 0.1; // Small distance to prevent clipping
   }
 
   update(ecsAPI, dt, camera) {
@@ -61,6 +69,14 @@ export class CameraSystem {
       if (touchDelta.x || touchDelta.y) {
         const touchSensitivity = this.mouseSensitivity * 5;
         this.yaw -= touchDelta.x * touchSensitivity;
+        this.pitch = THREE.MathUtils.clamp(
+          this.pitch -
+            touchDelta.y *
+              touchSensitivity *
+              (this.pitchSensitivity / this.mouseSensitivity),
+          this.minPitch,
+          this.maxPitch
+        );
 
         // Reset touch delta
         touchDelta.x = 0;
@@ -69,6 +85,11 @@ export class CameraSystem {
     } else if (document.pointerLockElement) {
       // Mouse controls
       this.yaw -= (mouseDelta.x ?? 0) * this.mouseSensitivity;
+      this.pitch = THREE.MathUtils.clamp(
+        this.pitch - (mouseDelta.y ?? 0) * this.pitchSensitivity,
+        this.minPitch,
+        this.maxPitch
+      );
 
       if (wheelDelta) {
         this.targetDistance = THREE.MathUtils.clamp(
@@ -105,7 +126,53 @@ export class CameraSystem {
     this.localOffset.set(this.rightOffset, 0, +this.distance);
     this.localOffset.applyQuaternion(this.camQuat);
 
-    camera.position.copy(this.targetPos).add(this.localOffset);
+    this.desiredPosition.copy(this.targetPos).add(this.localOffset);
+
+    // Set up ray from target to desired camera position for collision detection
+    this.cameraDirection
+      .subVectors(this.desiredPosition, this.targetPos)
+      .normalize();
+    const distance = this.targetPos.distanceTo(this.desiredPosition);
+
+    this.raycaster.set(this.targetPos, this.cameraDirection);
+    this.raycaster.far = distance;
+
+    // Get all collidable objects
+    const collidableEntities = ecsAPI.getEntitiesWithComponents(
+      ComponentTypes.COLLIDABLE,
+      ComponentTypes.MESH
+    );
+
+    const collidableObjects = [];
+    collidableEntities.forEach((entityId) => {
+      const meshComponent = ecsAPI.getComponent(entityId, ComponentTypes.MESH);
+      if (meshComponent && meshComponent.mesh) {
+        collidableObjects.push(meshComponent.mesh);
+      }
+    });
+
+    // Perform raycast
+    const intersections = this.raycaster.intersectObjects(
+      collidableObjects,
+      true
+    );
+
+    if (intersections.length > 0) {
+      // Camera hits something - place it at the intersection point
+      // Pull back slightly to avoid clipping into the object
+      const closestIntersection = intersections[0];
+      this.pullbackVector
+        .copy(this.cameraDirection)
+        .multiplyScalar(this.pullbackDistance);
+      this.finalCameraPosition
+        .copy(closestIntersection.point)
+        .sub(this.pullbackVector);
+      camera.position.copy(this.finalCameraPosition);
+    } else {
+      // No collision - use the desired position
+      camera.position.copy(this.desiredPosition);
+    }
+
     camera.quaternion.copy(this.camQuat);
   }
 }
