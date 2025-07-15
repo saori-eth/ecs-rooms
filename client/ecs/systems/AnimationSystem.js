@@ -27,25 +27,52 @@ export function createAnimationSystem() {
           // Determine which animation to play
           if (!isGrounded) {
             actionToPlay = anim.actions.jump;
-          } else if (isMoving && isSprinting) {
-            actionToPlay = anim.actions.sprint;
           } else if (isMoving) {
-            actionToPlay = anim.actions.walking;
+            // Determine movement direction relative to camera
+            const moveX = input.moveVector.x;
+            const moveZ = input.moveVector.z;
+            
+            // Determine primary movement direction
+            let direction = 'forward';
+            if (Math.abs(moveZ) > Math.abs(moveX)) {
+              // Primarily forward/backward movement
+              direction = moveZ > 0 ? 'backwards' : 'forward';
+            } else {
+              // Primarily left/right movement
+              direction = moveX > 0 ? 'right' : 'left';
+            }
+            
+            // Choose animation based on direction and sprint state
+            if (direction === 'forward') {
+              actionToPlay = isSprinting ? anim.actions.sprint : anim.actions.walking;
+            } else if (direction === 'backwards') {
+              actionToPlay = isSprinting ? 
+                (anim.actions.backwards_sprint || anim.actions.sprint) : 
+                (anim.actions.backwards_walk || anim.actions.walking);
+            } else if (direction === 'left') {
+              actionToPlay = isSprinting ? 
+                (anim.actions.left_sprint || anim.actions.sprint) : 
+                (anim.actions.left_walk || anim.actions.walking);
+            } else if (direction === 'right') {
+              actionToPlay = isSprinting ? 
+                (anim.actions.right_sprint || anim.actions.sprint) : 
+                (anim.actions.right_walk || anim.actions.walking);
+            }
           } else {
             actionToPlay = anim.actions.idle;
           }
 
           // Handle animation transitions
-          if (actionToPlay !== anim.currentAction) {
+          if (actionToPlay && actionToPlay !== anim.currentAction) {
             const lastAction = anim.currentAction;
             anim.currentAction = actionToPlay;
 
             // Special handling for jump animation
             if (actionToPlay === anim.actions.jump) {
-              lastAction.fadeOut(0.1);
+              if (lastAction) lastAction.fadeOut(0.1);
               anim.currentAction.reset().fadeIn(0.1).play();
             } else {
-              lastAction.fadeOut(0.2);
+              if (lastAction) lastAction.fadeOut(0.2);
               anim.currentAction.reset().fadeIn(0.2).play();
             }
           }
@@ -55,16 +82,41 @@ export function createAnimationSystem() {
               !anim.actions.jump.isRunning() && 
               isGrounded) {
             let nextAction;
-            if (isMoving && isSprinting) {
-              nextAction = anim.actions.sprint;
-            } else if (isMoving) {
-              nextAction = anim.actions.walking;
+            if (isMoving) {
+              // Determine movement direction for landing transition
+              const moveX = input.moveVector.x;
+              const moveZ = input.moveVector.z;
+              
+              let direction = 'forward';
+              if (Math.abs(moveZ) > Math.abs(moveX)) {
+                direction = moveZ > 0 ? 'backwards' : 'forward';
+              } else {
+                direction = moveX > 0 ? 'right' : 'left';
+              }
+              
+              if (direction === 'forward') {
+                nextAction = isSprinting ? anim.actions.sprint : anim.actions.walking;
+              } else if (direction === 'backwards') {
+                nextAction = isSprinting ? 
+                  (anim.actions.backwards_sprint || anim.actions.sprint) : 
+                  (anim.actions.backwards_walk || anim.actions.walking);
+              } else if (direction === 'left') {
+                nextAction = isSprinting ? 
+                  (anim.actions.left_sprint || anim.actions.sprint) : 
+                  (anim.actions.left_walk || anim.actions.walking);
+              } else if (direction === 'right') {
+                nextAction = isSprinting ? 
+                  (anim.actions.right_sprint || anim.actions.sprint) : 
+                  (anim.actions.right_walk || anim.actions.walking);
+              }
             } else {
               nextAction = anim.actions.idle;
             }
-            anim.currentAction = nextAction;
-            anim.actions.jump.stop();
-            nextAction.reset().fadeIn(0.2).play();
+            if (nextAction) {
+              anim.currentAction = nextAction;
+              anim.actions.jump.stop();
+              nextAction.reset().fadeIn(0.2).play();
+            }
           }
         }
 

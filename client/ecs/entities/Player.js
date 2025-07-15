@@ -107,6 +107,12 @@ export async function createPlayer(
       walking: mixer.clipAction(clips.walking),
       jump: mixer.clipAction(clips.jump),
       sprint: mixer.clipAction(clips.sprint),
+      backwards_walk: mixer.clipAction(clips.backwards_walk),
+      backwards_sprint: mixer.clipAction(clips.backwards_sprint),
+      left_walk: mixer.clipAction(clips.left_walk),
+      left_sprint: mixer.clipAction(clips.left_sprint),
+      right_walk: mixer.clipAction(clips.right_walk),
+      right_sprint: mixer.clipAction(clips.right_sprint),
     };
 
     // Ensure animations don't accumulate transforms
@@ -114,12 +120,24 @@ export async function createPlayer(
     actions.walking.setLoop(THREE.LoopRepeat);
     actions.jump.setLoop(THREE.LoopOnce); // Jump plays once
     actions.sprint.setLoop(THREE.LoopRepeat);
+    actions.backwards_walk.setLoop(THREE.LoopRepeat);
+    actions.backwards_sprint.setLoop(THREE.LoopRepeat);
+    actions.left_walk.setLoop(THREE.LoopRepeat);
+    actions.left_sprint.setLoop(THREE.LoopRepeat);
+    actions.right_walk.setLoop(THREE.LoopRepeat);
+    actions.right_sprint.setLoop(THREE.LoopRepeat);
 
     // Reset any accumulated transforms
     actions.idle.reset();
     actions.walking.reset();
     actions.jump.reset();
     actions.sprint.reset();
+    actions.backwards_walk.reset();
+    actions.backwards_sprint.reset();
+    actions.left_walk.reset();
+    actions.left_sprint.reset();
+    actions.right_walk.reset();
+    actions.right_sprint.reset();
 
     // Start with idle animation
     actions.idle.play();
