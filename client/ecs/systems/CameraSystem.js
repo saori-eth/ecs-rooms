@@ -25,6 +25,7 @@ export class CameraSystem {
     this.targetPos = new THREE.Vector3();
     this.localOffset = new THREE.Vector3();
     this.camEuler = new THREE.Euler();
+    this.mobileApplied = false;
   }
 
   update(ecsAPI, dt, camera) {
@@ -48,6 +49,12 @@ export class CameraSystem {
       touchDelta = {},
       isMobile,
     } = ecsAPI.inputState ?? {};
+
+    if (isMobile && !this.mobileApplied) {
+      this.distance = 2.5;
+      this.targetDistance = 2.5;
+      this.mobileApplied = true;
+    }
 
     if (isMobile) {
       // Touch controls

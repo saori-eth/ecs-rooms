@@ -102,7 +102,7 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
       {isMobile && (
         <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />
       )}
-      {!isMobile && isPointerLocked && (
+      {(isPointerLocked || isMobile) && (
         <div className="reticle">
           <div className="reticle-rect reticle-up"></div>
           <div className="reticle-rect reticle-down"></div>
