@@ -48,7 +48,7 @@ export function createNetworkSystem() {
     ws = new WebSocket(wsUrl);
 
     ws.binaryType = "arraybuffer";
-    
+
     ws.onopen = () => {
       console.log("Connected to server");
       connected = true;
@@ -185,7 +185,7 @@ export function createNetworkSystem() {
             if (interpolation) {
               // Use local timestamp for interpolation
               const localTs = Date.now();
-              
+
               // Push position data to position buffer
               interpolation.positionBuffer.push({
                 position: {
@@ -211,26 +211,26 @@ export function createNetworkSystem() {
               }
             }
 
-            if (animation && animation.actions) {
-              let actionToPlay;
-              
-              // Determine which animation to play based on received state
-              if (message.isGrounded === false && animation.actions.jump) {
-                actionToPlay = animation.actions.jump;
-              } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
-                actionToPlay = animation.actions.sprint;
-              } else if (message.isMoving && animation.actions.walking) {
-                actionToPlay = animation.actions.walking;
-              } else if (animation.actions.idle) {
-                actionToPlay = animation.actions.idle;
+            if (animation && animation.actions && message.animation) {
+              // Find the action that matches the animation name from the message
+              let actionToPlay = null;
+              for (const [actionName, action] of Object.entries(
+                animation.actions
+              )) {
+                if (action._clip && action._clip.name === message.animation) {
+                  actionToPlay = action;
+                  break;
+                }
               }
-              
-              if (actionToPlay !== animation.currentAction) {
+
+              // If we found a matching action and it's different from current
+              if (actionToPlay && actionToPlay !== animation.currentAction) {
                 const lastAction = animation.currentAction;
                 animation.currentAction = actionToPlay;
-                
+
                 // Use faster transition for jump animation
-                const fadeTime = actionToPlay === animation.actions.jump ? 0.1 : 0.2;
+                const fadeTime =
+                  actionToPlay === animation.actions.jump ? 0.1 : 0.2;
                 lastAction.fadeOut(fadeTime);
                 actionToPlay.reset().fadeIn(fadeTime).play();
               }
@@ -425,13 +425,18 @@ export function createNetworkSystem() {
           );
           const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
           const vrm = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+          const animationComponent = ecsAPI.getComponent(
+            entityId,
+            ComponentTypes.ANIMATION
+          );
+          const animation = animationComponent?.currentAction?._clip?.name;
 
           if (position && input && vrm) {
             const isMoving =
               input.moveVector.x !== 0 || input.moveVector.z !== 0;
             const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
             const isGrounded = player.isGrounded === true; // Will be false if undefined or false
-            
+
             const moveMessage = {
               type: "move",
               position: {
@@ -443,9 +448,10 @@ export function createNetworkSystem() {
               isMoving,
               isSprinting,
               isGrounded,
+              animation,
               timestamp: Date.now(),
             };
-            
+
             ws.send(pack(moveMessage));
           }
         }

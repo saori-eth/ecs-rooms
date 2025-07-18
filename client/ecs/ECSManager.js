@@ -27,7 +27,7 @@ if (import.meta.env.DEV) {
 // Camera system mapping
 const CAMERA_SYSTEMS = {
   basic: BasicCameraSystem,
-  tps: TPSCameraSystem
+  tps: TPSCameraSystem,
 };
 
 // Game manager to bridge React and Three.js
@@ -232,10 +232,10 @@ export class ECSManager {
     this.ecsAPI.registerSystem(this.inputSystem);
     this.ecsAPI.registerSystem(this.physicsSystem);
     this.ecsAPI.registerSystem(createMovementSystem());
+    this.ecsAPI.registerSystem(this.animationSystem); // Animation runs before network
     this.ecsAPI.registerSystem(createInterpolationSystem());
     this.ecsAPI.registerSystem(this.networkSystem);
     this.ecsAPI.registerSystem(createRenderSystem(this.scene));
-    this.ecsAPI.registerSystem(this.animationSystem);
 
     // Camera system will be created dynamically based on room config
 
@@ -318,14 +318,14 @@ export class ECSManager {
       if (roomData.roomType) {
         // Load the room
         this.sceneManager.loadRoom(roomData.roomType);
-        
+
         // Remove existing camera system if any
         if (this.cameraSystem) {
           console.log("Removing existing camera system");
           this.ecsAPI.removeSystem(this.cameraSystem);
           this.cameraSystem = null;
         }
-        
+
         // Get room definition and instantiate camera
         const roomDef = rooms[roomData.roomType];
         if (roomDef && roomDef.camera) {
