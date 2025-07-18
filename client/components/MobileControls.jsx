@@ -79,35 +79,48 @@ function MobileControls({ onMove, onJump }) {
         const angle = Math.atan2(moveY, moveX) * (180 / Math.PI);
         let dirAngle = angle >= 0 ? angle : angle + 360;
 
+        let discreteX = 0;
+        let discreteZ = 0;
+
         if (dirAngle >= 337.5 || dirAngle < 22.5) {
           discreteX = 1;
-          discreteZ = 0; // right
+          discreteZ = 0;
         } else if (dirAngle < 67.5) {
           discreteX = 1;
-          discreteZ = 1; // back-right
+          discreteZ = 1;
         } else if (dirAngle < 112.5) {
           discreteX = 0;
-          discreteZ = 1; // back
+          discreteZ = 1;
         } else if (dirAngle < 157.5) {
           discreteX = -1;
-          discreteZ = 1; // back-left
+          discreteZ = 1;
         } else if (dirAngle < 202.5) {
           discreteX = -1;
-          discreteZ = 0; // left
+          discreteZ = 0;
         } else if (dirAngle < 247.5) {
           discreteX = -1;
-          discreteZ = -1; // forward-left
+          discreteZ = -1;
         } else if (dirAngle < 292.5) {
           discreteX = 0;
-          discreteZ = -1; // forward
+          discreteZ = -1;
         } else {
           discreteX = 1;
-          discreteZ = -1; // forward-right
+          discreteZ = -1;
         }
-      }
 
-      // Use discreteX, discreteZ in onMove
-      onMove({ x: discreteX, z: discreteZ, sprint: isSprinting });
+        const discLength = Math.sqrt(
+          discreteX * discreteX + discreteZ * discreteZ
+        );
+        const scaleFactor = Math.min(normalizedDistance, 1);
+        if (discLength > 0) {
+          discreteX = (discreteX / discLength) * scaleFactor;
+          discreteZ = (discreteZ / discLength) * scaleFactor;
+        }
+
+        onMove({ x: discreteX, z: discreteZ, sprint: isSprinting });
+      } else {
+        onMove({ x: 0, z: 0, sprint: false });
+      }
     };
 
     const handleEnd = (e) => {
