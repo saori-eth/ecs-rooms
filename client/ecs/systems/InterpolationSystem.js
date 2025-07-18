@@ -26,47 +26,11 @@ export function createInterpolationSystem() {
           ComponentTypes.PHYSICS_BODY
         );
 
-        if (!player.isLocal && physicsComponent.body) {
-          const now = Date.now();
-          const renderDelay = 100;
-          const renderTime = now - renderDelay;
-
-          // Handle physics position updates
-          if (interpolation.positionBuffer.length > 0) {
-            if (
-              interpolation.positionBuffer.length >= 2 &&
-              interpolation.positionBuffer[0].timestamp <= renderTime &&
-              renderTime <= interpolation.positionBuffer[1].timestamp
-            ) {
-              const t0 = interpolation.positionBuffer[0].timestamp;
-              const t1 = interpolation.positionBuffer[1].timestamp;
-              const p0 = interpolation.positionBuffer[0].position;
-              const p1 = interpolation.positionBuffer[1].position;
-
-              const alpha = (renderTime - t0) / (t1 - t0);
-
-              const newX = p0.x + (p1.x - p0.x) * alpha;
-              const newY = p0.y + (p1.y - p0.y) * alpha;
-              const newZ = p0.z + (p1.z - p0.z) * alpha;
-
-              physicsComponent.body.position.set(newX, newY, newZ);
-            } else if (interpolation.positionBuffer.length === 1) {
-              const target = interpolation.positionBuffer[0].position;
-              const speed = 0.1;
-
-              const currentPos = physicsComponent.body.position;
-              physicsComponent.body.position.set(
-                currentPos.x + (target.x - currentPos.x) * speed,
-                currentPos.y + (target.y - currentPos.y) * speed,
-                currentPos.z + (target.z - currentPos.z) * speed
-              );
-            }
-          }
-        }
+        // Position handling moved to update; fixedUpdate now empty for this logic
       });
     },
 
-    update(ecsAPI, deltaTime) {
+    update(ecsAPI, deltaTime, camera, alpha) {
       const entities = ecsAPI.getEntitiesWithComponents(
         ComponentTypes.POSITION,
         ComponentTypes.INTERPOLATION,
@@ -83,19 +47,59 @@ export function createInterpolationSystem() {
         );
         const player = ecsAPI.getComponent(entityId, ComponentTypes.PLAYER);
         const vrmComponent = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+        const physicsComponent = ecsAPI.getComponent(
+          entityId,
+          ComponentTypes.PHYSICS_BODY
+        );
 
         if (!player.isLocal) {
           const now = Date.now();
           const renderDelay = 100;
-          const renderTime = now - renderDelay;
+          const adjustment = -(1 - alpha) * ecsAPI.fixedTimeStep * 1000;
+          const renderTime = now - renderDelay + adjustment;
 
-          // Handle position buffer management (no physics updates here)
+          // Handle position buffer management
           if (interpolation.positionBuffer.length > 0) {
             while (
               interpolation.positionBuffer.length > 2 &&
               interpolation.positionBuffer[1].timestamp <= renderTime
             ) {
               interpolation.positionBuffer.shift();
+            }
+          }
+
+          // Handle physics position updates
+          if (
+            physicsComponent.body &&
+            interpolation.positionBuffer.length > 0
+          ) {
+            if (
+              interpolation.positionBuffer.length >= 2 &&
+              interpolation.positionBuffer[0].timestamp <= renderTime &&
+              renderTime <= interpolation.positionBuffer[1].timestamp
+            ) {
+              const t0 = interpolation.positionBuffer[0].timestamp;
+              const t1 = interpolation.positionBuffer[1].timestamp;
+              const p0 = interpolation.positionBuffer[0].position;
+              const p1 = interpolation.positionBuffer[1].position;
+
+              const fraction = (renderTime - t0) / (t1 - t0);
+
+              const newX = p0.x + (p1.x - p0.x) * fraction;
+              const newY = p0.y + (p1.y - p0.y) * fraction;
+              const newZ = p0.z + (p1.z - p0.z) * fraction;
+
+              physicsComponent.body.position.set(newX, newY, newZ);
+            } else if (interpolation.positionBuffer.length === 1) {
+              const target = interpolation.positionBuffer[0].position;
+              const speed = 0.1;
+
+              const currentPos = physicsComponent.body.position;
+              physicsComponent.body.position.set(
+                currentPos.x + (target.x - currentPos.x) * speed,
+                currentPos.y + (target.y - currentPos.y) * speed,
+                currentPos.z + (target.z - currentPos.z) * speed
+              );
             }
           }
 
