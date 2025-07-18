@@ -71,10 +71,43 @@ function MobileControls({ onMove, onJump }) {
         knob.classList.remove("sprinting");
       }
 
-      // Convert to game coordinates
-      // Joystick up (negative Y) should move forward (negative Z)
-      // Joystick down (positive Y) should move backward (positive Z)
-      onMove({ x: moveX, z: moveY, sprint: isSprinting });
+      const deadzone = 0.2;
+      let discreteX = 0;
+      let discreteZ = 0;
+
+      if (normalizedDistance > deadzone) {
+        const angle = Math.atan2(moveY, moveX) * (180 / Math.PI);
+        let dirAngle = angle >= 0 ? angle : angle + 360;
+
+        if (dirAngle >= 337.5 || dirAngle < 22.5) {
+          discreteX = 1;
+          discreteZ = 0; // right
+        } else if (dirAngle < 67.5) {
+          discreteX = 1;
+          discreteZ = 1; // back-right
+        } else if (dirAngle < 112.5) {
+          discreteX = 0;
+          discreteZ = 1; // back
+        } else if (dirAngle < 157.5) {
+          discreteX = -1;
+          discreteZ = 1; // back-left
+        } else if (dirAngle < 202.5) {
+          discreteX = -1;
+          discreteZ = 0; // left
+        } else if (dirAngle < 247.5) {
+          discreteX = -1;
+          discreteZ = -1; // forward-left
+        } else if (dirAngle < 292.5) {
+          discreteX = 0;
+          discreteZ = -1; // forward
+        } else {
+          discreteX = 1;
+          discreteZ = -1; // forward-right
+        }
+      }
+
+      // Use discreteX, discreteZ in onMove
+      onMove({ x: discreteX, z: discreteZ, sprint: isSprinting });
     };
 
     const handleEnd = (e) => {
