@@ -7,9 +7,6 @@
 
 ## Features
 
-- [ ] third person cam
-- [x] better falling speed
-- [x] jump
 - [ ] oauth
 - [ ] stripe
 - [ ] avatar marketplace
@@ -21,12 +18,12 @@
 
 - [ ] improve room data and exit button appearance
 - [ ] maybe get rid of the green theme on in world ui
+- [ ] style properly for landscape mobile
 
 ### API
 
 - [ ] pick up / drop weapons
-- [ ] zoom in
-- [ ] camera control
+- [ ] zoom in / scope
 
 ## Optimizations
 
@@ -37,13 +34,11 @@
 
 ## Bugs
 
-- [x] certain players float in the menu screen. probably in game too. files: client/src/MenuScene.js, client/src/VRMLoader.js
-  - [ ] i think this is just an issue with the avatars themselves
-- [x] player should jump higher, fall faster, right now it does alot of floating. it also goes up slopes too quickly and slides down them when standing still files: client/ecs/entities/Player.js, client/ecs/systems/MovementSystem.js, client/ecs/systems/PhysicsSystem.js
-- [ ] mobile joystick controls are simultaneously registering as camera controls, and pinch zoom doesnt work: client/components/MobileControls.jsx, client/ecs/systems/InputSystem.js
-- [ ] if i load the page on desktop, then switch to mobile through dev tools, i see the mobile controls but they dont work. files: client/components/MobileControls.jsx, keyword: 'isMobile'
-- [ ] low framerate, cam controls dont stop moving=
 - [ ] when i spawn inside another player things go bad
+- [ ] on tps cam, the environment seems to jitter when moving
+- [ ] press enter to focus chat, pressing enter again unfocuses
+- [ ] zoom doesnt feel great on tps cam
+- [ ] player too far away from reticle on tps cam
 
 ## AI suggestions
 

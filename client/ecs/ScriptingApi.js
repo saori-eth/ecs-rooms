@@ -39,40 +39,6 @@ export class ScriptingAPI {
     }
   }
 
-  // Camera Control
-  setCameraTarget(entityId) {
-    // First, remove cameraTarget from any other entity
-    const currentTargets = this.ecsAPI.getEntitiesWithComponents(
-      ComponentTypes.CAMERA_TARGET
-    );
-    for (const target of currentTargets) {
-      this.ecsAPI.removeComponent(target, ComponentTypes.CAMERA_TARGET);
-    }
-
-    if (entityId !== null && this.ecsAPI.entities.has(entityId)) {
-      // Set new entity as target
-      this.ecsAPI.addComponent(entityId, ComponentTypes.CAMERA_TARGET, {});
-    } else {
-      // Reset to local player if entityId is null or invalid
-      const localPlayer = this.ecsAPI.findEntityWithComponent(
-        ComponentTypes.PLAYER
-      );
-      if (localPlayer) {
-        const playerComponent = this.ecsAPI.getComponent(
-          localPlayer.id,
-          ComponentTypes.PLAYER
-        );
-        if (playerComponent && playerComponent.isLocal) {
-          this.ecsAPI.addComponent(
-            localPlayer.id,
-            ComponentTypes.CAMERA_TARGET,
-            {}
-          );
-        }
-      }
-    }
-  }
-
   // Game Object Management
   registerGameObject(id, entityId) {
     this.gameObjects.set(id, entityId);

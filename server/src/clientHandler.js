@@ -64,6 +64,7 @@ function handleMove(client, message) {
           rotation: message.rotation,
           isMoving: message.isMoving,
           isSprinting: message.isSprinting,
+          animation: message.animation,
           isGrounded: message.isGrounded,
           timestamp: Date.now(),
         },
@@ -94,14 +95,14 @@ function handleChatMessage(client, message) {
 
       // Send chat message to Discord
       try {
-      msgDiscord(
-        {
-          roomId: room.id,
-          author: chatMessage.author,
-          text: chatMessage.text,
-        },
-        { title: `Chat message in ${room.roomType}` , color: 0xfee75c }
-      );
+        msgDiscord(
+          {
+            roomId: room.id,
+            author: chatMessage.author,
+            text: chatMessage.text,
+          },
+          { title: `Chat message in ${room.roomType}`, color: 0xfee75c }
+        );
       } catch (error) {
         console.error("Error sending chat message to Discord:", error);
       }

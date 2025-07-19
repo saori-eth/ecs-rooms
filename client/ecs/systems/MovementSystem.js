@@ -9,7 +9,7 @@ export function createMovementSystem() {
   const moveVector = new THREE.Vector3();
   const rotatedVector = new THREE.Vector3();
   const euler = new THREE.Euler();
-  
+
   // Framerate-independent turning rate
   const turningRate = 9.49; // Converted from 0.15 at 60fps
 
@@ -170,10 +170,31 @@ export function createMovementSystem() {
           );
         }
 
-        // Store the target direction for visual rotation in update loop
+        // Store the camera yaw for visual rotation in update loop
         if (vrmComponent) {
-          // Clone the rotatedVector to store it on the component
-          vrmComponent.targetDirection = rotatedVector.clone();
+          const isMoving = x !== 0 || z !== 0;
+
+          if (isMoving) {
+            let strafeAngle = 0;
+            const strafeDirection = -Math.sign(x); // 1 for left, -1 for right
+            const isStrafing = x !== 0;
+            const isMovingForwardOrBackward = z !== 0;
+            const isMovingBackward = z > 0;
+
+            if (isStrafing && isMovingForwardOrBackward) {
+              const angle = Math.PI / 4; // 45 degrees
+              if (isMovingBackward) {
+                // When moving backward, invert the strafe angle
+                strafeAngle = -strafeDirection * angle;
+              } else {
+                strafeAngle = strafeDirection * angle;
+              }
+            }
+            vrmComponent.targetYaw = cameraYaw + strafeAngle;
+          } else {
+            // Player is idle, face the camera direction
+            vrmComponent.targetYaw = cameraYaw;
+          }
         }
 
         physicsComponent.body.velocity.y = Math.max(
@@ -194,18 +215,15 @@ export function createMovementSystem() {
         if (
           vrmComponent &&
           vrmComponent.vrm &&
-          vrmComponent.targetDirection &&
-          (vrmComponent.targetDirection.x !== 0 ||
-            vrmComponent.targetDirection.z !== 0)
+          typeof vrmComponent.targetYaw === "number"
         ) {
-          const angle =
-            Math.atan2(
-              vrmComponent.targetDirection.x,
-              vrmComponent.targetDirection.z
-            ) + Math.PI;
+          const angle = vrmComponent.targetYaw;
           tempQuaternion.setFromAxisAngle(yAxis, angle);
           const turningFactor = 1 - Math.exp(-turningRate * deltaTime);
-          vrmComponent.vrm.scene.quaternion.slerp(tempQuaternion, turningFactor);
+          vrmComponent.vrm.scene.quaternion.slerp(
+            tempQuaternion,
+            turningFactor
+          );
         }
       });
     },

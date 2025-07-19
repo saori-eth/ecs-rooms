@@ -1,7 +1,7 @@
 # fly.toml app configuration file
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 
-app = "digispace"
+app = "lobbyws"
 primary_region = "sjc"
 
 [build]
@@ -41,4 +41,4 @@ primary_region = "sjc"
   PORT = "8080"
   NODE_ENV = "production"
   DEFAULT_AVATAR="killua"
-  DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1392702624159236226/1e62bMZRxVYwYm-LeC1Sp4X-NtZ0WEfSM7UVeC3Uvr32GuSv_-2uNbI8ltX-TG-HamiQ"
+  DISCORD_WEBHOOK_URL="https://discord.com/api/webhooks/1392891460944269342/fiBoNFMdXZEhAmOd6MXx8hDaVlcOqwv0XyTg9_0jHvAOiin2yMKQ0Ut17jBzQOpsSx_u"
