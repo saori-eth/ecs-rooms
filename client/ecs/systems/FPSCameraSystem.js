@@ -23,6 +23,7 @@ export class FPSCameraSystem {
     this.camQuat = new THREE.Quaternion();
     this.targetPos = new THREE.Vector3();
     this.camEuler = new THREE.Euler();
+    this.init = false;
   }
 
   update(ecsAPI, dt, camera) {
@@ -38,6 +39,11 @@ export class FPSCameraSystem {
     const position = ecsAPI.getComponent(targetId, ComponentTypes.POSITION);
     const vrmComponent = ecsAPI.getComponent(targetId, ComponentTypes.VRM);
     if (!position) return;
+
+    if (!this.init) {
+      this.init = true;
+      vrmComponent.vrm.firstPerson?.setup();
+    }
 
     // Input handling
     const {
