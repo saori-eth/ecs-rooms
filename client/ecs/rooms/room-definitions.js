@@ -23,4 +23,11 @@ export const rooms = {
       scale: { x: 1, y: 1, z: 1 },
     },
   },
+  fps: {
+    name: "FPS",
+    description: "A room with a script running",
+    camera: "fps",
+    sceneModel: "/environments/arena.glb",
+    script: "/rooms/scripts/particle-box-scene.js",
+  },
 };

@@ -9,6 +9,7 @@ import { createPhysicsSystem } from "./systems/PhysicsSystem.js";
 import { createAnimationSystem } from "./systems/AnimationSystem.js";
 import { SceneManager } from "./SceneManager.js";
 import { TPSCameraSystem } from "./systems/TPSCameraSystem.js";
+import { FPSCameraSystem } from "./systems/FPSCameraSystem.js";
 import { BasicCameraSystem } from "./systems/BasicCameraSystem.js";
 import { rooms } from "./rooms/room-definitions.js";
 import { VRMManager } from "../src/VRMLoader.js";
@@ -28,6 +29,7 @@ if (import.meta.env.DEV) {
 const CAMERA_SYSTEMS = {
   basic: BasicCameraSystem,
   tps: TPSCameraSystem,
+  fps: FPSCameraSystem,
 };
 
 // Game manager to bridge React and Three.js
