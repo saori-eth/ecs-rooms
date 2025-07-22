@@ -7,17 +7,10 @@ console.log('[ScriptLoader] Available script modules:', Object.keys(scriptModule
 
 // Configure HMR to handle script updates without page reload
 if (import.meta.hot) {
-  // Accept updates for all script modules to prevent page reload
-  Object.keys(scriptModules).forEach(modulePath => {
-    import.meta.hot.accept(modulePath, () => {
-      console.log(`[ScriptLoader] HMR update detected for ${modulePath}, but handled manually - no auto reload`);
-      // Do nothing - we handle reloading manually via the UI button
-    });
-  });
-  
-  // Also accept updates for this module itself
+  // We accept updates to this module so it can hot-reload.
+  // This is necessary for the HMR logic inside loadGameScript to be updated.
   import.meta.hot.accept(() => {
-    console.log('[ScriptLoader] ScriptLoader module updated');
+    console.log('[ScriptLoader] ScriptLoader module itself has been updated.');
   });
 }
 
@@ -32,28 +25,39 @@ export async function loadGameScript(scriptPath, forceReload = false) {
     console.log(`[ScriptLoader] Looking for module key: ${moduleKey}`);
 
     if (scriptModules[moduleKey]) {
-      console.log(`[ScriptLoader] Found module, loading...`);
-      
-      // For force reload in development, use direct dynamic import
-      if (forceReload && import.meta.env.DEV) {
-        try {
-          console.log(`[ScriptLoader] Force reload in dev mode - using direct import`);
-          // Use relative path from this file's location
-          const timestamp = Date.now();
-          const importPath = `./rooms/scripts/${scriptName}.js?update=${timestamp}`;
-          console.log(`[ScriptLoader] Import path: ${importPath}`);
-          
-          // Use dynamic import with timestamp to bypass cache
-          const module = await import(/* @vite-ignore */ importPath);
-          console.log(`[ScriptLoader] Module loaded with timestamp:`, module);
-          return module;
-        } catch (e) {
-          console.log(`[ScriptLoader] Direct import failed, falling back:`, e);
+      console.log(`[ScriptLoader] Found module, preparing to load...`);
+
+      const importer = scriptModules[moduleKey];
+
+      // In development, we wrap the importer to add HMR handling.
+      if (import.meta.env.DEV) {
+        // The wrapped function becomes the new way to get the module.
+        const module = await importer();
+        
+        if (import.meta.hot) {
+            // Accept HMR updates for the specific module that was just imported.
+            import.meta.hot.accept(moduleKey, () => {
+                console.log(`[ScriptLoader] HMR update accepted for ${moduleKey}. Use UI to reload.`);
+            });
         }
+        
+        // For a forced reload, we need to bypass the cache.
+        if (forceReload) {
+          try {
+            const timestamp = Date.now();
+            const importPath = `./rooms/scripts/${scriptName}.js?update=${timestamp}`;
+            console.log(`[ScriptLoader] Force reloading via: ${importPath}`);
+            return await import(/* @vite-ignore */ importPath);
+          } catch (e) {
+            console.error(`[ScriptLoader] Force reload failed:`, e);
+          }
+        }
+        
+        return module;
       }
       
-      // Regular glob import
-      const module = await scriptModules[moduleKey]();
+      // In production or when HMR is not supported, just load the module.
+      const module = await importer();
       console.log(`[ScriptLoader] Module loaded successfully:`, module);
       return module;
     }
