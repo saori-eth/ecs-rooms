@@ -3,15 +3,6 @@ import * as CANNON from "cannon-es";
 import { ComponentTypes } from "../../../ecs/components.js";
 import GlobalEventManager from "../../../src/GlobalEventManager.js";
 
-// Handle HMR for this module
-if (import.meta.hot) {
-  import.meta.hot.accept(() => {
-    console.log(
-      "[ArenaShootingGame] Module updated via HMR - use Reload Script button to apply changes"
-    );
-  });
-}
-
 export class ArenaShootingGame {
   constructor(scriptingAPI) {
     this.api = scriptingAPI;
