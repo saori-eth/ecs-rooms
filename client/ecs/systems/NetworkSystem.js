@@ -1,5 +1,6 @@
 import { ComponentTypes, createInterpolationComponent } from "../components.js";
 import { createPlayer } from "../entities/Player.js";
+import { pack, unpack } from "../../encoding.js";
 
 export function createNetworkSystem() {
   let ws = null;
@@ -46,6 +47,8 @@ export function createNetworkSystem() {
     const wsUrl = `${protocol}//${host}`;
     ws = new WebSocket(wsUrl);
 
+    ws.binaryType = "arraybuffer";
+
     ws.onopen = () => {
       console.log("Connected to server");
       connected = true;
@@ -55,13 +58,13 @@ export function createNetworkSystem() {
 
       heartbeatInterval = setInterval(() => {
         if (connected) {
-          ws.send(JSON.stringify({ type: "heartbeat" }));
+          ws.send(pack({ type: "heartbeat" }));
         }
       }, 10000);
     };
 
     ws.onmessage = (event) => {
-      const message = JSON.parse(event.data);
+      const message = unpack(event.data);
 
       switch (message.type) {
         case "connected":
@@ -180,6 +183,9 @@ export function createNetworkSystem() {
             );
 
             if (interpolation) {
+              // Use local timestamp for interpolation
+              const localTs = Date.now();
+
               // Push position data to position buffer
               interpolation.positionBuffer.push({
                 position: {
@@ -187,13 +193,13 @@ export function createNetworkSystem() {
                   y: message.position.y,
                   z: message.position.z,
                 },
-                timestamp: message.timestamp,
+                timestamp: localTs,
               });
 
               // Push rotation data to rotation buffer
               interpolation.rotationBuffer.push({
                 rotation: message.rotation,
-                timestamp: message.timestamp,
+                timestamp: localTs,
               });
 
               // Maintain buffer sizes
@@ -205,26 +211,26 @@ export function createNetworkSystem() {
               }
             }
 
-            if (animation && animation.actions) {
-              let actionToPlay;
-              
-              // Determine which animation to play based on received state
-              if (message.isGrounded === false && animation.actions.jump) {
-                actionToPlay = animation.actions.jump;
-              } else if (message.isMoving && message.isSprinting && animation.actions.sprint) {
-                actionToPlay = animation.actions.sprint;
-              } else if (message.isMoving && animation.actions.walking) {
-                actionToPlay = animation.actions.walking;
-              } else if (animation.actions.idle) {
-                actionToPlay = animation.actions.idle;
+            if (animation && animation.actions && message.animation) {
+              // Find the action that matches the animation name from the message
+              let actionToPlay = null;
+              for (const [actionName, action] of Object.entries(
+                animation.actions
+              )) {
+                if (action._clip && action._clip.name === message.animation) {
+                  actionToPlay = action;
+                  break;
+                }
               }
-              
-              if (actionToPlay !== animation.currentAction) {
+
+              // If we found a matching action and it's different from current
+              if (actionToPlay && actionToPlay !== animation.currentAction) {
                 const lastAction = animation.currentAction;
                 animation.currentAction = actionToPlay;
-                
+
                 // Use faster transition for jump animation
-                const fadeTime = actionToPlay === animation.actions.jump ? 0.1 : 0.2;
+                const fadeTime =
+                  actionToPlay === animation.actions.jump ? 0.1 : 0.2;
                 lastAction.fadeOut(fadeTime);
                 actionToPlay.reset().fadeIn(fadeTime).play();
               }
@@ -344,7 +350,7 @@ export function createNetworkSystem() {
     joinGame(identity, roomType) {
       if (connected && ws && ws.readyState === WebSocket.OPEN) {
         ws.send(
-          JSON.stringify({
+          pack({
             type: "joinGame",
             identity: identity,
             roomType: roomType,
@@ -359,7 +365,7 @@ export function createNetworkSystem() {
           type: "chatMessage",
           text: text,
         };
-        ws.send(JSON.stringify(message));
+        ws.send(pack(message));
       } else {
         console.error(
           "[NetworkSystem] Cannot send chat message - not connected or not in room"
@@ -374,7 +380,7 @@ export function createNetworkSystem() {
           eventType: eventType,
           data: data,
         };
-        ws.send(JSON.stringify(message));
+        ws.send(pack(message));
       } else {
         console.error(
           "[NetworkSystem] Cannot send game event - not connected or not in room"
@@ -419,13 +425,18 @@ export function createNetworkSystem() {
           );
           const input = ecsAPI.getComponent(entityId, ComponentTypes.INPUT);
           const vrm = ecsAPI.getComponent(entityId, ComponentTypes.VRM);
+          const animationComponent = ecsAPI.getComponent(
+            entityId,
+            ComponentTypes.ANIMATION
+          );
+          const animation = animationComponent?.currentAction?._clip?.name;
 
           if (position && input && vrm) {
             const isMoving =
               input.moveVector.x !== 0 || input.moveVector.z !== 0;
             const isSprinting = ecsAPI.inputState && ecsAPI.inputState.sprint;
             const isGrounded = player.isGrounded === true; // Will be false if undefined or false
-            
+
             const moveMessage = {
               type: "move",
               position: {
@@ -437,10 +448,11 @@ export function createNetworkSystem() {
               isMoving,
               isSprinting,
               isGrounded,
+              animation,
               timestamp: Date.now(),
             };
-            
-            ws.send(JSON.stringify(moveMessage));
+
+            ws.send(pack(moveMessage));
           }
         }
       });

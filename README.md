@@ -37,6 +37,7 @@ npm start
 
 ### Multiplayer
 - WebSocket-based real-time communication
+- MessagePack binary encoding for efficient data transfer
 - Room-based sessions (4 players max)
 - Automatic position/animation synchronization
 - Custom game events for gameplay logic

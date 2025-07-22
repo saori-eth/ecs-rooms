@@ -1,5 +1,7 @@
 import { findOrCreateRoom, getRoom, deleteRoom } from "./roomManager.js";
 import { MAX_PLAYERS_PER_ROOM } from "./Room.js";
+import { pack, unpack } from "./encoding.js";
+import { msgDiscord } from "../discord.js";
 
 let nextClientId = 1;
 
@@ -7,7 +9,7 @@ function handleJoinGame(client, room) {
   room.addPlayer(client);
 
   client.ws.send(
-    JSON.stringify({
+    pack({
       type: "joinedRoom",
       roomId: room.id,
       roomType: room.roomType,
@@ -36,7 +38,7 @@ function handleJoinGame(client, room) {
   });
 
   client.ws.send(
-    JSON.stringify({
+    pack({
       type: "roomUpdate",
       playerCount: room.players.size,
       maxPlayers: MAX_PLAYERS_PER_ROOM,
@@ -62,6 +64,7 @@ function handleMove(client, message) {
           rotation: message.rotation,
           isMoving: message.isMoving,
           isSprinting: message.isSprinting,
+          animation: message.animation,
           isGrounded: message.isGrounded,
           timestamp: Date.now(),
         },
@@ -73,7 +76,7 @@ function handleMove(client, message) {
 
 function handleHeartbeat(client) {
   client.lastHeartbeat = Date.now();
-  client.ws.send(JSON.stringify({ type: "heartbeatAck" }));
+  client.ws.send(pack({ type: "heartbeatAck" }));
 }
 
 function handleChatMessage(client, message) {
@@ -89,6 +92,20 @@ function handleChatMessage(client, message) {
 
       // Send to all players in the room including the sender
       room.broadcastToAll(chatMessage);
+
+      // Send chat message to Discord
+      try {
+        msgDiscord(
+          {
+            roomId: room.id,
+            author: chatMessage.author,
+            text: chatMessage.text,
+          },
+          { title: `Chat message in ${room.roomType}`, color: 0xfee75c }
+        );
+      } catch (error) {
+        console.error("Error sending chat message to Discord:", error);
+      }
     }
   }
 }
@@ -123,7 +140,7 @@ export function handleConnection(ws) {
     identity: null,
   };
   ws.send(
-    JSON.stringify({
+    pack({
       type: "connected",
       id: clientId,
     })
@@ -131,7 +148,7 @@ export function handleConnection(ws) {
 
   ws.on("message", (data) => {
     try {
-      const message = JSON.parse(data.toString());
+      const message = unpack(data);
 
       switch (message.type) {
         case "joinGame":

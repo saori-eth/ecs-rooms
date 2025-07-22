@@ -97,6 +97,14 @@ export class ECSApi {
     return this.registerSystem(system);
   }
 
+  removeSystem(system) {
+    console.log('removing system', system);
+    const index = this.systems.indexOf(system);
+    if (index !== -1) {
+      this.systems.splice(index, 1);
+    }
+  }
+
   fixedUpdate(fixedDeltaTime) {
     // Update scene manager's fixed update if it exists
     if (this.sceneManager && this.sceneManager.fixedUpdate) {

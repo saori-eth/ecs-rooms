@@ -1,9 +1,12 @@
 import * as THREE from "three";
 import { ComponentTypes } from "../components.js";
 
-export class CameraSystem {
+export class BasicCameraSystem {
   constructor() {
     this.raycaster = new THREE.Raycaster();
+    
+    // UI preferences
+    this.showReticle = false; // Basic camera doesn't need a reticle
 
     // Camera rotation state
     this.yaw = 0;

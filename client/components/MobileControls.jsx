@@ -71,10 +71,56 @@ function MobileControls({ onMove, onJump }) {
         knob.classList.remove("sprinting");
       }
 
-      // Convert to game coordinates
-      // Joystick up (negative Y) should move forward (negative Z)
-      // Joystick down (positive Y) should move backward (positive Z)
-      onMove({ x: moveX, z: moveY, sprint: isSprinting });
+      const deadzone = 0.2;
+      let discreteX = 0;
+      let discreteZ = 0;
+
+      if (normalizedDistance > deadzone) {
+        const angle = Math.atan2(moveY, moveX) * (180 / Math.PI);
+        let dirAngle = angle >= 0 ? angle : angle + 360;
+
+        let discreteX = 0;
+        let discreteZ = 0;
+
+        if (dirAngle >= 337.5 || dirAngle < 22.5) {
+          discreteX = 1;
+          discreteZ = 0;
+        } else if (dirAngle < 67.5) {
+          discreteX = 1;
+          discreteZ = 1;
+        } else if (dirAngle < 112.5) {
+          discreteX = 0;
+          discreteZ = 1;
+        } else if (dirAngle < 157.5) {
+          discreteX = -1;
+          discreteZ = 1;
+        } else if (dirAngle < 202.5) {
+          discreteX = -1;
+          discreteZ = 0;
+        } else if (dirAngle < 247.5) {
+          discreteX = -1;
+          discreteZ = -1;
+        } else if (dirAngle < 292.5) {
+          discreteX = 0;
+          discreteZ = -1;
+        } else {
+          discreteX = 1;
+          discreteZ = -1;
+        }
+
+        const discLength = Math.sqrt(
+          discreteX * discreteX + discreteZ * discreteZ
+        );
+        const scaleFactor = Math.min(normalizedDistance, 1);
+        if (discLength > 0) {
+          discreteX = (discreteX / discLength) * scaleFactor;
+          discreteZ = (discreteZ / discLength) * scaleFactor;
+        }
+
+        onMove({ x: discreteX, z: discreteZ, sprint: isSprinting });
+      } else {
+        onMove({ x: 0, z: 0, sprint: false });
+      }
     };
 
     const handleEnd = (e) => {
@@ -105,10 +151,16 @@ function MobileControls({ onMove, onJump }) {
     };
 
     // Touch events
-    GlobalEventManager.add(joystick, "touchstart", handleStart, { passive: false });
-    GlobalEventManager.add(document, "touchmove", handleMove, { passive: false });
+    GlobalEventManager.add(joystick, "touchstart", handleStart, {
+      passive: false,
+    });
+    GlobalEventManager.add(document, "touchmove", handleMove, {
+      passive: false,
+    });
     GlobalEventManager.add(document, "touchend", handleEnd, { passive: false });
-    GlobalEventManager.add(document, "touchcancel", handleEnd, { passive: false });
+    GlobalEventManager.add(document, "touchcancel", handleEnd, {
+      passive: false,
+    });
 
     // Mouse events for testing on desktop
     GlobalEventManager.add(joystick, "mousedown", handleStart);
@@ -143,7 +195,21 @@ function MobileControls({ onMove, onJump }) {
           e.preventDefault();
         }}
       >
-        Jump
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7 14l5-5 5 5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
       </button>
     </div>
   );

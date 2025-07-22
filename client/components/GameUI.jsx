@@ -7,6 +7,7 @@ import GlobalEventManager from "../src/GlobalEventManager.js";
 function GameUI({ roomInfo, ecsManager, onExit }) {
   const [isMobile, setIsMobile] = useState(false);
   const [isPointerLocked, setIsPointerLocked] = useState(false);
+  const [showCameraReticle, setShowCameraReticle] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -21,6 +22,23 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
 
     return () => GlobalEventManager.remove(window, "resize", checkMobile);
   }, []);
+
+  // Check camera reticle preference
+  useEffect(() => {
+    const checkCameraReticle = () => {
+      if (ecsManager) {
+        setShowCameraReticle(ecsManager.shouldShowReticle());
+      }
+    };
+
+    // Check immediately
+    checkCameraReticle();
+
+    // Check periodically in case camera changes
+    const interval = setInterval(checkCameraReticle, 100);
+
+    return () => clearInterval(interval);
+  }, [ecsManager]);
 
   const handleMobileMove = (moveVector) => {
     if (ecsManager && ecsManager.mobileInputCallback) {
@@ -116,6 +134,14 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
       </div>
       {isMobile && (
         <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />
+      )}
+      {(isPointerLocked || isMobile) && showCameraReticle && (
+        <div className="reticle">
+          <div className="reticle-rect reticle-up"></div>
+          <div className="reticle-rect reticle-down"></div>
+          <div className="reticle-rect reticle-left"></div>
+          <div className="reticle-rect reticle-right"></div>
+        </div>
       )}
       <Chat ecsManager={ecsManager} />
     </div>

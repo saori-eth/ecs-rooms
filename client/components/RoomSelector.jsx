@@ -30,10 +30,6 @@ export const RoomSelector = ({ selectedRoom, onRoomSelect }) => {
       id,
       ...room,
       playerCount: liveData ? liveData.playerCount : 0,
-      description:
-        room.name === "Arena Shooter"
-          ? "Fast-paced combat with shooting mechanics"
-          : "Open arena for exploration and practice",
     };
   });
 

@@ -2,14 +2,11 @@
 
 ## General
 
-- [ ] get name
-- [ ] start company
+- [x] get name
+- [x] start company
 
 ## Features
 
-- [ ] third person cam
-- [ ] better falling speed
-- [ ] jump
 - [ ] oauth
 - [ ] stripe
 - [ ] avatar marketplace
@@ -21,12 +18,12 @@
 
 - [ ] improve room data and exit button appearance
 - [ ] maybe get rid of the green theme on in world ui
+- [ ] style properly for landscape mobile
 
 ### API
 
 - [ ] pick up / drop weapons
-- [ ] zoom in
-- [ ] camera control
+- [ ] zoom in / scope
 
 ## Optimizations
 
@@ -37,13 +34,11 @@
 
 ## Bugs
 
-- [x] certain players float in the menu screen. probably in game too. files: client/src/MenuScene.js, client/src/VRMLoader.js
-  - [ ] i think this is just an issue with the avatars themselves
-- [x] player should jump higher, fall faster, right now it does alot of floating. it also goes up slopes too quickly and slides down them when standing still files: client/ecs/entities/Player.js, client/ecs/systems/MovementSystem.js, client/ecs/systems/PhysicsSystem.js
-- [ ] mobile joystick controls are simultaneously registering as camera controls, and pinch zoom doesnt work: client/components/MobileControls.jsx, client/ecs/systems/InputSystem.js
-- [ ] if i load the page on desktop, then switch to mobile through dev tools, i see the mobile controls but they dont work. files: client/components/MobileControls.jsx, keyword: 'isMobile'
-- [ ] low framerate, cam controls dont stop moving=
 - [ ] when i spawn inside another player things go bad
+- [ ] on tps cam, the environment seems to jitter when moving
+- [ ] press enter to focus chat, pressing enter again unfocuses
+- [ ] zoom doesnt feel great on tps cam
+- [ ] player too far away from reticle on tps cam
 
 ## AI suggestions
 
@@ -58,3 +53,16 @@ Fix: create materials once, avoid tweaking shader-defines/uniform counts inside 
 
 Frequent drawImage / fillText
 Those are 2-D canvas calls; if you’re drawing HUD text each frame, cache to an off-screen canvas or use a bitmap font in WebGL.
+
+
+## IERCAN
+
+https://coda.io/d/_d4DpRlhYgW3/ECS-world-recap_su_C9IrS
+
+- [ ] optimize packets
+- [ ] uWebSockets server
+- [ ] reduce first load impact (probably cloudflare)
+- [ ] gzip compression static assets
+- [ ] broadcast game state in fixed timestep
+- [ ] zod schema input validation
+- [ ] typescript
