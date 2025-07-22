@@ -116,6 +116,21 @@ function GameUI({ roomInfo, ecsManager, onExit }) {
         <button className="exit-button" onClick={onExit}>
           Exit
         </button>
+        <button 
+          className="reload-button" 
+          onClick={async () => {
+            console.log('[GameUI] Reload Script button clicked');
+            if (ecsManager && ecsManager.reloadSceneScript) {
+              console.log('[GameUI] Calling ecsManager.reloadSceneScript()');
+              await ecsManager.reloadSceneScript();
+              console.log('[GameUI] Script reload complete');
+            } else {
+              console.log('[GameUI] ecsManager or reloadSceneScript not available');
+            }
+          }}
+        >
+          Reload Script
+        </button>
       </div>
       {isMobile && (
         <MobileControls onMove={handleMobileMove} onJump={handleMobileJump} />

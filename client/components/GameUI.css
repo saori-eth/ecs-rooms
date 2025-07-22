@@ -109,6 +109,31 @@
   transform: translateY(0);
 }
 
+.reload-button {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: rgba(77, 147, 255, 0.8);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: "Inter", sans-serif;
+  width: 100%;
+}
+
+.reload-button:hover {
+  background: rgba(77, 147, 255, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(77, 147, 255, 0.3);
+}
+
+.reload-button:active {
+  transform: translateY(0);
+}
+
 .reticle {
   position: absolute;
   top: 50%;

@@ -1,5 +1,14 @@
 import * as THREE from "three";
 
+// Handle HMR for this module
+if (import.meta.hot) {
+  import.meta.hot.accept(() => {
+    console.log(
+      "[ParticleBoxScene] Module updated via HMR - use Reload Script button to apply changes"
+    );
+  });
+}
+
 export class ParticleBoxScene {
   constructor(scriptingAPI) {
     this.api = scriptingAPI;
@@ -13,7 +22,7 @@ export class ParticleBoxScene {
     this.createMagicalOrbParticles();
     this.createFireflyParticles();
     this.createEnergyFieldParticles();
-    // this.createGroundFogParticles();
+    this.createGroundFogParticles();
   }
 
   createFloatingDustParticles() {

@@ -368,4 +368,10 @@ export class ECSManager {
       }
     };
   }
+
+  async reloadSceneScript() {
+    if (this.sceneManager) {
+      await this.sceneManager.reloadActiveScript();
+    }
+  }
 }
