@@ -1,151 +1,61 @@
-# Scripting Guide
+# Room Scripts
 
-## Overview
-Scripts define the game logic for each room. They handle player interactions, game state, physics, and networking.
+This directory contains all room scripts that are loaded dynamically by the game.
 
-## Script Structure
-Create scripts in `/public/rooms/scripts/`:
+## How It Works
 
-```javascript
-export class YourScript {
-  constructor(scriptingAPI) {
-    this.api = scriptingAPI;
-    // Initialize state
-  }
+Scripts are imported through the ScriptLoader.js module, which maintains a registry of available scripts. This approach allows:
 
-  onLoad() {
-    // Setup when room loads
-  }
+1. Proper module resolution (importing npm packages like "three")
+2. Build-time optimization and bundling
+3. Type checking and linting
+4. Tree shaking of unused code
 
-  onUpdate(deltaTime) {
-    // Called every frame
-    // deltaTime in seconds
-  }
+## Adding New Scripts
 
-  onPlayerJoin(playerId) {
-    // Player joined room
-  }
+1. Create your script file in this directory
+2. Register your room and script in `client/ecs/rooms/room-definitions.js`.
 
-  onPlayerLeave(playerId) {
-    // Player left room
-  }
-}
-```
+## Room Definitions (`room-definitions.js`)
 
-## Core Concepts
-
-### Host Logic
-The first player acts as the "host" and handles:
-- Spawning enemies/items
-- Game state management
-- Physics simulations for shared objects
+The `client/ecs/rooms/room-definitions.js` file is where you define the properties for each room. Here's an example of a room definition:
 
 ```javascript
-isHost() {
-  const players = this.api.getEntitiesWithComponents(
-    ComponentTypes.PLAYER, ComponentTypes.NETWORK
-  );
-  if (players.length === 0) return false;
-  
-  const myNetwork = this.api.getComponent(this.api.localPlayerId, ComponentTypes.NETWORK);
-  return players[0] === this.api.localPlayerId;
-}
+"arena-empty": {
+  name: "Empty Room",
+  description: "Testing purposes",
+  camera: "basic",
+  sceneModel: "/environments/arena.glb",
+  script: "/rooms/scripts/arena-logic.js",
+  sceneTransform: {
+    position: { x: 0, y: -1, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+    scale: { x: 1, y: 1, z: 1 },
+  },
+},
 ```
 
-### Entity Management
-```javascript
-// Create entity
-const entityId = this.api.createEntity();
+- **`name`**: The display name of the room.
+- **`description`**: A short description of the room.
+- **`camera`**: The camera mode to use (e.g., "tps", "fps", "basic").
+- **`sceneModel`**: The path to the 3D model for the room's environment.
+- **`script`**: The path to the JavaScript file that contains the room's logic.
+- **`sceneTransform`**: An optional object to position, rotate, and scale the scene model.
 
-// Add components
-this.api.addComponent(entityId, ComponentTypes.POSITION, { x: 0, y: 1, z: 0 });
+## Scripting API Lifecycle
 
-// Get component
-const pos = this.api.getComponent(entityId, ComponentTypes.POSITION);
+Your script class must implement some or all of the following methods, which are called by the `SceneManager` at different points.
 
-// Destroy entity
-this.api.destroyEntity(entityId);
-```
+-   `constructor(scriptingAPI)`: Called when the script instance is created. It receives the `ScriptingAPI` object, which allows interaction with the game world.
+-   `onLoad()`: Called once after the room's 3D scene and assets have been loaded. This is a good place for initialization logic.
+-   `onUpdate(deltaTime)`: Called on every frame. `deltaTime` is the time in seconds since the last frame. Good for game logic that needs to run continuously.
+-   `onFixedUpdate(fixedDeltaTime)`: Called on a fixed time step, independent of the frame rate. This is the recommended place for physics-related logic.
+-   `onPlayerJoin(playerId)`: Called when a new player joins the room.
+-   `onPlayerLeave(playerId)`: Called when a player leaves the room.
+-   `destroy()`: Called when the room is being unloaded or reloaded. This is where you should perform cleanup tasks, like removing event listeners or cleaning up custom objects.
 
-### Physics Objects
-```javascript
-// Create physics body
-const shape = new CANNON.Sphere(0.5);
-const body = this.api.createPhysicsBody(shape, { x: 0, y: 5, z: 0 }, mass);
+## Important Notes
 
-// Add to entity
-this.api.addComponent(entityId, ComponentTypes.PHYSICS_BODY, { body });
-```
-
-### Network Events
-```javascript
-// Send event
-this.api.sendGameEvent('spawn', { 
-  type: 'enemy',
-  position: { x: 0, y: 0, z: 0 }
-});
-
-// Handle events
-this.api.networkSystem.onGameEvent = (event) => {
-  if (event.eventType === 'spawn') {
-    this.spawnObject(event.data);
-  }
-};
-```
-
-## Example: Collectible System
-```javascript
-export class CollectibleGame {
-  constructor(scriptingAPI) {
-    this.api = scriptingAPI;
-    this.collectibles = new Map();
-  }
-
-  onLoad() {
-    // Only host spawns collectibles
-    if (this.isHost()) {
-      this.spawnCollectibles();
-    }
-    
-    // All players handle collection
-    this.api.networkSystem.onGameEvent = (event) => {
-      if (event.eventType === 'collect') {
-        this.removeCollectible(event.data.id);
-      }
-    };
-  }
-
-  onUpdate(deltaTime) {
-    // Check collisions
-    const playerPos = this.api.getComponent(this.api.localPlayerId, ComponentTypes.POSITION);
-    
-    for (const [id, data] of this.collectibles) {
-      const distance = this.getDistance(playerPos, data.position);
-      if (distance < 1.0) {
-        this.api.sendGameEvent('collect', { id });
-      }
-    }
-  }
-}
-```
-
-## API Reference
-
-### Core APIs
-- [Entity Management](./api/entities.md) - Creating and managing entities
-- [Physics](./api/physics.md) - Physics bodies and collision detection
-- [Networking](./api/networking.md) - Multiplayer events and synchronization
-- [Visual](./api/visual.md) - 3D objects and visual effects
-
-### New Features
-- [Animation API](./api/animation.md) - Custom animations and emotes
-- [Input API](./api/input.md) - Keyboard event handling
-
-## Best Practices
-1. Always check if you're the host before spawning objects
-2. Sync important state changes via network events
-3. Clean up entities and physics bodies on destroy
-4. Use object pooling for frequently spawned items
-5. Handle player disconnections gracefully
-6. Remove event listeners when scripts are destroyed
-7. Test multiplayer features with multiple clients
+- Scripts must export a class that follows the scripting API interface
+- All imports (like "three", "cannon-es") will be properly resolved during build
+- The public directory scripts are not used - everything runs through the build system
